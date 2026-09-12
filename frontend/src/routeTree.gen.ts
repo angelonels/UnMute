@@ -10,33 +10,53 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrototypeCallShellRouteImport } from './routes/[_]prototype/call-shell'
+import { Route as PrototypeFoundationsRouteImport } from './routes/[_]prototype/foundations'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrototypeCallShellRoute = PrototypeCallShellRouteImport.update({
+  id: '/_prototype/call-shell',
+  path: '/_prototype/call-shell',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrototypeFoundationsRoute = PrototypeFoundationsRouteImport.update({
+  id: '/_prototype/foundations',
+  path: '/_prototype/foundations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/_prototype/call-shell': typeof PrototypeCallShellRoute
+  '/_prototype/foundations': typeof PrototypeFoundationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/_prototype/call-shell': typeof PrototypeCallShellRoute
+  '/_prototype/foundations': typeof PrototypeFoundationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_prototype/call-shell': typeof PrototypeCallShellRoute
+  '/_prototype/foundations': typeof PrototypeFoundationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/_prototype/call-shell' | '/_prototype/foundations'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/_prototype/call-shell' | '/_prototype/foundations'
+  id: '__root__' | '/' | '/_prototype/call-shell' | '/_prototype/foundations'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  PrototypeCallShellRoute: typeof PrototypeCallShellRoute
+  PrototypeFoundationsRoute: typeof PrototypeFoundationsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +68,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_prototype/call-shell': {
+      id: '/_prototype/call-shell'
+      path: '/_prototype/call-shell'
+      fullPath: '/_prototype/call-shell'
+      preLoaderRoute: typeof PrototypeCallShellRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_prototype/foundations': {
+      id: '/_prototype/foundations'
+      path: '/_prototype/foundations'
+      fullPath: '/_prototype/foundations'
+      preLoaderRoute: typeof PrototypeFoundationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  PrototypeCallShellRoute: PrototypeCallShellRoute,
+  PrototypeFoundationsRoute: PrototypeFoundationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

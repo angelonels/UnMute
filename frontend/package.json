@@ -12,7 +12,8 @@
     "test:e2e": "playwright test",
     "generate": "orval --config orval.config.ts",
     "doctor": "react-doctor src",
-    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs"
+    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs",
+    "theme:build": "pnpm exec astryx theme build src/theme/unmute-theme.ts"
   },
   "dependencies": {
     "@astryxdesign/core": "^0.6.0",
