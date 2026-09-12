@@ -1,0 +1,17 @@
+node_modules
+dist
+build
+coverage
+.wrangler
+.dev.vars
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log
+.vite
+.turbo
+playwright-report
+test-results
+blob-report
+worker-configuration.d.ts

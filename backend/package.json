@@ -1,0 +1,27 @@
+{
+  "name": "@unmute/backend",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run --outdir dist",
+    "typecheck": "wrangler types && tsc --noEmit",
+    "test": "vitest run",
+    "openapi": "tsx scripts/export-openapi.ts",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@hono/zod-openapi": "^1.6.3",
+    "@unmute/shared": "workspace:*",
+    "hono": "^4.13.7",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.0",
+    "tsx": "^4.23.13",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "wrangler": "^4.131.1"
+  }
+}

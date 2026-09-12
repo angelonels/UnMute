@@ -1,0 +1,23 @@
+{
+  "name": "unmute",
+  "private": true,
+  "packageManager": "pnpm@10.22.0",
+  "engines": {
+    "node": ">=22.18.0",
+    "pnpm": ">=10.22.0"
+  },
+  "scripts": {
+    "dev": "pnpm --parallel --filter @unmute/frontend --filter @unmute/backend dev",
+    "dev:frontend": "pnpm --filter @unmute/frontend dev",
+    "dev:backend": "pnpm --filter @unmute/backend dev",
+    "build": "pnpm --filter @unmute/backend build && pnpm --filter @unmute/frontend build",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "lint": "pnpm -r --if-present lint",
+    "generate": "pnpm --filter @unmute/backend openapi && pnpm --filter @unmute/frontend generate",
+    "doctor": "pnpm --filter @unmute/frontend run doctor"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild", "workerd"]
+  }
+}

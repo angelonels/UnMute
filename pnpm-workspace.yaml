@@ -1,0 +1,13 @@
+packages:
+  - frontend
+  - backend
+  - packages/*
+
+catalog:
+  typescript: 5.9.3
+  zod: 4.6.2
+  vitest: 5.0.0
+
+onlyBuiltDependencies:
+  - esbuild
+  - workerd
