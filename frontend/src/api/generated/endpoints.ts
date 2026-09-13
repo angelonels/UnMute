@@ -23,7 +23,7 @@ import type {
   HealthResponse
 } from './model';
 
-import { apiFetch } from '../../shared/lib/api-client';
+import { apiFetch } from '../client';
 
 
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];

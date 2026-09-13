@@ -9,8 +9,5 @@
     },
     "types": ["vite/client"]
   },
-  "include": [
-    "src",
-    "orval.config.ts",
-  ]
+  "include": ["src", "orval.config.ts"]
 }

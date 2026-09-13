@@ -1,0 +1,11 @@
+**/dist
+**/node_modules
+backend/openapi
+backend/worker-configuration.d.ts
+frontend/src/api/generated
+frontend/src/routeTree.gen.ts
+frontend/src/theme/unmute.css
+frontend/src/theme/unmute.d.ts
+frontend/src/theme/unmute.js
+frontend/src/theme/unmute.variants.d.ts
+pnpm-lock.yaml

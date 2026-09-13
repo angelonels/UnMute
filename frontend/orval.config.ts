@@ -12,7 +12,7 @@ export default defineConfig({
       clean: true,
       override: {
         mutator: {
-          path: './src/shared/lib/api-client.ts',
+          path: './src/api/client.ts',
           name: 'apiFetch',
         },
         fetch: {

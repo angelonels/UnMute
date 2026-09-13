@@ -13,7 +13,6 @@
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.6.3",
-    "@unmute/shared": "workspace:*",
     "hono": "^4.13.7",
     "zod": "catalog:"
   },

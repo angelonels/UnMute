@@ -2,20 +2,33 @@
 
 Project-specific guidance for AI coding agents.
 
+## Product architecture
+
+- `routes/` only composes screens and loads route state; import features through their `index.ts`.
+- Keep UI with its owning feature. Promote a component after two features need the same stable contract, and name the new owner explicitly instead of creating a generic `shared/` bucket.
+- Product requests use the generated client under `api/generated/`; only `api/client.ts` performs raw `fetch` and maps transport failures.
+- Prefer URL → Query → React → Zustand for state ownership. Effects synchronize external systems, not derived render state.
+- Use semantic HTML where semantics exist, Astryx layout primitives for composition, and a neutral wrapper only when neither applies. This refines the generated “no div” shorthand below.
+- Every async screen handles loading, empty, recoverable error/retry, partial, success, and unavailable/permission states that apply.
+- Validate UI in a real feature at narrow/wide widths, light/dark modes, keyboard-only navigation, and reduced motion. Do not ship permanent prototype or design-gallery routes.
+
 <!-- ASTRYX:START -->
+
 Astryx v0.6.0 · 163 components
 CLI: run every command as `pnpm exec astryx <cmd>` (shown below as `astryx ...`).
 
 SETUP (once, in your app entry e.g. main.tsx) — without these, components render unstyled:
-  import "@astryxdesign/core/reset.css";
-  import "@astryxdesign/core/astryx.css";
+import "@astryxdesign/core/reset.css";
+import "@astryxdesign/core/astryx.css";
 
 WORKFLOW — discover, don't guess. Before writing UI:
+
 1. `astryx build "<idea>"` — START HERE: returns a kit (closest [page] + [block]s + [component]s). No args = full playbook.
 2. `astryx template <name> [--skeleton]` — scaffold the [page]/[block]s it named, or study their layout. Templates are reference code.
 3. `astryx component <Name>` — props + examples for every component you use.
 
 RULES:
+
 - No <div> — components do all layout/spacing, page frame included.
 - Frame first: read `astryx docs layout` before writing any page or screen — page frame, region widths, breakpoint behavior.
 - Dense data = rows (Table, List/Item), never Card-wrapped list items; Card is for standalone widgets. Status = StatusDot/Token; Badge = counts only.
@@ -24,10 +37,10 @@ RULES:
 - SELF-CHECK before you finish: re-read the file and replace any style={{…}}, raw <div>/<span> layout, imported .css/@apply, or hardcoded/arbitrary value (e.g. bg-[#fff], p-[13px]) with the component or a token-backed utility. If unsure a component/prop exists, run `astryx component <Name>` / `astryx search "<thing>"`; don't hand-roll CSS.
 
 MORE CLI:
-  search "<query>"   find any component / hook / doc / template / block
-  component --list   163 components by category
-  template --list    page + block recipes
-  docs <topic>       browser-support, cli-integrations, color, elevation, getting-started, icons, illustrations, internationalization, layout, migration, motion, principles, shadcn-compatibility, shape, spacing, styling-libraries, styling, theme, tokens, typography, working-with-ai
-  swizzle <Name>     eject component source for deep customization
-  upgrade --apply    run after any Astryx or integration dependency bump
+search "<query>" find any component / hook / doc / template / block
+component --list 163 components by category
+template --list page + block recipes
+docs <topic> browser-support, cli-integrations, color, elevation, getting-started, icons, illustrations, internationalization, layout, migration, motion, principles, shadcn-compatibility, shape, spacing, styling-libraries, styling, theme, tokens, typography, working-with-ai
+swizzle <Name> eject component source for deep customization
+upgrade --apply run after any Astryx or integration dependency bump
 <!-- ASTRYX:END -->

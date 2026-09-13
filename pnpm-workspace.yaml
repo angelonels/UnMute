@@ -1,7 +1,6 @@
 packages:
   - frontend
   - backend
-  - packages/*
 
 catalog:
   typescript: 5.9.3
@@ -11,3 +10,6 @@ catalog:
 onlyBuiltDependencies:
   - esbuild
   - workerd
+
+minimumReleaseAge: 1440
+strictDepBuilds: true

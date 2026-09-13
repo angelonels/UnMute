@@ -11,13 +11,23 @@
     "dev:frontend": "pnpm --filter @unmute/frontend dev",
     "dev:backend": "pnpm --filter @unmute/backend dev",
     "build": "pnpm --filter @unmute/backend build && pnpm --filter @unmute/frontend build",
-    "typecheck": "pnpm -r --if-present typecheck",
-    "test": "pnpm -r --if-present test",
-    "lint": "pnpm -r --if-present lint",
+    "typecheck": "pnpm --filter @unmute/backend typecheck && pnpm --filter @unmute/frontend typecheck",
+    "test": "pnpm --filter @unmute/backend test && pnpm --filter @unmute/frontend test",
+    "lint": "eslint . --max-warnings=0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "generate": "pnpm --filter @unmute/backend openapi && pnpm --filter @unmute/frontend generate",
-    "doctor": "pnpm --filter @unmute/frontend run doctor"
+    "generated:check": "node scripts/check-generated.mjs",
+    "theme:build": "pnpm --filter @unmute/frontend theme:build",
+    "doctor": "pnpm --filter @unmute/frontend run doctor",
+    "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm generated:check && pnpm build"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": ["esbuild", "workerd"]
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.10.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "typescript-eslint": "^8.70.0"
   }
 }
