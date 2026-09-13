@@ -8,6 +8,8 @@ catalog:
   vitest: 5.0.0
 
 onlyBuiltDependencies:
+  - '@astryxdesign/cli'
+  - '@astryxdesign/core'
   - esbuild
   - workerd
 
