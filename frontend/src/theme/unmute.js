@@ -6,6 +6,7 @@
  * Core: @astryxdesign/core@0.6.0
  */
 
+import { unmuteIcons } from './unmute-icons';
 /**
  * unmute theme — built by `pnpm exec astryx theme build`
  * Import the CSS file alongside this module:
@@ -71,14 +72,14 @@ export const unmuteTheme = {
     "--text-display-3-size": "var(--font-size-3xl)",
     "--text-display-3-weight": "var(--font-weight-normal)",
     "--text-display-3-leading": "1.3793",
-    "--duration-fast-min": "120ms",
-    "--duration-fast": "160ms",
-    "--duration-fast-max": "215ms",
-    "--duration-medium-min": "210ms",
-    "--duration-medium": "280ms",
-    "--duration-medium-max": "375ms",
-    "--duration-slow-min": "375ms",
-    "--duration-slow": "500ms",
+    "--duration-fast-min": "110ms",
+    "--duration-fast": "150ms",
+    "--duration-fast-max": "210ms",
+    "--duration-medium-min": "175ms",
+    "--duration-medium": "240ms",
+    "--duration-medium-max": "335ms",
+    "--duration-slow-min": "345ms",
+    "--duration-slow": "480ms",
     "--duration-slow-max": "665ms",
     "--font-family-body": "\"IBM Plex Sans\", ui-sans-serif, system-ui, sans-serif",
     "--font-family-heading": "\"IBM Plex Sans\", ui-sans-serif, system-ui, sans-serif",
@@ -97,41 +98,41 @@ export const unmuteTheme = {
     "--color-syntax-property": "light-dark(#005348, #90d7c8)",
     "--color-syntax-punctuation": "light-dark(#6a6a6a, #9e9e9e)",
     "--color-syntax-background": "light-dark(#ffffff, #111111)",
-    "--color-background-surface": "light-dark(#FAFAFC, #0E0E11)",
-    "--color-background-body": "light-dark(#ECECEE, #070708)",
-    "--color-background-card": "light-dark(#FFFFFF, #121216)",
-    "--color-background-popover": "light-dark(#FFFFFF, #1A1A1F)",
-    "--color-background-muted": "light-dark(#F4F4F5, #0A0A0C)",
-    "--color-accent": "light-dark(#885300, #FABC33)",
-    "--color-accent-muted": "light-dark(color-mix(in srgb, var(--color-accent) 20%, transparent), color-mix(in srgb, var(--color-accent) 25%, transparent))",
-    "--color-neutral": "light-dark(#1E1B181A, #E6E2DD33)",
-    "--color-overlay": "light-dark(rgba(24, 24, 27, 0.45), rgba(7, 7, 8, 0.72))",
-    "--color-overlay-hover": "light-dark(#1E1B180D, #FFFFFF0D)",
-    "--color-overlay-pressed": "light-dark(#1E1B181A, #FFFFFF1A)",
-    "--color-text-primary": "light-dark(#18181B, #F4F4F5)",
-    "--color-text-secondary": "light-dark(#52525B, #A1A1AA)",
-    "--color-text-disabled": "light-dark(#A1A1AA, #71717A)",
-    "--color-text-accent": "var(--color-accent)",
+    "--color-background-surface": "light-dark(#FAFBFD, #0C111A)",
+    "--color-background-body": "light-dark(#F0F3F7, #070A10)",
+    "--color-background-card": "light-dark(#FFFFFF, #111824)",
+    "--color-background-popover": "light-dark(#FFFFFF, #182131)",
+    "--color-background-muted": "light-dark(#E8EDF3, #0A0F18)",
+    "--color-accent": "light-dark(#A8D83A, #C7F14B)",
+    "--color-accent-muted": "light-dark(rgba(168, 216, 58, 0.2), rgba(199, 241, 75, 0.18))",
+    "--color-neutral": "light-dark(#1B1C181A, #E2E3DD33)",
+    "--color-overlay": "light-dark(rgba(17, 23, 34, 0.48), rgba(3, 6, 12, 0.78))",
+    "--color-overlay-hover": "light-dark(#1B1C180D, #FFFFFF0D)",
+    "--color-overlay-pressed": "light-dark(#1B1C181A, #FFFFFF1A)",
+    "--color-text-primary": "light-dark(#111722, #F5F7FA)",
+    "--color-text-secondary": "light-dark(#536174, #A9B4C4)",
+    "--color-text-disabled": "light-dark(#7A8795, #788493)",
+    "--color-text-accent": "light-dark(#557100, #D5FF5F)",
     "--color-on-dark": "#ffffff",
     "--color-on-light": "#111111",
-    "--color-on-accent": "light-dark(#FFF8E8, #1A1304)",
-    "--color-on-success": "light-dark(#ffffff, #111111)",
-    "--color-on-error": "light-dark(#ffffff, #111111)",
-    "--color-on-warning": "#111111",
-    "--color-icon-accent": "var(--color-accent)",
-    "--color-icon-primary": "light-dark(#1E1B18, #E6E2DD)",
-    "--color-icon-secondary": "light-dark(#4D463E, #B1AAA0)",
-    "--color-icon-disabled": "light-dark(#988F86, #645D55)",
-    "--color-success": "light-dark(#00490b, #a4d6a3)",
-    "--color-error": "light-dark(#76000c, #ffc4be)",
-    "--color-warning": "light-dark(#4b3900, #f8d36a)",
-    "--color-success-muted": "light-dark(#bce0bb, #90ca903D)",
-    "--color-error-muted": "light-dark(#ffc4be, #ff98903D)",
-    "--color-warning-muted": "light-dark(#fae19e, #e2b6233D)",
-    "--color-border": "light-dark(rgba(24, 24, 27, 0.12), rgba(255, 255, 255, 0.12))",
-    "--color-border-emphasized": "light-dark(#D4D4D8, #3F3F46)",
-    "--color-skeleton": "light-dark(#B2AAA1, #4C463E)",
-    "--color-shadow": "light-dark(rgba(24, 24, 27, 0.12), rgba(0, 0, 0, 0.45))",
+    "--color-on-accent": "light-dark(#172200, #172200)",
+    "--color-on-success": "light-dark(#FFFFFF, #082219)",
+    "--color-on-error": "light-dark(#FFFFFF, #300B0C)",
+    "--color-on-warning": "light-dark(#FFFFFF, #2B1805)",
+    "--color-icon-accent": "light-dark(#638500, #C7F14B)",
+    "--color-icon-primary": "light-dark(#1B1C18, #E2E3DD)",
+    "--color-icon-secondary": "light-dark(#46483E, #AAACA1)",
+    "--color-icon-disabled": "light-dark(#8F9287, #5E5F55)",
+    "--color-success": "light-dark(#087A42, #63E6A5)",
+    "--color-error": "light-dark(#B4233D, #FF7088)",
+    "--color-warning": "light-dark(#855A00, #FFD166)",
+    "--color-success-muted": "light-dark(rgba(8, 122, 66, 0.14), rgba(99, 230, 165, 0.16))",
+    "--color-error-muted": "light-dark(rgba(180, 35, 61, 0.13), rgba(255, 112, 136, 0.16))",
+    "--color-warning-muted": "light-dark(rgba(133, 90, 0, 0.14), rgba(255, 209, 102, 0.16))",
+    "--color-border": "light-dark(rgba(17, 23, 34, 0.12), rgba(218, 230, 248, 0.13))",
+    "--color-border-emphasized": "light-dark(#C8D1DE, #354258)",
+    "--color-skeleton": "light-dark(#AAACA1, #46483E)",
+    "--color-shadow": "light-dark(rgba(31, 42, 60, 0.16), rgba(0, 0, 0, 0.52))",
     "--color-tint-hover": "light-dark(black, white)",
     "--color-background-red": "light-dark(#ffc4be, #5b2b28)",
     "--color-border-red": "light-dark(#ffaea7, #fa6762)",
@@ -174,33 +175,33 @@ export const unmuteTheme = {
     "--color-icon-gray": "light-dark(#474747, #9e9e9e)",
     "--color-text-gray": "light-dark(#1b1b1b, #d4d4d4)",
     "--radius-none": "0px",
-    "--radius-inner": "8px",
-    "--radius-element": "12px",
-    "--radius-container": "16px",
-    "--radius-page": "22px",
+    "--radius-inner": "6px",
+    "--radius-element": "10px",
+    "--radius-container": "18px",
+    "--radius-page": "24px",
     "--radius-full": "9999px",
-    "--shadow-low": "light-dark(0 1px 2px rgba(24, 24, 27, 0.12), 0 1px 2px rgba(0, 0, 0, 0.28))",
-    "--shadow-med": "light-dark(0 8px 24px rgba(24, 24, 27, 0.16), 0 8px 24px rgba(0, 0, 0, 0.34))",
-    "--shadow-high": "light-dark(0 18px 40px rgba(24, 24, 27, 0.2), 0 18px 40px rgba(0, 0, 0, 0.42))",
+    "--shadow-low": "light-dark(0 1px 2px rgba(31, 42, 60, 0.08), 0 6px 16px rgba(31, 42, 60, 0.05), 0 1px 2px rgba(0, 0, 0, 0.38), 0 8px 18px rgba(0, 0, 0, 0.22))",
+    "--shadow-med": "light-dark(0 2px 5px rgba(31, 42, 60, 0.08), 0 14px 34px rgba(31, 42, 60, 0.12), 0 2px 5px rgba(0, 0, 0, 0.38), 0 16px 38px rgba(0, 0, 0, 0.34))",
+    "--shadow-high": "light-dark(0 4px 10px rgba(31, 42, 60, 0.1), 0 28px 64px rgba(31, 42, 60, 0.18), 0 4px 10px rgba(0, 0, 0, 0.46), 0 30px 72px rgba(0, 0, 0, 0.5))",
     "--shadow-inset-hover": "inset 0px 0px 0px 2px #0074e24D",
     "--shadow-inset-selected": "inset 0px 0px 0px 2px #0074e280",
     "--shadow-inset-success": "inset 0px 0px 0px 2px #2f7d334D",
     "--shadow-inset-warning": "inset 0px 0px 0px 2px #f8d36a4D",
     "--shadow-inset-error": "inset 0px 0px 0px 2px #de47454D",
-    "--color-background-inverted": "light-dark(#1E1B18, #FFFCF6)",
-    "--color-track": "light-dark(#B2AAA1, #4C463E)",
-    "--radius-chat": "22px",
-    "--ease-standard": "cubic-bezier(0.25, 0.1, 0.25, 1)",
-    "--size-element-sm": "32px",
-    "--size-element-md": "40px",
+    "--color-background-inverted": "light-dark(#1B1C18, #FCFDF7)",
+    "--color-track": "light-dark(#AAACA1, #46483E)",
+    "--radius-chat": "20px",
+    "--ease-standard": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "--size-element-sm": "34px",
+    "--size-element-md": "42px",
     "--size-element-lg": "48px"
   },
   localTokens: {
-    "--astryx-theme-neutral-color-status-fill-accent": "light-dark(#0074e2, #6d9cfe)",
-    "--astryx-theme-neutral-color-status-fill-success": "light-dark(#198100, #64af4c)",
-    "--astryx-theme-neutral-color-status-fill-warning": "#ffce2f",
-    "--astryx-theme-neutral-color-status-fill-error": "light-dark(#c9303a, #ff705d)",
-    "--astryx-theme-neutral-color-status-muted-accent": "light-dark(#b9d7ff, #88bcff3D)",
+    "--astryx-theme-neutral-color-status-fill-accent": "light-dark(#A8D83A, #C7F14B)",
+    "--astryx-theme-neutral-color-status-fill-success": "light-dark(#087A42, #63E6A5)",
+    "--astryx-theme-neutral-color-status-fill-warning": "light-dark(#855A00, #FFD166)",
+    "--astryx-theme-neutral-color-status-fill-error": "light-dark(#B4233D, #FF7088)",
+    "--astryx-theme-neutral-color-status-muted-accent": "light-dark(rgba(168, 216, 58, 0.2), rgba(199, 241, 75, 0.18))",
     "--astryx-theme-neutral-color-on-tint-neutral": "light-dark(#fafafa4D, #0a0a0a4D)",
     "--astryx-theme-neutral-color-on-tint-overlay-hover": "light-dark(#fafafa1A, #0a0a0a1A)",
     "--astryx-theme-neutral-color-on-tint-overlay-pressed": "light-dark(#fafafa33, #0a0a0a33)",
@@ -327,7 +328,7 @@ export const unmuteTheme = {
         "borderRadius": "var(--radius-element)",
         "transition": "transform var(--duration-fast) var(--ease-standard), opacity var(--duration-fast) var(--ease-standard)",
         ":active": {
-          "transform": "scale(0.97)"
+          "transform": "scale(0.975)"
         }
       }
     },
@@ -508,6 +509,42 @@ export const unmuteTheme = {
       "base": {
         "padding": "var(--spacing-3)"
       }
+    },
+    "clickable-card": {
+      "base": {
+        "borderRadius": "var(--radius-container)",
+        "transition": "transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard)",
+        ":active": {
+          "transform": "scale(0.985)"
+        }
+      }
+    },
+    "selectable-card": {
+      "base": {
+        "borderRadius": "var(--radius-container)",
+        "transition": "transform var(--duration-fast) var(--ease-standard), box-shadow var(--duration-fast) var(--ease-standard)",
+        ":active": {
+          "transform": "scale(0.985)"
+        }
+      }
+    },
+    "popover": {
+      "base": {
+        "borderRadius": "var(--radius-container)",
+        "boxShadow": "var(--shadow-med)"
+      }
+    },
+    "dialog": {
+      "base": {
+        "borderRadius": "var(--radius-page)",
+        "boxShadow": "var(--shadow-high)"
+      }
+    },
+    "tooltip": {
+      "base": {
+        "borderRadius": "var(--radius-inner)",
+        "boxShadow": "var(--shadow-low)"
+      }
     }
   },
   __onDark: {
@@ -516,7 +553,7 @@ export const unmuteTheme = {
       "--color-text-primary": "var(--color-on-dark)",
       "--color-icon-primary": "var(--color-on-dark)",
       "--color-accent": "var(--color-on-dark)",
-      "--color-on-accent": "#1A1304"
+      "--color-on-accent": "#172200"
     },
     "components": {
       "button": {
@@ -543,7 +580,35 @@ export const unmuteTheme = {
       "xl": 1280,
       "2xl": 1536
     },
-    "rules": []
+    "rules": [
+      {
+        "when": {
+          "pointer": "coarse"
+        },
+        "value": {
+          "tokens": {
+            "--size-element-sm": "38px",
+            "--size-element-md": "44px",
+            "--size-element-lg": "50px"
+          }
+        }
+      },
+      {
+        "when": {
+          "motion": "reduce"
+        },
+        "value": {
+          "tokens": {
+            "--duration-fast-min": "0ms",
+            "--duration-fast": "0ms",
+            "--duration-fast-max": "0ms",
+            "--duration-medium-min": "0ms",
+            "--duration-medium": "0ms",
+            "--duration-medium-max": "0ms"
+          }
+        }
+      }
+    ]
   },
   __axes: {
     "typography": {
@@ -567,23 +632,25 @@ export const unmuteTheme = {
     },
     "color": {
       "accent": [
-        "#C4850A",
-        "#F0B429"
+        "#A8D83A",
+        "#C7F14B"
       ],
       "neutralStyle": "neutral",
       "contrast": "standard"
     },
     "radius": {
-      "base": 6,
+      "base": 5,
       "multiplier": 1
     },
     "motion": {
-      "fast": 160,
-      "medium": 280,
-      "slow": 500,
-      "ratio": 0.75,
-      "easing": "cubic-bezier(0.25, 0.1, 0.25, 1)"
+      "fast": 150,
+      "medium": 240,
+      "slow": 480,
+      "ratio": 0.72,
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)"
     }
   },
-
+  icons: unmuteIcons,
 };
+
+export { unmuteIcons };

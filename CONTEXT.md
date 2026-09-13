@@ -6,10 +6,11 @@ This file is product context, not implementation authority. Folder shape, stack,
 
 ## Locked UI
 
-Foundations (from `/_prototype/foundations`):
+Foundations (the earlier `/_prototype/foundations` comparison board is superseded):
 
-- Hue amber, tone dim, density comfortable, roundness softer, elevation shadow, type IBM Plex
-- Dark-first. Light sheet is kept, not the default.
+- Volt accent over cool midnight ink, comfortable density, nested soft geometry, layered elevation, IBM Plex
+- Dark-first for live media. The light studio sheet is fully supported.
+- The live foundation reference is `/_prototype/design-system`; stable usage rules live in `frontend/src/theme/FOUNDATIONS.md`.
 
 In-call stage (from `/_prototype/call-shell`):
 

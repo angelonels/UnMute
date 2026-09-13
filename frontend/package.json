@@ -22,6 +22,7 @@
     "@tanstack/react-query": "^5.102.8",
     "@tanstack/react-router": "^1.170.35",
     "@unmute/shared": "workspace:*",
+    "lucide-react": "1.45.0",
     "motion": "^13.2.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",

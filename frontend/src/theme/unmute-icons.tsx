@@ -1,0 +1,72 @@
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CalendarDays,
+  Check,
+  CheckCheck,
+  ChevronDown,
+  ChevronFirst,
+  ChevronLast,
+  ChevronLeft,
+  ChevronRight,
+  CircleCheck,
+  CircleX,
+  Clock3,
+  Columns3,
+  Copy,
+  Ellipsis,
+  ExternalLink,
+  EyeOff,
+  Funnel,
+  Info,
+  Menu,
+  Mic,
+  Search,
+  Settings2,
+  Square,
+  TriangleAlert,
+  X,
+} from 'lucide-react';
+import React from 'react';
+
+const iconProps = {
+  'aria-hidden': true,
+  absoluteStrokeWidth: true,
+  strokeWidth: 1.8,
+} as const;
+
+/**
+ * Theme-scoped semantic icons keep Astryx internals and product UI on the same
+ * visual language. Product-only glyphs can still use Lucide components directly.
+ */
+export const unmuteIcons = {
+  close: <X {...iconProps} />,
+  chevronDown: <ChevronDown {...iconProps} />,
+  chevronLeft: <ChevronLeft {...iconProps} />,
+  chevronRight: <ChevronRight {...iconProps} />,
+  chevronsLeft: <ChevronFirst {...iconProps} />,
+  chevronsRight: <ChevronLast {...iconProps} />,
+  check: <Check {...iconProps} />,
+  success: <CircleCheck {...iconProps} />,
+  error: <CircleX {...iconProps} />,
+  warning: <TriangleAlert {...iconProps} />,
+  info: <Info {...iconProps} />,
+  calendar: <CalendarDays {...iconProps} />,
+  clock: <Clock3 {...iconProps} />,
+  externalLink: <ExternalLink {...iconProps} />,
+  menu: <Menu {...iconProps} />,
+  moreHorizontal: <Ellipsis {...iconProps} />,
+  search: <Search {...iconProps} />,
+  arrowUp: <ArrowUp {...iconProps} />,
+  arrowDown: <ArrowDown {...iconProps} />,
+  arrowsUpDown: <ArrowUpDown {...iconProps} />,
+  funnel: <Funnel {...iconProps} />,
+  eyeSlash: <EyeOff {...iconProps} />,
+  viewColumns: <Columns3 {...iconProps} />,
+  copy: <Copy {...iconProps} />,
+  checkDouble: <CheckCheck {...iconProps} />,
+  wrench: <Settings2 {...iconProps} />,
+  stop: <Square {...iconProps} />,
+  microphone: <Mic {...iconProps} />,
+};

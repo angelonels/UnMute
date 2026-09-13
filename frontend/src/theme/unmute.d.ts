@@ -8,4 +8,6 @@
 
 /// <reference path="./unmute.variants.d.ts" />
 import type { DefinedTheme } from '@astryxdesign/core/theme';
+import type { IconRegistry } from '@astryxdesign/core/Icon';
+export declare const unmuteIcons: IconRegistry;
 export declare const unmuteTheme: DefinedTheme;

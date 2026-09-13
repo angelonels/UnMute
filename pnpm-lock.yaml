@@ -71,6 +71,9 @@ importers:
       '@unmute/shared':
         specifier: workspace:*
         version: link:../packages/shared
+      lucide-react:
+        specifier: 1.45.0
+        version: 1.45.0(react@19.3.0)
       motion:
         specifier: ^13.2.0
         version: 13.2.0(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
