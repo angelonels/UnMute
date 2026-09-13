@@ -142,4 +142,28 @@ export default tseslint.config(
       ],
     },
   },
+  {
+    files: ['frontend/src/{app,features,routes}/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['*.css', '**/*.css'],
+              message:
+                'Use Astryx first, then token-backed Tailwind. Plain CSS belongs in global/theme infrastructure.',
+            },
+          ],
+        },
+      ],
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "JSXAttribute[name.name='style']",
+          message: 'Use Astryx props or token-backed Tailwind utilities instead of inline styles.',
+        },
+      ],
+    },
+  },
 );
