@@ -4,7 +4,7 @@ Astryx owns accessible primitives and interaction states; `unmute-theme.ts` owns
 
 ## Character
 
-- Dark-first live-media canvas; light mode is a fully supported studio sheet.
+- Dark is the shipped application mode. The theme retains a compatible light palette for future non-media surfaces; validate light mode when the product exposes it.
 - Volt is the only brand accent: primary action, selection, focus, and AI assistance. Status colors keep semantic meaning.
 - Cool midnight surfaces progress body → surface → card → popover. Prefer spacing, sections, and dividers before elevation.
 - IBM Plex Sans is UI copy; Plex Mono is timestamps, transcripts, AI cues, and technical metadata.
@@ -22,6 +22,6 @@ Astryx owns accessible primitives and interaction states; `unmute-theme.ts` owns
 - One primary action per region. Use semantic tokens and matching on-colors; never hardcode the Volt value.
 - Normal Lucide icons are the default. Use animated icons only when animation communicates a state transition; keep sizing/color token-driven.
 - Press feedback is subtle. Fast motion serves frequent feedback; medium motion serves panels/dialogs. Never delay an action for animation.
-- `MediaTheme mode="dark"` protects video chrome contrast. Validate wide/narrow, dark/light, keyboard, coarse pointer, and reduced motion in real feature screens.
+- `MediaTheme mode="dark"` protects video chrome contrast. Validate wide/narrow, every exposed color mode, keyboard, coarse pointer, and reduced motion in real feature screens.
 
 Before new UI, run `pnpm exec astryx build "<screen>"`, read `pnpm exec astryx docs layout`, then inspect each chosen primitive with `pnpm exec astryx component <Name>`.
