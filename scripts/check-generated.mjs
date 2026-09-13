@@ -8,6 +8,7 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const targets = [
   'backend/openapi',
   'frontend/src/api/generated',
+  'frontend/src/routeTree.gen.ts',
   'frontend/src/theme/unmute.css',
   'frontend/src/theme/unmute.js',
   'frontend/src/theme/unmute.d.ts',
@@ -38,6 +39,10 @@ function snapshot() {
 const before = snapshot();
 execFileSync('pnpm', ['generate'], { cwd: root, stdio: 'inherit' });
 execFileSync('pnpm', ['theme:build'], { cwd: root, stdio: 'inherit' });
+execFileSync('pnpm', ['--filter', '@unmute/frontend', 'exec', 'vite', 'build'], {
+  cwd: root,
+  stdio: 'inherit',
+});
 const after = snapshot();
 
 const paths = new Set([...before.keys(), ...after.keys()]);

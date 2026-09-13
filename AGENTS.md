@@ -23,15 +23,16 @@ frontend/src/routes/              thin route composition
 frontend/src/theme/               Astryx theme source and generated artifacts
 ```
 
-Dependency flow: routes → feature public APIs → generated API client; HTTP handlers → use cases → policies/repositories. Features never depend on routes. HTTP handlers never access persistence directly. Promote code only after two owners need the same stable abstraction.
+Dependency flow: routes → feature public APIs → generated API client. Business operations flow from HTTP handlers → use cases → policies/repositories. Transport-only endpoints may respond directly. Features never depend on routes; handlers never access persistence or server-vendor integrations directly. Promote code only after two owners need the same stable abstraction.
 
 ## Ownership
 
-- Hono routes validate/map HTTP and call use cases. Use cases own business orchestration; policies own authorization; repositories own storage.
+- Hono handlers own validation, authentication context, and HTTP mapping. They delegate business operations to use cases but may answer transport-only requests directly. Use cases own business orchestration; policies own authorization; repositories own storage.
 - Hono + Zod OpenAPI is the transport source. Regenerate OpenAPI and Orval after contract changes; do not duplicate inferred types or wrap generated clients without behavior.
 - TanStack Router owns URL state, Query owns server state, React owns local state. Add Zustand only for genuine shared client state; never mirror Query data.
 - Astryx owns standard UI semantics and states. Tailwind composes token-backed custom visuals. Add Motion, animated icons, Sonner, charts, or shader effects only when a shipped interaction needs them; normal Lucide is the default icon set.
 - Better Auth and Drizzle are preferred when auth/persistence are introduced, but are not installed requirements.
+- Keep third-party SDKs at explicit integration boundaries. Features depend on application-facing interfaces, not vendor IDs, configuration, payloads, or types. Server SDKs remain backend-only; browser media SDKs stay behind a frontend media adapter. Create the boundary only when its first vendor arrives.
 - Use semantic HTML and native behavior; preserve keyboard access, focus, reduced motion, responsive states, and performance on media-heavy surfaces.
 
 ## Reliability and delivery

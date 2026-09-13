@@ -1,4 +1,5 @@
 import js from '@eslint/js';
+import boundaries from '@boundaries/eslint-plugin';
 import reactHooks from 'eslint-plugin-react-hooks';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
@@ -37,15 +38,95 @@ export default tseslint.config(
     files: ['frontend/src/**/*.{ts,tsx}'],
   },
   {
-    files: ['frontend/src/routes/**/*.{ts,tsx}'],
+    files: ['{frontend,backend}/src/**/*.{ts,tsx}'],
+    plugins: { boundaries },
+    settings: {
+      'import/resolver': {
+        node: { extensions: ['.js', '.jsx', '.mjs', '.ts', '.tsx'] },
+      },
+      'boundaries/root-path': process.cwd(),
+      'boundaries/dependency-nodes': ['import', 'dynamic-import', 'export'],
+      'boundaries/elements': [
+        {
+          type: 'backend-api',
+          pattern: 'backend/src/features/*/api',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        {
+          type: 'backend-repository',
+          pattern: 'backend/src/features/*/repositories',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        {
+          type: 'backend-db',
+          pattern: 'backend/src/features/*/db',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        {
+          type: 'backend-use-case',
+          pattern: 'backend/src/features/*/use-cases',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        {
+          type: 'backend-policy',
+          pattern: 'backend/src/features/*/policies',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        {
+          type: 'backend-feature',
+          pattern: 'backend/src/features/*',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        { type: 'backend-core', pattern: 'backend/src/core', partialMatch: false },
+        {
+          type: 'frontend-feature',
+          pattern: 'frontend/src/features/*',
+          capture: ['feature'],
+          partialMatch: false,
+        },
+        { type: 'frontend-route', pattern: 'frontend/src/routes', partialMatch: false },
+        { type: 'frontend-app', pattern: 'frontend/src/app', partialMatch: false },
+        { type: 'frontend-api', pattern: 'frontend/src/api', partialMatch: false },
+        { type: 'frontend-theme', pattern: 'frontend/src/theme', partialMatch: false },
+      ],
+    },
     rules: {
-      'no-restricted-imports': [
+      'boundaries/dependencies': [
         'error',
         {
-          patterns: [
+          default: 'allow',
+          policies: [
             {
-              group: ['@/features/*/*', '../features/*/*', '../../features/*/*'],
-              message: 'Routes import a feature through its public index.',
+              disallow: {
+                to: {
+                  element: { type: 'frontend-feature', fileInternalPath: '!index.ts' },
+                },
+              },
+              message: 'Import features through their public index.',
+            },
+            {
+              from: { element: { type: 'frontend-route' } },
+              disallow: { to: { element: { type: 'frontend-api' } } },
+              message: 'Routes compose features; they do not call the API directly.',
+            },
+            {
+              from: { element: { type: 'frontend-feature' } },
+              disallow: { to: { element: { type: 'frontend-route' } } },
+              message: 'Features cannot depend on routes.',
+            },
+            {
+              from: { element: { type: 'backend-api' } },
+              disallow: [
+                { to: { element: { type: 'backend-repository' } } },
+                { to: { element: { type: 'backend-db' } } },
+              ],
+              message: 'HTTP adapters cannot access persistence directly.',
             },
           ],
         },
@@ -53,47 +134,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['frontend/src/features/**/*.{ts,tsx}'],
+    files: ['frontend/src/{app,features,routes,theme}/**/*.{ts,tsx}'],
     rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: [
-                '@/features/*/*',
-                '../../*/components/*',
-                '../../*/hooks/*',
-                '../../*/store/*',
-              ],
-              message: 'Cross-feature imports go through the owning feature index.',
-            },
-            {
-              group: ['@/routes/*', '../../routes/*'],
-              message: 'Features cannot depend on routes.',
-            },
-          ],
-        },
-      ],
       'no-restricted-globals': [
         'error',
         { name: 'fetch', message: 'Use the generated API client for product requests.' },
-      ],
-    },
-  },
-  {
-    files: ['backend/src/features/**/api/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['../../repositories/*', '../repositories/*', '../../db/*', '../db/*'],
-              message: 'HTTP adapters call use cases; they do not access persistence directly.',
-            },
-          ],
-        },
       ],
     },
   },

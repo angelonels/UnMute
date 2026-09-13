@@ -10,7 +10,7 @@ Project-specific guidance for AI coding agents.
 - Prefer URL → Query → React → Zustand for state ownership. Effects synchronize external systems, not derived render state.
 - Use semantic HTML where semantics exist, Astryx layout primitives for composition, and a neutral wrapper only when neither applies. This refines the generated “no div” shorthand below.
 - Every async screen handles loading, empty, recoverable error/retry, partial, success, and unavailable/permission states that apply.
-- Validate UI in a real feature at narrow/wide widths, light/dark modes, keyboard-only navigation, and reduced motion. Do not ship permanent prototype or design-gallery routes.
+- Validate UI in a real feature at narrow/wide widths, every product-exposed color mode, keyboard-only navigation, and reduced motion. Do not ship permanent prototype or design-gallery routes.
 
 <!-- ASTRYX:START -->
 
