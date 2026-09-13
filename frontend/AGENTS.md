@@ -9,6 +9,7 @@ Project-specific guidance for AI coding agents.
 - Product requests use the generated client under `api/generated/`; only `api/client.ts` performs raw `fetch` and maps transport failures.
 - Prefer URL → Query → React → Zustand for state ownership. Effects synchronize external systems, not derived render state.
 - Use semantic HTML where semantics exist, Astryx layout primitives for composition, and a neutral wrapper only when neither applies. This refines the generated “no div” shorthand below.
+- Feature styling: use Astryx components and props first, then token-backed Tailwind utilities; values come from theme tokens. Reserve plain CSS for resets, global/theme infrastructure, and generated output. Do not add feature/component stylesheets, CSS modules, CSS-in-JS, or inline styles unless a concrete requirement cannot be expressed through Astryx or Tailwind; document any narrow lint exception beside the configuration.
 - Every async screen handles loading, empty, recoverable error/retry, partial, success, and unavailable/permission states that apply.
 - Validate UI in a real feature at narrow/wide widths, every product-exposed color mode, keyboard-only navigation, and reduced motion. Do not ship permanent prototype or design-gallery routes.
 
