@@ -1,5 +1,19 @@
 # AGENTS.md
 
+## Agent skills
+
+### Issue tracker
+
+Issues, specifications, and Wayfinder maps are tracked in GitHub Issues. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the standard `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix` labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+UnMute uses a single product-domain context rooted at `CONTEXT.md`. See `docs/agents/domain.md`.
+
 ## Rules
 
 - Precedence: task > deepest `AGENTS.md` > parent. `CONTEXT.md` is product context, never implementation authority.
