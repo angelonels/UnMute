@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Meeting Record playback — throwaway behavior prototype</title>
+  </head>
+  <body>
+    <main>
+      <h1>Meeting Record playback</h1>
+      <p>
+        Throwaway behavior prototype. Does one shared Meeting timeline, with independent video and
+        audio selection, behave as you expect when a citation jumps, a track is missing, or access
+        disappears?
+      </p>
+      <p>
+        This demo uses invented participants and transcript lines. It has no recordings, streaming
+        connection, AI, or access enforcement. Each button changes the proposed playback state for
+        review. It is not production UI.
+      </p>
+
+      <section aria-labelledby="state-heading">
+        <h2 id="state-heading">Current playback state</h2>
+        <p id="notice" role="status" aria-live="polite"></p>
+        <dl id="state"></dl>
+        <h3>Participant tracks at this moment</h3>
+        <ul id="tracks"></ul>
+      </section>
+
+      <section aria-labelledby="controls-heading">
+        <h2 id="controls-heading">Try the controls</h2>
+        <fieldset id="playback">
+          <legend>One timeline for the whole Meeting</legend>
+          <button type="button" id="play">Play</button>
+          <button type="button" id="pause">Pause</button>
+          <button type="button" id="advance">Advance 15 seconds</button>
+          <p>
+            <label for="time">Meeting moment (seconds)</label>
+            <input id="time" type="range" min="0" max="600" value="0" />
+            <output id="time-label" for="time">00:00</output>
+          </p>
+          <fieldset>
+            <legend>Whose video is visible?</legend>
+            <label><input type="checkbox" data-video="Ana" checked />Ana</label>
+            <label><input type="checkbox" data-video="Bo" checked />Bo</label>
+            <label><input type="checkbox" data-video="Chen" checked />Chen</label>
+          </fieldset>
+          <fieldset>
+            <legend>Whose recorded audio is heard?</legend>
+            <label><input type="checkbox" data-audio="Ana" checked />Ana</label>
+            <label><input type="checkbox" data-audio="Bo" checked />Bo</label>
+            <label><input type="checkbox" data-audio="Chen" checked />Chen</label>
+          </fieldset>
+        </fieldset>
+        <p>
+          Selection never changes anyone's position on the timeline. Empty video selection means
+          audio-only playback; empty audio selection means silent playback. There are no download
+          controls.
+        </p>
+        <fieldset id="citations">
+          <legend>Invented transcript and AI-note citations</legend>
+          <button type="button" data-citation="60">
+            Ana · 01:00 — “Let's launch a small pilot.”
+          </button>
+          <button type="button" data-citation="180">
+            Bo · 03:00 — “I can prepare the invitation.”
+          </button>
+          <button type="button" data-citation="330">
+            Chen · 05:30 — “We should review the pilot on Friday.”
+          </button>
+        </fieldset>
+        <p>
+          A citation seeks every track together, preserves your selections and play/pause choice,
+          and identifies the cited speaker. A hidden or muted speaker stays hidden or muted until
+          you change your selection.
+        </p>
+      </section>
+
+      <section aria-labelledby="scenarios-heading">
+        <h2 id="scenarios-heading">Guided walkthroughs</h2>
+        <p>
+          Pick a walkthrough to reset the demo, then press its steps in order. The controls above
+          also work freely. Media gaps contribute silence or an unavailable tile; buffering of a
+          selected, available track stalls the shared timeline until it can resume.
+        </p>
+        <nav aria-label="Walkthroughs" id="scenarios"></nav>
+        <h3 id="scenario-title"></h3>
+        <p id="scenario-description"></p>
+        <ol id="steps"></ol>
+        <button type="button" id="reset">Reset to everyone at 00:00</button>
+      </section>
+    </main>
+    <script>
+      const names = ['Ana', 'Bo', 'Chen'];
+      const initial = () => ({
+        time: 0,
+        playing: false,
+        video: [...names],
+        audio: [...names],
+        access: 'allowed',
+        media: 'ready',
+        stalled: false,
+        cited: null,
+        notice: 'Everyone is selected. Playback is paused at the start.',
+      });
+      const stamp = (time) =>
+        `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`;
+      const presence = (name, time) => {
+        if (name === 'Chen' && time < 120) return 'has not joined yet';
+        if (name === 'Bo' && time >= 240 && time < 300) return 'disconnected; returns at 05:00';
+        return 'present';
+      };
+      const track = (state, name, kind) => {
+        const absent = presence(name, state.time);
+        if (absent !== 'present') return absent;
+        if (state.media === 'processing') return 'still processing';
+        if (state.media === 'failed') return 'recording unavailable';
+        if (kind === 'video' && name === 'Chen' && state.time < 210)
+          return 'camera off; audio may still be available';
+        if (state.media === 'gap' && name === 'Ana' && state.time >= 180 && state.time < 225)
+          return 'recording gap from 03:00 to 03:45';
+        return 'available';
+      };
+      function reduce(state, action) {
+        if (action.type === 'reset') return initial();
+        if (action.type === 'access') {
+          return {
+            ...state,
+            access: action.value,
+            playing: false,
+            stalled: false,
+            cited: null,
+            notice:
+              action.value === 'deleted'
+                ? 'The Organizer deleted this Meeting Record. Nothing can be opened.'
+                : 'Access was revoked. Stop playback and clear the visible record.',
+          };
+        }
+        if (state.access !== 'allowed') return state;
+        if (action.type === 'play')
+          return { ...state, playing: state.time < 600, notice: 'Playback requested.' };
+        if (action.type === 'pause')
+          return { ...state, playing: false, notice: 'Playback paused.' };
+        if (action.type === 'seek') {
+          return {
+            ...state,
+            time: action.time,
+            playing: state.playing && action.time < 600,
+            cited: action.speaker ?? null,
+            notice: action.speaker
+              ? `Citation: ${action.speaker} at ${stamp(action.time)}. Your audio and video selections stay as they were.`
+              : `Every track seeks to ${stamp(action.time)}.`,
+          };
+        }
+        if (action.type === 'advance') {
+          if (
+            !state.playing ||
+            state.stalled ||
+            state.media === 'processing' ||
+            state.media === 'failed'
+          )
+            return { ...state, notice: 'The shared timeline cannot advance in its current state.' };
+          const time = Math.min(600, state.time + 15);
+          return {
+            ...state,
+            time,
+            playing: time < 600,
+            notice:
+              time === 600
+                ? 'The Meeting recording has ended.'
+                : 'Every selected track advanced together.',
+          };
+        }
+        if (action.type === 'select') {
+          const selected = state[action.kind].includes(action.name);
+          return {
+            ...state,
+            [action.kind]: selected
+              ? state[action.kind].filter((name) => name !== action.name)
+              : [...state[action.kind], action.name],
+            notice: `${action.name}'s ${action.kind} is now ${selected ? 'unselected' : 'selected'}. The Meeting moment stays the same.`,
+          };
+        }
+        if (action.type === 'media')
+          return {
+            ...state,
+            media: action.value,
+            notice: `Recording state: ${action.value}. Transcript and AI notes can still be read.`,
+          };
+        if (action.type === 'stall')
+          return {
+            ...state,
+            stalled: action.value,
+            notice: action.value
+              ? 'A selected, available track is buffering. All playback waits at this moment.'
+              : 'The track is ready. Playback can continue from the same moment.',
+          };
+        return state;
+      }
+
+      const scenarios = [
+        {
+          title: 'Choose and cite',
+          description:
+            "Watch Ana's video, hear Bo, then follow a citation to Chen without silently changing your selections.",
+          steps: [
+            ["Hide Bo's video", { type: 'select', kind: 'video', name: 'Bo' }],
+            ["Hide Chen's video", { type: 'select', kind: 'video', name: 'Chen' }],
+            ["Mute Ana's recording", { type: 'select', kind: 'audio', name: 'Ana' }],
+            ["Mute Chen's recording", { type: 'select', kind: 'audio', name: 'Chen' }],
+            ['Play', { type: 'play' }],
+            ["Follow Chen's citation at 05:30", { type: 'seek', time: 330, speaker: 'Chen' }],
+            ["Include Chen's recorded audio", { type: 'select', kind: 'audio', name: 'Chen' }],
+          ],
+        },
+        {
+          title: 'Arrivals and gaps',
+          description:
+            'Chen joins at 02:00 with the camera off. Bo disconnects from 04:00 to 05:00. Ana has a recording gap from 03:00 to 03:45. None of these shifts the timeline.',
+          steps: [
+            ['Go to 01:00, before Chen joins', { type: 'seek', time: 60 }],
+            ["Go to 02:30, with Chen's camera off", { type: 'seek', time: 150 }],
+            ['Reveal a recording gap', { type: 'media', value: 'gap' }],
+            ["Go to 03:15, inside Ana's gap", { type: 'seek', time: 195 }],
+            ['Go to 04:15, while Bo is disconnected', { type: 'seek', time: 255 }],
+            ['Go to 05:15, after Bo returns', { type: 'seek', time: 315 }],
+          ],
+        },
+        {
+          title: 'Processing and buffering',
+          description:
+            'Media can be pending or unavailable while the transcript is readable. A transient streaming stall waits instead of letting selected tracks drift apart.',
+          steps: [
+            ['Media is still processing', { type: 'media', value: 'processing' }],
+            ["Read Bo's citation at 03:00", { type: 'seek', time: 180, speaker: 'Bo' }],
+            ['Media becomes ready', { type: 'media', value: 'ready' }],
+            ['Play', { type: 'play' }],
+            ['A selected track starts buffering', { type: 'stall', value: true }],
+            ['Try advancing: the moment stays put', { type: 'advance' }],
+            ['Buffering clears', { type: 'stall', value: false }],
+            ['Advance everyone by 15 seconds', { type: 'advance' }],
+            ['Recording becomes unavailable; text remains', { type: 'media', value: 'failed' }],
+          ],
+        },
+        {
+          title: 'Access revoked',
+          description:
+            'The Organizer removes access while this person is watching. The proposal stops playback and clears media, transcript, and AI notes immediately.',
+          steps: [
+            ['Play', { type: 'play' }],
+            ['Advance 15 seconds', { type: 'advance' }],
+            ['Organizer revokes access', { type: 'access', value: 'revoked' }],
+          ],
+        },
+        {
+          title: 'Record deleted',
+          description:
+            'Deleting the Meeting Record prevents everyone from opening its contents, including a viewer who already has it open.',
+          steps: [
+            ['Play', { type: 'play' }],
+            ['Organizer deletes the Meeting Record', { type: 'access', value: 'deleted' }],
+          ],
+        },
+      ];
+      let state = initial();
+      let scenarioIndex = 0;
+      let nextStep = 0;
+      const node = (id) => document.getElementById(id);
+      function addField(label, value) {
+        const term = document.createElement('dt');
+        term.textContent = label;
+        const detail = document.createElement('dd');
+        detail.textContent = value;
+        node('state').append(term, detail);
+      }
+      function render() {
+        const allowed = state.access === 'allowed';
+        node('notice').textContent = state.notice;
+        node('playback').disabled = !allowed;
+        node('citations').disabled = !allowed;
+        node('citations').hidden = !allowed;
+        node('state').replaceChildren();
+        addField('Record access', state.access);
+        node('tracks').replaceChildren();
+        if (allowed) {
+          addField('Shared Meeting moment', stamp(state.time));
+          addField(
+            'Playback',
+            !state.playing
+              ? 'Paused'
+              : state.stalled || ['processing', 'failed'].includes(state.media)
+                ? 'Waiting for media'
+                : 'Playing',
+          );
+          addField('Video selection', state.video.join(', ') || 'None — audio only');
+          addField('Audio selection', state.audio.join(', ') || 'None — silent playback');
+          addField('Recordings', state.media);
+          addField('Transcript', 'Available; follows the shared Meeting moment');
+          addField('AI notes', 'Available, marked as AI-made; claims link to speaker and moment');
+          addField('Cited speaker', state.cited ?? 'None');
+          for (const name of names) {
+            const item = document.createElement('li');
+            item.textContent = `${name}: video ${state.video.includes(name) ? track(state, name, 'video') : 'hidden'}; audio ${state.audio.includes(name) ? track(state, name, 'audio') : 'muted'}.`;
+            node('tracks').append(item);
+          }
+        } else {
+          addField('Visible contents', 'Cleared — no media, transcript, or AI notes');
+        }
+        node('time').value = state.time;
+        node('time-label').textContent = allowed ? stamp(state.time) : 'Unavailable';
+        for (const kind of ['audio', 'video'])
+          document.querySelectorAll(`[data-${kind}]`).forEach((input) => {
+            input.checked = state[kind].includes(input.dataset[kind]);
+          });
+        node('play').disabled = !allowed || state.time === 600;
+        node('advance').disabled =
+          !allowed ||
+          !state.playing ||
+          state.stalled ||
+          ['processing', 'failed'].includes(state.media);
+      }
+      function dispatch(action) {
+        state = reduce(state, action);
+        render();
+      }
+      function showScenario(index) {
+        scenarioIndex = index;
+        nextStep = 0;
+        dispatch({ type: 'reset' });
+        const scenario = scenarios[index];
+        node('scenario-title').textContent = scenario.title;
+        node('scenario-description').textContent = scenario.description;
+        node('steps').replaceChildren();
+        scenario.steps.forEach(([label, action], step) => {
+          const item = document.createElement('li');
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = label;
+          button.disabled = step !== nextStep;
+          button.addEventListener('click', () => {
+            dispatch(action);
+            nextStep += 1;
+            node('steps')
+              .querySelectorAll('button')
+              .forEach((control, position) => {
+                control.disabled = position !== nextStep;
+              });
+            node('steps').querySelectorAll('button')[nextStep]?.focus();
+          });
+          item.append(button);
+          node('steps').append(item);
+        });
+        node('scenarios')
+          .querySelectorAll('button')
+          .forEach((button, position) => {
+            button.setAttribute('aria-pressed', String(position === scenarioIndex));
+          });
+      }
+      scenarios.forEach((scenario, index) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = scenario.title;
+        button.addEventListener('click', () => showScenario(index));
+        node('scenarios').append(button);
+      });
+      for (const type of ['play', 'pause', 'advance'])
+        node(type).addEventListener('click', () => dispatch({ type }));
+      node('time').addEventListener('input', (event) =>
+        dispatch({ type: 'seek', time: Number(event.target.value) }),
+      );
+      for (const kind of ['audio', 'video'])
+        document
+          .querySelectorAll(`[data-${kind}]`)
+          .forEach((input) =>
+            input.addEventListener('change', () =>
+              dispatch({ type: 'select', kind, name: input.dataset[kind] }),
+            ),
+          );
+      document.querySelectorAll('[data-citation]').forEach((button, index) =>
+        button.addEventListener('click', () =>
+          dispatch({
+            type: 'seek',
+            time: Number(button.dataset.citation),
+            speaker: names[index],
+          }),
+        ),
+      );
+      node('reset').addEventListener('click', () => showScenario(scenarioIndex));
+      showScenario(0);
+    </script>
+  </body>
+</html>
