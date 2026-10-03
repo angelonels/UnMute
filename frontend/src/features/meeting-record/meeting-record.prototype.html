@@ -51,6 +51,12 @@
             <label><input type="checkbox" data-audio="Bo" checked />Bo</label>
             <label><input type="checkbox" data-audio="Chen" checked />Chen</label>
           </fieldset>
+          <p>
+            <label for="enlarge">Video layout</label>
+            <select id="enlarge">
+              <option value="">Grid of selected participants</option>
+            </select>
+          </p>
         </fieldset>
         <p>
           Selection never changes anyone's position on the timeline. Empty video selection means
@@ -97,6 +103,7 @@
         playing: false,
         video: [...names],
         audio: [...names],
+        enlarged: null,
         access: 'allowed',
         media: 'ready',
         stalled: false,
@@ -178,9 +185,21 @@
             [action.kind]: selected
               ? state[action.kind].filter((name) => name !== action.name)
               : [...state[action.kind], action.name],
+            enlarged:
+              action.kind === 'video' && selected && state.enlarged === action.name
+                ? null
+                : state.enlarged,
             notice: `${action.name}'s ${action.kind} is now ${selected ? 'unselected' : 'selected'}. The Meeting moment stays the same.`,
           };
         }
+        if (action.type === 'enlarge')
+          return {
+            ...state,
+            enlarged: action.name,
+            notice: action.name
+              ? `${action.name}'s video is enlarged. Audio selection and the Meeting moment stay the same.`
+              : 'Returned to the grid. Audio selection and the Meeting moment stay the same.',
+          };
         if (action.type === 'media')
           return {
             ...state,
@@ -204,6 +223,7 @@
           description:
             "Watch Ana's video, hear Bo, then follow a citation to Chen without silently changing your selections.",
           steps: [
+            ["Enlarge Ana's video", { type: 'enlarge', name: 'Ana' }],
             ["Hide Bo's video", { type: 'select', kind: 'video', name: 'Bo' }],
             ["Hide Chen's video", { type: 'select', kind: 'video', name: 'Chen' }],
             ["Mute Ana's recording", { type: 'select', kind: 'audio', name: 'Ana' }],
@@ -294,6 +314,13 @@
           );
           addField('Video selection', state.video.join(', ') || 'None — audio only');
           addField('Audio selection', state.audio.join(', ') || 'None — silent playback');
+          addField(
+            'Video layout',
+            state.enlarged
+              ? `${state.enlarged} enlarged; other selected videos remain available`
+              : 'Grid of selected participants',
+          );
+          addField('Buffering', state.stalled ? 'A selected track is buffering' : 'None');
           addField('Recordings', state.media);
           addField('Transcript', 'Available; follows the shared Meeting moment');
           addField('AI notes', 'Available, marked as AI-made; claims link to speaker and moment');
@@ -307,6 +334,17 @@
           addField('Visible contents', 'Cleared — no media, transcript, or AI notes');
         }
         node('time').value = state.time;
+        node('enlarge').replaceChildren();
+        for (const [value, label] of [
+          ['', 'Grid of selected participants'],
+          ...state.video.map((name) => [name, `Enlarge ${name}`]),
+        ]) {
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          node('enlarge').append(option);
+        }
+        node('enlarge').value = state.enlarged ?? '';
         node('time-label').textContent = allowed ? stamp(state.time) : 'Unavailable';
         for (const kind of ['audio', 'video'])
           document.querySelectorAll(`[data-${kind}]`).forEach((input) => {
@@ -367,6 +405,9 @@
         node(type).addEventListener('click', () => dispatch({ type }));
       node('time').addEventListener('input', (event) =>
         dispatch({ type: 'seek', time: Number(event.target.value) }),
+      );
+      node('enlarge').addEventListener('change', (event) =>
+        dispatch({ type: 'enlarge', name: event.target.value || null }),
       );
       for (const kind of ['audio', 'video'])
         document
