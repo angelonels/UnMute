@@ -18,7 +18,6 @@
     "format:check": "prettier --check .",
     "generate": "pnpm --filter @unmute/backend openapi && pnpm --filter @unmute/frontend generate",
     "generated:check": "node scripts/check-generated.mjs",
-    "theme:build": "pnpm --filter @unmute/frontend theme:build",
     "doctor": "pnpm --filter @unmute/frontend run doctor",
     "verify": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm generated:check && pnpm build"
   },

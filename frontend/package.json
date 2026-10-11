@@ -11,24 +11,16 @@
     "test": "vitest run",
     "test:e2e": "playwright test",
     "generate": "orval --config orval.config.ts",
-    "doctor": "react-doctor src",
-    "astryx": "node node_modules/@astryxdesign/cli/clients/cli/bin/astryx.mjs",
-    "theme:build": "pnpm exec astryx theme build src/theme/unmute-theme.ts"
+    "doctor": "react-doctor src"
   },
   "dependencies": {
-    "@astryxdesign/core": "^0.6.0",
-    "@astryxdesign/theme-neutral": "^0.6.0",
-    "@stylexjs/stylex": "^0.19.0",
     "@tanstack/react-query": "^5.102.8",
     "@tanstack/react-router": "^1.170.35",
-    "lucide-react": "1.45.0",
     "react": "^19.3.0",
     "react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "@astryxdesign/cli": "^0.6.0",
     "@playwright/test": "^1.63.0",
-    "@tailwindcss/vite": "^4.3.3",
     "@tanstack/router-plugin": "^1.168.37",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
@@ -39,7 +31,6 @@
     "jsdom": "^29.1.1",
     "orval": "^8.32.0",
     "react-doctor": "^0.9.14",
-    "tailwindcss": "^4.3.3",
     "typescript": "catalog:",
     "vite": "^8.3.0",
     "vitest": "catalog:"

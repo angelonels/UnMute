@@ -1,13 +1,8 @@
 # UnMute
 
-A video platform smart enough to take the heat, take the notes, and let you take the credit.
+## Setup
 
-## Workspace
-
-- `frontend` — React, Vite, Astryx, TanStack Router/Query
-- `backend` — Cloudflare Workers, Hono, Zod OpenAPI
-
-Requires Node 22+ and pnpm 10.22+.
+Requires Node.js 22.18+ and pnpm 10.22+.
 
 ```sh
 pnpm install
@@ -15,12 +10,23 @@ pnpm generate
 pnpm dev
 ```
 
-App: `http://localhost:5173` · health: `http://localhost:8787/api/health` · OpenAPI: `http://localhost:8787/api/openapi.json`. Local frontend requests use Vite's `/api` proxy.
+- Frontend: `http://localhost:5173`
+- API health: `http://localhost:8787/api/health`
+- OpenAPI: `http://localhost:8787/api/openapi.json`
 
-| Command                                   | Purpose                                                          |
-| ----------------------------------------- | ---------------------------------------------------------------- |
-| `pnpm verify`                             | Format, lint, types, tests, generated drift, theme drift, builds |
-| `pnpm generate`                           | Export OpenAPI and regenerate Orval                              |
-| `pnpm theme:build`                        | Regenerate Astryx theme artifacts                                |
-| `pnpm doctor`                             | React Doctor                                                     |
-| `pnpm --filter @unmute/frontend test:e2e` | Playwright journeys                                              |
+Local frontend requests use Vite's `/api` proxy to the backend.
+
+## Commands
+
+| Command                                   | Purpose                                                               |
+| ----------------------------------------- | --------------------------------------------------------------------- |
+| `pnpm dev`                                | Start frontend and backend                                            |
+| `pnpm dev:frontend`                       | Start the frontend                                                    |
+| `pnpm dev:backend`                        | Start the backend                                                     |
+| `pnpm verify`                             | Check formatting, lint, types, tests, generated artifacts, and builds |
+| `pnpm build`                              | Build frontend and backend; backend build is a deployment dry run     |
+| `pnpm test`                               | Run unit and component tests                                          |
+| `pnpm generate`                           | Export OpenAPI and regenerate the API client                          |
+| `pnpm run doctor`                         | Run React Doctor                                                      |
+| `pnpm --filter @unmute/frontend test:e2e` | Run Playwright journeys                                               |
+| `pnpm format`                             | Format the repository                                                 |

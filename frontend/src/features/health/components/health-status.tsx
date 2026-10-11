@@ -1,17 +1,15 @@
-import { Badge } from '@astryxdesign/core/Badge';
-import { Text } from '@astryxdesign/core/Text';
 import { useGetApiHealth } from '../../../api/generated/endpoints';
 
 export function HealthStatus() {
   const health = useGetApiHealth();
 
   if (health.isPending) {
-    return <Text type="supporting">Checking API…</Text>;
+    return <p role="status">Checking API…</p>;
   }
 
   if (health.isError) {
-    return <Badge variant="error" label="API unavailable" />;
+    return <p role="status">API unavailable</p>;
   }
 
-  return <Badge variant="success" label="API healthy" />;
+  return <p role="status">API healthy</p>;
 }
