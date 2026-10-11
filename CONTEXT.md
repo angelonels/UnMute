@@ -9,3 +9,5 @@ Keep this file highly selective. Add a note only when it materially affects futu
 - Before adding anything, check for an existing note; update or replace it rather than duplicating it.
 - Remove obsolete notes and consolidate overlapping ones as work changes. Keep the whole file under 60 lines; prune before appending if needed.
 - If nothing qualifies, leave this file unchanged. Retained notes inform future work; the current task takes precedence.
+
+- Effect v4 is the chosen application programming model. Retain Hono/OpenAPI and React Query as transport/UI boundaries; they can execute Effects through Promise adapters, so adopting Effect does not require replacing the working scaffold.
