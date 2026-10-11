@@ -1,13 +1,5 @@
-import { HealthStatus } from '../../health';
+import { AuthPage } from '../../auth';
 
-export function HomePage() {
-  return (
-    <main>
-      <h1>UnMute</h1>
-      <p>
-        A video platform smart enough to take the heat, take the notes, and let you take the credit.
-      </p>
-      <HealthStatus />
-    </main>
-  );
+export function HomePage({ authError = false }: { authError?: boolean }) {
+  return <AuthPage authError={authError} />;
 }

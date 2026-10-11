@@ -5,6 +5,7 @@ import { handleError, handleNotFound } from './core/error-handler';
 import { errorBody } from './core/errors';
 import { openApiInfo } from './core/openapi';
 import { requestContext } from './core/request-context';
+import { registerAuthRoutes } from './features/auth';
 import { registerHealthRoutes } from './features/health';
 
 export function createApp() {
@@ -24,6 +25,7 @@ export function createApp() {
     })(c, next),
   );
 
+  registerAuthRoutes(app);
   registerHealthRoutes(app);
 
   app.doc31('/api/openapi.json', openApiInfo);
