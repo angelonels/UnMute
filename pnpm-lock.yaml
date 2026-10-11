@@ -47,6 +47,9 @@ importers:
       '@hono/zod-openapi':
         specifier: ^1.6.3
         version: 1.6.3(hono@4.13.7)(zod@4.6.2)
+      effect:
+        specifier: 4.0.2
+        version: 4.0.2
       hono:
         specifier: ^4.13.7
         version: 4.13.7
@@ -78,6 +81,9 @@ importers:
       '@tanstack/react-router':
         specifier: ^1.170.35
         version: 1.170.35(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+      effect:
+        specifier: 4.0.2
+        version: 4.0.2
       react:
         specifier: ^19.3.0
         version: 19.3.0
@@ -114,7 +120,7 @@ importers:
         version: 29.1.1
       orval:
         specifier: ^8.32.0
-        version: 8.32.0(@tanstack/react-query@5.102.8(react@19.3.0))(prettier@3.9.6)(typescript@5.9.3)(zod@4.6.2)
+        version: 8.32.0(@tanstack/react-query@5.102.8(react@19.3.0))(effect@4.0.2)(prettier@3.9.6)(typescript@5.9.3)(zod@4.6.2)
       react-doctor:
         specifier: ^0.9.14
         version: 0.9.14(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(eslint@10.10.0(jiti@2.7.0))(react@19.3.0)
@@ -2112,6 +2118,9 @@ packages:
     resolution: {integrity: sha512-BTJ9aZYL3vCfZlZOBLy9v8TUqWGQ0pzFnygKwFZt5udj6viBoFIBviKPUoZLDCPn1FoXffv6McQFDenrm5Krfw==}
     engines: {node: '>=20'}
 
+  effect@4.0.2:
+    resolution: {integrity: sha512-YeYnLqSFrL4+tCOXRrfNP03w8FILoF/wDl+ukraJAGzXrjcS383W7LAAvGBbLatEyktmLxRq+9xJinx7QzXW5A==}
+
   electron-to-chromium@1.5.427:
     resolution: {integrity: sha512-n14zb3FdsChZ2BNobqNHAJMcP3ifFv4paox2LvCrfVAQcqGiSURgbJl+PfMpHVCNFkStnNc+RRVtPBTVW5PDgw==}
 
@@ -4032,10 +4041,12 @@ snapshots:
       - supports-color
       - typescript
 
-  '@orval/effect@8.32.0(typescript@5.9.3)':
+  '@orval/effect@8.32.0(effect@4.0.2)(typescript@5.9.3)':
     dependencies:
       '@orval/core': 8.32.0(typescript@5.9.3)
       remeda: 2.48.0
+    optionalDependencies:
+      effect: 4.0.2
     transitivePeerDependencies:
       - '@faker-js/faker'
       - supports-color
@@ -4959,6 +4970,8 @@ snapshots:
     dependencies:
       type-fest: 5.9.0
 
+  effect@4.0.2: {}
+
   electron-to-chromium@1.5.427: {}
 
   entities@4.5.0: {}
@@ -5535,13 +5548,13 @@ snapshots:
       type-check: 0.4.0
       word-wrap: 1.2.5
 
-  orval@8.32.0(@tanstack/react-query@5.102.8(react@19.3.0))(prettier@3.9.6)(typescript@5.9.3)(zod@4.6.2):
+  orval@8.32.0(@tanstack/react-query@5.102.8(react@19.3.0))(effect@4.0.2)(prettier@3.9.6)(typescript@5.9.3)(zod@4.6.2):
     dependencies:
       '@commander-js/extra-typings': 15.0.0(commander@15.0.0)
       '@orval/angular': 8.32.0(typescript@5.9.3)
       '@orval/axios': 8.32.0(typescript@5.9.3)
       '@orval/core': 8.32.0(typescript@5.9.3)
-      '@orval/effect': 8.32.0(typescript@5.9.3)
+      '@orval/effect': 8.32.0(effect@4.0.2)(typescript@5.9.3)
       '@orval/fetch': 8.32.0(typescript@5.9.3)
       '@orval/hono': 8.32.0(typescript@5.9.3)(zod@4.6.2)
       '@orval/mcp': 8.32.0(typescript@5.9.3)(zod@4.6.2)

@@ -26,8 +26,9 @@ Dependency flow: routes → feature public APIs → generated API client. Busine
 
 ## Ownership
 
+- Use Effect v4 for application workflows, service dependencies, typed failures, and resource lifetimes. Run effects at transport/UI boundaries; keep reusable application operations as Effects.
 - Hono handlers own validation, authentication context, and HTTP mapping. They delegate business operations to use cases but may answer transport-only requests directly. Use cases own business orchestration; policies own authorization; repositories own storage.
-- Hono + Zod OpenAPI is the transport source. Regenerate OpenAPI and Orval after contract changes; do not duplicate inferred types or wrap generated clients without behavior.
+- Hono + Zod OpenAPI is the HTTP transport source; keep Zod at that boundary and use Effect Schema for domain validation when needed. Regenerate OpenAPI and Orval after contract changes; do not duplicate inferred types or wrap generated clients without behavior.
 - TanStack Router owns URL state, Query owns server state, React owns local state. Add Zustand only for genuine shared client state; never mirror Query data.
 - Better Auth and Drizzle are preferred when auth/persistence are introduced, but are not installed requirements.
 - Keep third-party SDKs at explicit integration boundaries. Features depend on application-facing interfaces, not vendor IDs, configuration, payloads, or types. Server SDKs remain backend-only; browser media SDKs stay behind a frontend media adapter. Create the boundary only when its first vendor arrives.

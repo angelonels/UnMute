@@ -1,21 +1,10 @@
 import type { ErrorHandler, NotFoundHandler } from 'hono';
-import type { ContentfulStatusCode } from 'hono/utils/http-status';
 import type { AppEnv } from './env';
-import { AppError, errorBody } from './errors';
+import { errorBody } from './errors';
 import { log } from './logging';
 
 export const handleError: ErrorHandler<AppEnv> = (err, c) => {
   const requestId = c.get('requestId');
-
-  if (err instanceof AppError) {
-    log({
-      event: 'request_error',
-      requestId,
-      code: err.code,
-      status: err.status,
-    });
-    return c.json(errorBody(err.code, err.message), err.status as ContentfulStatusCode);
-  }
 
   log({
     event: 'unhandled_error',
