@@ -1,33 +1,11 @@
-# UnMute
+# Retained context
 
-UnMute is an AI-native conferencing product that reduces the attention and administration required before, during, and after purposeful online meetings.
+Keep this file highly selective. Add a note only when it materially affects future work and cannot reasonably be recovered from the code, tests, configuration, or existing documentation.
 
-## Language
-
-**Meeting**:
-A single scheduled or immediate conferencing occurrence with its own invitation link. A new occurrence is a new Meeting, even when the same people meet again.
-_Avoid_: Room, call
-
-**Live Session**:
-The active, real-time phase of a Meeting in which participants exchange audio and video.
-_Avoid_: Room
-
-**Meeting Record**:
-The durable result of a completed Meeting, including its participant recordings, voice transcript, and AI-derived material.
-_Avoid_: Recording
-
-**Organizer**:
-The signed-in person who creates a Meeting and controls its lifecycle and durable access policy.
-_Avoid_: Owner
-
-**Host**:
-A signed-in participant authorized to control a Live Session, including admitting or removing participants and managing recording.
-_Avoid_: Admin
-
-**Guest**:
-A person who joins a Live Session with a display name and no UnMute account. Attendance alone does not grant access to the Meeting Record.
-_Avoid_: Anonymous user
-
-**Meeting Knowledge**:
-The speaker-attributed voice transcript that the AI may treat as evidence of what occurred in a Meeting.
-_Avoid_: Meeting context
+- Record only important, settled decisions with their non-obvious reasons, or durable external facts and constraints that future agents need.
+- Record decisions only after they have actually been made; distinguish confirmed facts from uncertainty.
+- Use one concise bullet per item. Include a source or date only when needed to understand or recheck it.
+- Leave out code summaries, setup commands, task plans, progress logs, completed-work lists, speculative ideas, and repeated instructions.
+- Before adding anything, check for an existing note; update or replace it rather than duplicating it.
+- Remove obsolete notes and consolidate overlapping ones as work changes. Keep the whole file under 60 lines; prune before appending if needed.
+- If nothing qualifies, leave this file unchanged. Retained notes inform future work; the current task takes precedence.

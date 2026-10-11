@@ -12,7 +12,6 @@ const generated = [
   'backend/worker-configuration.d.ts',
   'frontend/src/api/generated/**',
   'frontend/src/routeTree.gen.ts',
-  'frontend/src/theme/unmute.{css,js,d.ts,variants.d.ts}',
 ];
 
 export default tseslint.config(
@@ -93,7 +92,6 @@ export default tseslint.config(
         { type: 'frontend-route', pattern: 'frontend/src/routes', partialMatch: false },
         { type: 'frontend-app', pattern: 'frontend/src/app', partialMatch: false },
         { type: 'frontend-api', pattern: 'frontend/src/api', partialMatch: false },
-        { type: 'frontend-theme', pattern: 'frontend/src/theme', partialMatch: false },
       ],
     },
     rules: {
@@ -134,35 +132,11 @@ export default tseslint.config(
     },
   },
   {
-    files: ['frontend/src/{app,features,routes,theme}/**/*.{ts,tsx}'],
+    files: ['frontend/src/{app,features,routes}/**/*.{ts,tsx}'],
     rules: {
       'no-restricted-globals': [
         'error',
         { name: 'fetch', message: 'Use the generated API client for product requests.' },
-      ],
-    },
-  },
-  {
-    files: ['frontend/src/{app,features,routes}/**/*.{ts,tsx}'],
-    rules: {
-      'no-restricted-imports': [
-        'error',
-        {
-          patterns: [
-            {
-              group: ['*.css', '**/*.css'],
-              message:
-                'Use Astryx first, then token-backed Tailwind. Plain CSS belongs in global/theme infrastructure.',
-            },
-          ],
-        },
-      ],
-      'no-restricted-syntax': [
-        'error',
-        {
-          selector: "JSXAttribute[name.name='style']",
-          message: 'Use Astryx props or token-backed Tailwind utilities instead of inline styles.',
-        },
       ],
     },
   },
