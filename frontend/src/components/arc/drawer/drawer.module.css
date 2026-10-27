@@ -179,8 +179,8 @@
 .close {
   display: grid;
   flex: 0 0 auto;
-  width: var(--space-8);
-  height: var(--space-8);
+  width: 2.75rem;
+  height: 2.75rem;
   margin-top: calc((var(--text-lg) * var(--leading-body) - var(--space-8)) / 2);
   place-items: center;
   border: 1px solid var(--border);
@@ -293,5 +293,11 @@
   }
   .close:active {
     transform: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  .overlay {
+    backdrop-filter: none;
   }
 }

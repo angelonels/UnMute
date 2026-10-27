@@ -26,17 +26,11 @@ export interface ButtonProps extends Omit<
   loading?: boolean;
 }
 
-/** Icon buttons press a little deeper, wide buttons a little less, so every size reads as the same push. */
+/** UnMute uses one fixed press depth across button sizes. */
 const pressVariants: Variants = {
-  pressed: (button: RefObject<HTMLButtonElement | null>) => {
-    const width = button.current?.offsetWidth ?? 0;
-    return {
-      scale: width > 220 ? 0.985 : width && width <= 48 ? 0.96 : 0.97,
-      transition: {
-        duration: motionTokens.duration.instant,
-        ease: [...motionTokens.ease.standard],
-      },
-    };
+  pressed: {
+    transform: 'scale(0.96)',
+    transition: { duration: 0.15, ease: [...motionTokens.ease.standard] },
   },
 };
 

@@ -29,6 +29,7 @@ type User = typeof authClient.$Infer.Session.user;
 export function WorkspacePage({ user }: { user: User }) {
   const [navigationOpen, setNavigationOpen] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const { busy, failed, signOut } = useAuthActions(false);
   return (
     <div className="flex min-h-svh flex-col p-3 sm:p-4">
@@ -115,7 +116,9 @@ export function WorkspacePage({ user }: { user: User }) {
             )}
           </div>
         </aside>
-        <main className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell">
+        <main
+          className={`relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell ${sidePanelOpen ? 'xl:mr-84' : ''}`}
+        >
           <div className="flex min-h-20 items-center justify-between gap-3 px-5 sm:px-8">
             <div className="flex items-center gap-2">
               <div className="lg:hidden">
@@ -163,7 +166,7 @@ export function WorkspacePage({ user }: { user: User }) {
               </div>
               <h1 className="text-sm font-medium">Overview</h1>
             </div>
-            <Drawer modal={false}>
+            <Drawer modal={false} open={sidePanelOpen} onOpenChange={setSidePanelOpen}>
               <DrawerTrigger asChild>
                 <button
                   type="button"
@@ -177,7 +180,7 @@ export function WorkspacePage({ user }: { user: User }) {
               <DrawerContent
                 title="Your side panel"
                 description="A little extra space, when you need it."
-                onOpenAutoFocus={(event) => event.preventDefault()}
+                className="xl:top-23! xl:right-4! xl:bottom-4! xl:w-80! xl:rounded-[1.75rem]!"
               >
                 <div className="flex min-h-80 flex-col items-center justify-center text-center">
                   <span className="grid size-14 place-items-center rounded-2xl bg-primary/8 text-primary">
@@ -191,9 +194,9 @@ export function WorkspacePage({ user }: { user: User }) {
               </DrawerContent>
             </Drawer>
           </div>
-          <div className="flex flex-1 flex-col items-center justify-center px-5 pt-12 pb-16 text-center sm:px-8 sm:pt-16 sm:pb-24">
+          <div className="flex flex-1 flex-col items-center justify-center px-5 pt-8 pb-10 text-center sm:px-8 sm:pt-16 sm:pb-24">
             <div
-              className="relative mb-9 grid size-28 place-items-center rounded-[2rem] bg-primary/7 text-primary shadow-[inset_0_1px_0_color-mix(in_oklab,var(--primary)_10%,transparent)]"
+              className="relative mb-7 grid size-24 sm:mb-9 sm:size-28 place-items-center rounded-[2rem] bg-primary/7 text-primary shadow-[inset_0_1px_0_color-mix(in_oklab,var(--primary)_10%,transparent)]"
               aria-hidden="true"
             >
               <AudioLines size={48} strokeWidth={1.5} />
@@ -202,7 +205,7 @@ export function WorkspacePage({ user }: { user: User }) {
               </span>
             </div>
             <p className="mb-3 text-sm text-muted">Your next good conversation</p>
-            <h2 className="max-w-2xl text-[clamp(2.5rem,4.5vw,4rem)] leading-[1.07] font-medium tracking-[-0.055em]">
+            <h2 className="max-w-2xl text-[clamp(2rem,4.5vw,4rem)] leading-[1.07] font-medium tracking-[-0.055em]">
               A little more presence.
               <br />
               <span className="text-muted">A lot more possibility.</span>
