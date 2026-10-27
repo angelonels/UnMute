@@ -232,7 +232,7 @@ export function WorkspacePage({ user }: { user: User }) {
           </div>
           <footer className="mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 py-5 text-xs text-muted sm:mx-8">
             <span className="inline-flex items-center gap-2">
-              <span className="size-1.5 rounded-full bg-accent" />
+              <span className="size-1.5 rounded-full bg-muted/50" />
               Made for being here.
             </span>
             <span>UnMute © {new Date().getFullYear()}</span>
@@ -288,7 +288,7 @@ function PreviewToggle({
       aria-label={label}
       aria-pressed={enabled}
       onClick={onClick}
-      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm ${enabled ? 'border-border bg-surface text-text' : 'border-primary/30 bg-primary/8 text-primary'}`}
+      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
     >
       {children}
     </button>
@@ -350,7 +350,10 @@ function MeetingPreview({ user }: { user: User }) {
             Camera {camera ? 'on' : 'off'}
           </PreviewToggle>
         </div>
-        <p role="status" className="mt-5 rounded-xl bg-primary/6 p-4 text-sm leading-6 text-muted">
+        <p
+          role="status"
+          className="mt-5 rounded-xl bg-surface-muted p-4 text-sm leading-6 text-muted"
+        >
           Preview only. Your devices are not active, and no meeting has started.
         </p>
         <Dialog.Close asChild>
