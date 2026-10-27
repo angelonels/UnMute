@@ -5,6 +5,7 @@ import { focusOrder, galleryGeometry, type Participant } from '../meeting-model'
 import { ParticipantTile } from './participant-tile';
 
 export function MeetingStage({
+  selfSpeaking,
   cameraStream,
   screenStream,
   people,
@@ -17,6 +18,7 @@ export function MeetingStage({
   onPin,
   onFocus,
 }: {
+  selfSpeaking: boolean;
   cameraStream: MediaStream | null;
   screenStream: MediaStream | null;
   people: Participant[];
@@ -61,7 +63,9 @@ export function MeetingStage({
     ...ordered.slice(currentPage * capacity, (currentPage + 1) * capacity),
   ];
   const columns = Math.min(geometry.columns, visible.length || 1);
-  const speaker = people.find((person) => person.id === speakerId && person.microphone);
+  const speaker = people.find(
+    (person) => person.id === speakerId && person.microphone && (!person.self || selfSpeaking),
+  );
   const tile = (person: Participant, compact = false) => (
     <ParticipantTile
       key={person.id}

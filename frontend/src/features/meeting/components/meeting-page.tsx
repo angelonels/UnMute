@@ -1,3 +1,7 @@
+import {
+  MessageCircleIcon,
+  type MessageCircleIconHandle,
+} from '../../../components/icons/message-circle';
 import SegmentedControl from '../../../components/arc/segmented-control/segmented-control';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { Link } from '@tanstack/react-router';
@@ -6,7 +10,6 @@ import {
   Captions,
   Hand,
   LockKeyhole,
-  MessageCircle,
   Mic,
   MicOff,
   MonitorUp,
@@ -19,7 +22,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { useLocalMedia } from '../../media';
+import { useLocalMedia, useMicrophoneLevel } from '../../media';
 import { Brand } from '../../../components/brand';
 import { ThemeToggle } from '../../../components/theme-toggle';
 import {
@@ -64,6 +67,8 @@ export function MeetingPage({
     initialCamera,
     import.meta.env.DEV && demo ? captureMode : 'native',
   );
+  const microphoneMeterRef = useRef<HTMLMeterElement>(null);
+  const microphoneLevel = useMicrophoneLevel(localMedia.streams.microphone, microphoneMeterRef);
   const [preferences, setPreferences] = useState(initialMedia);
   const media = {
     ...preferences,
@@ -89,6 +94,7 @@ export function MeetingPage({
   const [ended, setEnded] = useState(false);
   const [notice] = useState('');
   const aiTrigger = useRef<HTMLButtonElement>(null);
+  const chatIcon = useRef<MessageCircleIconHandle>(null);
   const chatTrigger = useRef<HTMLButtonElement>(null);
   const peopleTrigger = useRef<HTMLButtonElement>(null);
   const [rightOpener, setRightOpener] = useState<'chat' | 'people'>('chat');
@@ -244,6 +250,7 @@ export function MeetingPage({
                 : 'Disconnected'}
           </span>
           <DeviceSettings
+            error={localMedia.error}
             devices={localMedia.devices}
             streams={localMedia.streams}
             pending={localMedia.pending}
@@ -260,7 +267,7 @@ export function MeetingPage({
           aria-controls="meeting-ai"
           tone={showLeft ? 'primary' : 'neutral'}
           onClick={() => openPanel('left', !showLeft)}
-          icon={<Sparkles size={16} aria-hidden="true" />}
+          icon={<Sparkles size={18} strokeWidth={1.65} aria-hidden="true" />}
         >
           <span className="hidden min-[420px]:inline">UnMute AI</span>
         </MeetingControl>
@@ -283,7 +290,7 @@ export function MeetingPage({
               setRightTab('people');
               openPanel('right', true);
             }}
-            icon={<Users size={16} aria-hidden="true" />}
+            icon={<Users size={18} strokeWidth={1.65} aria-hidden="true" />}
           >
             <span className="tabular-nums">{people.length}</span>
           </MeetingControl>
@@ -294,11 +301,13 @@ export function MeetingPage({
             aria-controls="meeting-chat"
             tone={panels.right ? 'primary' : 'neutral'}
             onClick={() => {
+              if (!panels.right && !keyboard) chatIcon.current?.startAnimation();
+              else chatIcon.current?.stopAnimation();
               setRightOpener('chat');
               setRightTab('chat');
               openPanel('right', !panels.right);
             }}
-            icon={<MessageCircle size={16} aria-hidden="true" />}
+            icon={<MessageCircleIcon ref={chatIcon} size={18} aria-hidden="true" />}
           >
             <span className="hidden min-[420px]:inline">Chat</span>
           </MeetingControl>
@@ -346,6 +355,7 @@ export function MeetingPage({
         </MeetingPanel>
         <main className="flex min-h-0 min-w-0 flex-1 flex-col">
           <MeetingStage
+            selfSpeaking={microphoneLevel.speaking}
             cameraStream={localMedia.streams.camera}
             screenStream={localMedia.streams.screen}
             people={people}
@@ -482,7 +492,7 @@ export function MeetingPage({
               </>
             ))}
         </div>
-        <div className="mx-auto mt-2 flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-transparent bg-surface p-1 shadow-shell sm:gap-3 sm:p-2 sm:px-3">
+        <div className="mx-auto mt-2 flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
           <MeetingControl
             aria-label={`Microphone ${media.microphone ? 'on' : 'off'}`}
             aria-pressed={media.microphone}
@@ -493,13 +503,26 @@ export function MeetingPage({
             onClick={() => toggle('microphone')}
             icon={
               media.microphone ? (
-                <Mic size={19} aria-hidden="true" />
+                <Mic size={20} strokeWidth={1.65} aria-hidden="true" />
               ) : (
-                <MicOff size={19} aria-hidden="true" />
+                <MicOff size={20} strokeWidth={1.65} aria-hidden="true" />
               )
             }
           >
             <span className="hidden md:inline">Mic {media.microphone ? 'on' : 'off'}</span>
+            {media.microphone && (
+              <meter
+                aria-label={
+                  microphoneLevel.unavailable
+                    ? 'Microphone captured, input meter unavailable'
+                    : 'Microphone input level'
+                }
+                min={0}
+                max={0.15}
+                ref={microphoneMeterRef}
+                className="hidden h-2 w-8 accent-success sm:block"
+              />
+            )}
           </MeetingControl>
           <MeetingControl
             aria-label={`Camera ${media.camera ? 'on' : 'off'}`}
@@ -511,9 +534,9 @@ export function MeetingPage({
             onClick={() => toggle('camera')}
             icon={
               media.camera ? (
-                <Video size={19} aria-hidden="true" />
+                <Video size={20} strokeWidth={1.65} aria-hidden="true" />
               ) : (
-                <VideoOff size={19} aria-hidden="true" />
+                <VideoOff size={20} strokeWidth={1.65} aria-hidden="true" />
               )
             }
           >
@@ -528,7 +551,7 @@ export function MeetingPage({
             disabled={localMedia.pending.screen}
             aria-busy={localMedia.pending.screen}
             onClick={() => toggle('sharing')}
-            icon={<MonitorUp size={19} aria-hidden="true" />}
+            icon={<MonitorUp size={20} strokeWidth={1.65} aria-hidden="true" />}
           >
             <span className="hidden lg:inline">{media.sharing ? 'Sharing' : 'Share'}</span>
           </MeetingControl>
@@ -538,7 +561,7 @@ export function MeetingPage({
             title={media.hand ? 'Lower hand' : 'Raise hand'}
             tone={media.hand ? 'warning' : 'neutral'}
             onClick={() => toggle('hand')}
-            icon={<Hand size={19} aria-hidden="true" />}
+            icon={<Hand size={20} strokeWidth={1.65} aria-hidden="true" />}
           />
           <MeetingControl
             aria-label={media.captions ? 'Hide captions' : 'Show captions'}
@@ -546,7 +569,7 @@ export function MeetingPage({
             title="Captions"
             tone={media.captions ? 'primary' : 'neutral'}
             onClick={() => toggle('captions')}
-            icon={<Captions size={19} aria-hidden="true" />}
+            icon={<Captions size={20} strokeWidth={1.65} aria-hidden="true" />}
           />
           <button
             type="button"
@@ -558,7 +581,7 @@ export function MeetingPage({
             }}
             className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-2.5 text-xs font-medium text-white dark:text-canvas"
           >
-            <PhoneOff size={19} aria-hidden="true" />
+            <PhoneOff size={20} strokeWidth={1.65} aria-hidden="true" />
             <span className="hidden sm:inline">Leave</span>
           </button>
         </div>

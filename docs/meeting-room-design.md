@@ -1,6 +1,6 @@
 # Meeting room: frontend interaction design
 
-This pass implements local interface behavior. It does not capture devices, connect peers, transmit chat, transcribe speech, or call a model. The normal meeting preview contains only the signed-in user. Development fixtures are available only behind Vite's development flag and the explicit `demo=true` search parameter.
+This pass implements local interface behavior and real browser camera, microphone, and display capture. It does not connect peers, transmit chat, transcribe speech, or call a model. The normal meeting preview contains only the signed-in user. Development fixtures are available only behind Vite's development flag and the explicit `demo=true` search parameter.
 
 ## Information hierarchy
 
@@ -42,7 +42,7 @@ An amber decorative dot beside general footer copy can be mistaken for a warning
 - The composer accepts Enter to send and Shift+Enter for a line break, respects IME composition, rejects empty input, bounds message length, and preserves draft when unavailable. No file controls are shown before attachments work.
 - AI has a distinct private scope, suggestion prompts, a local conversation, and clear sample-answer labels in demo mode. It never implies that a model listened to the meeting. Normal preview prompts receive an explicit unavailable response.
 - Chat logs have polite additions announcements. Auto-scroll follows new messages only when the reader is near the bottom; otherwise a jump-to-latest action appears. Local histories are bounded to avoid an unbounded DOM.
-- Captions use labelled fixture text in the development demo and an unavailable state in a normal preview. Hand, mic, camera, and share controls change local preferences only.
+- Captions use labelled fixture text in the development demo and an unavailable state in a normal preview. Hand is local state. Mic, camera, and share controls operate real browser tracks. Captions remain an explicitly labelled sample or unavailable state until transcription is connected.
 - Leaving produces an ended view with explicit rejoin and workspace actions. Rejoin begins a fresh local room state; no destructive global “end for everyone” control exists without real authorization.
 
 ## Motion contract
@@ -53,10 +53,26 @@ Mic, camera, captions, tabs, speech highlights, chat input, paging, and particip
 
 ## Development playground
 
-The dev-only entry is `/meeting?demo=true`. Fixtures contain no real account or conversation data. Controls expose 1/2/6/12/24/48-person rooms, explicit speaker selection, connection states, and reset. Sharing, pinning, panels, chat, and captions are exercised through the real interface controls. The playground and seed conversations must disappear from production bundles. There is also an entry link on the development login and workspace pages.
+The dev-only entry is `/meeting?demo=true`. Fixtures contain no real account or conversation data. Controls expose 1/2/6/12/24/48-person rooms, explicit speaker selection, connection states, and reset. Capture defaults to real browser devices, even in the playground. Explicit synthetic devices and permission-denial modes permit repeatable visual checks without physical capture. Synthetic mode can simulate the browser ending a share. All fixtures and test-device code are excluded from production bundles. Sharing, pinning, panels, chat, and captions are exercised through the real interface controls. The playground and seed conversations must disappear from production bundles. There is also an entry link on the development login and workspace pages.
 
 ## Failure cases and verification
 
-Before implementation, the key failure cases are: off states shown as brand selection; missing keyboard labels/focus return; page overflow at 320px; a dock hidden by a sheet or text wrapping; an empty page after shrinking the room; a pinned person dropping out on paging; one person duplicated on stage and filmstrip; sharing displaced by a pin; panels squeezing all tiles to thumbnails; drafts lost on panel close; whitespace/IME accidentally sent; messages interpreted as HTML; sample AI answers confused with live inference; reconnecting/disconnected shown as healthy; device permissions requested by a frontend demo; demo fixtures bundled in production; and animation ignoring reduced motion.
+Before implementation, the key failure cases are: off states shown as brand selection; missing keyboard labels/focus return; page overflow at 320px; a dock hidden by a sheet or text wrapping; an empty page after shrinking the room; a pinned person dropping out on paging; one person duplicated on stage and filmstrip; sharing displaced by a pin; panels squeezing all tiles to thumbnails; drafts lost on panel close; whitespace/IME accidentally sent; messages interpreted as HTML; sample AI answers confused with live inference; reconnecting/disconnected shown as healthy; permission denial, unavailable/busy inputs, late permission responses after leaving, browser-ended sharing, failed input replacement, and leaked device tracks; demo fixtures bundled in production; and animation ignoring reduced motion.
 
 Use browser E2E flows to inspect one, two, six, and many participants; pin/unpin across pages; focus/gallery/share; both panels; local AI/chat; network states; leave/rejoin; themes; narrow/short/wide screens; keyboard Escape/focus; and reduced motion. Save screenshots and a repeatable inspection record. Run `pnpm verify`, React Doctor, and the applicable Playwright checks; report unrun checks explicitly.
+
+## Local media contract
+
+`features/media` owns browser capture, typed Effect failures, stream lifetimes, and muted video playback. Workspace preview and meeting room consume its public API. The returned native streams can later feed a media transport without coupling the current UI to a vendor SDK.
+
+Camera and microphone are separate streams, so stopping one never disables the other. Input replacement acquires the new stream before releasing the old one. Generation counters dispose of late or superseded permission results. Leaving, route unmount, source changes, and the browser's own screen-sharing stop action release tracks. Local video never plays captured audio through the speakers. A permission prompt can remain pending, while leaving still cancels ownership and disposes of any eventual result.
+
+Device settings enumerate inputs and refresh after permission and device changes. Camera is mirrored locally; a shared screen preserves orientation and uses contain sizing. A blocked playback promise exposes an explicit play action. Microphone activity is measured locally through an analyser disconnected from audio output; the input meter updates independently of React rendering. The speaking indicator uses a threshold and a 400ms hold, rather than treating every enabled microphone as speech.
+
+Panels start closed to preserve stage space. They keep drafts and histories in the room owner. Responsive gallery capacity uses the measured stage and stable participant IDs; future membership and speaker events can replace development fixtures directly.
+
+## Arc review
+
+Arc Button, Drawer, Chat Thread, and Segmented Control use public free registry source, with the source links and adaptations recorded in the vendored README. No Pro source was reconstructed. The Arc skill and checklist were reviewed after the skill was supplied. Arc MCP tools were not exposed to this tool session; the public registry was used as the documented fallback.
+
+The user's Tailwind requirement takes precedence over Arc's CSS-module installation convention. The existing shared theme adapter supplies semantic tokens and keyboard focus. Identity colours are named theme tokens. Compact meeting gutters and density take precedence over generic dashboard spacing so media keeps the available space. Native media controls and Radix panel mechanics remain purpose-built for the room's responsive, persistent-draft behavior. Existing brand artwork and the login composition retain the established brand language.

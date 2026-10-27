@@ -6,11 +6,11 @@ type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
   tone?: 'neutral' | 'off' | 'success' | 'warning' | 'primary';
 };
 const tones = {
-  neutral: 'border-border/70 bg-surface text-text hover:bg-surface-muted',
+  neutral: 'border-transparent bg-transparent text-muted hover:bg-surface-muted hover:text-text',
   off: 'border-error/25 bg-error/10 text-error hover:bg-error/15',
   success: 'border-success/25 bg-success/10 text-success hover:bg-success/15',
   warning: 'border-warning/25 bg-warning/10 text-warning hover:bg-warning/15',
-  primary: 'border-primary/25 bg-primary/10 text-primary hover:bg-primary/15',
+  primary: 'border-transparent bg-primary/10 text-primary hover:bg-primary/15',
 };
 export const MeetingControl = forwardRef<HTMLButtonElement, Props>(function MeetingControl(
   { icon, children, tone = 'neutral', className = '', ...props },

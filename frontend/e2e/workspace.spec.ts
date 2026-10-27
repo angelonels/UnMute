@@ -21,6 +21,18 @@ const session = {
 };
 
 test.beforeEach(async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+      value: (constraints: MediaStreamConstraints) => {
+        if (constraints.audio)
+          return Promise.resolve(new AudioContext().createMediaStreamDestination().stream);
+        const canvas = document.createElement('canvas');
+        canvas.width = 640;
+        canvas.height = 360;
+        return Promise.resolve(canvas.captureStream(5));
+      },
+    });
+  });
   await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: session }));
 });
 
@@ -54,7 +66,7 @@ test('workspace panels and meeting preview preserve keyboard access', async ({
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   }
-  await expect(preview.getByRole('status')).toContainText('no meeting has started');
+  await expect(preview.getByRole('status')).toContainText('stays on this device');
   await page.screenshot({ path: testInfo.outputPath('meeting-preview.png'), fullPage: true });
   await preview.getByRole('button', { name: 'Back to workspace' }).click();
   await expect(start).toBeFocused();

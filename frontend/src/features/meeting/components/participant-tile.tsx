@@ -29,7 +29,7 @@ export function ParticipantTile({
   return (
     <article
       aria-label={`${person.name}${person.self ? ', you' : ''}${speaking ? ', speaking' : ''}`}
-      className={`group relative flex h-full min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border-2 ${speaking ? 'border-success' : 'border-transparent'} ${stream ? 'text-white bg-black' : tones[person.tone]}`}
+      className={`group relative flex h-full min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border ${speaking ? 'border-success' : 'border-border/60'} ${stream ? 'text-white bg-black' : 'bg-surface text-text'}`}
     >
       {stream && (
         <>
@@ -38,31 +38,33 @@ export function ParticipantTile({
         </>
       )}
       <div className="absolute inset-x-3 top-3 flex min-w-0 items-center justify-between gap-2">
-        <span
-          className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-medium ${person.camera ? 'bg-black/5 dark:bg-black/15' : 'bg-surface/90 text-error'} ${compact ? 'hidden sm:inline-flex' : ''}`}
-        >
-          {person.camera ? (
-            <Video size={12} aria-hidden="true" />
-          ) : (
-            <VideoOff size={12} aria-hidden="true" />
-          )}
-          <span className="truncate">
-            {person.camera ? (stream ? 'Camera on' : 'Video preview') : 'Camera off'}
+        {!person.camera && (
+          <span
+            className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-medium ${person.camera ? 'bg-black/5 dark:bg-black/15' : 'bg-surface/90 text-error'} ${compact ? 'hidden sm:inline-flex' : ''}`}
+          >
+            {person.camera ? (
+              <Video size={12} aria-hidden="true" />
+            ) : (
+              <VideoOff size={12} aria-hidden="true" />
+            )}
+            <span className="truncate">
+              {person.camera ? (stream ? 'Camera on' : 'Video preview') : 'Camera off'}
+            </span>
           </span>
-        </span>
+        )}
         <button
           type="button"
           aria-label={`${pinned ? 'Unpin' : 'Pin'} ${person.name}`}
           aria-pressed={pinned}
           title={`${pinned ? 'Unpin' : 'Pin'} ${person.name}`}
           onClick={onPin}
-          className={`ms-auto grid size-9 shrink-0 cursor-pointer place-items-center rounded-full ${pinned ? 'bg-surface text-text shadow-sm' : 'bg-black/5 hover:bg-black/10 dark:bg-black/15 dark:hover:bg-black/25'}`}
+          className={`ms-auto grid size-9 shrink-0 cursor-pointer place-items-center rounded-full ${pinned ? 'bg-surface text-text shadow-sm' : 'bg-transparent opacity-65 hover:bg-surface-muted hover:opacity-100'}`}
         >
           {pinned ? <PinOff size={15} aria-hidden="true" /> : <Pin size={15} aria-hidden="true" />}
         </button>
       </div>
       <div
-        className={`${stream ? 'invisible' : ''} grid shrink-0 place-items-center rounded-full bg-white/30 font-medium tracking-[-0.04em] shadow-[inset_0_1px_0_#ffffff30] dark:bg-white/8 ${compact ? 'size-12 text-lg' : 'size-[clamp(3.5rem,8vw,6.5rem)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
+        className={`${stream ? 'invisible' : ''} grid shrink-0 place-items-center rounded-full font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-12 text-lg' : 'size-[clamp(3.5rem,8vw,6.5rem)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
         aria-hidden="true"
       >
         {initials(person.name)}

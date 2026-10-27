@@ -279,7 +279,9 @@ function PreviewToggle({
   onClick,
   children,
   label,
+  pending = false,
 }: {
+  pending?: boolean;
   enabled: boolean;
   onClick: () => void;
   children: ReactNode;
@@ -290,8 +292,10 @@ function PreviewToggle({
       type="button"
       aria-label={label}
       aria-pressed={enabled}
+      aria-busy={pending}
+      disabled={pending}
       onClick={onClick}
-      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
+      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm disabled:cursor-progress disabled:opacity-50 ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
     >
       {children}
     </button>
@@ -338,6 +342,7 @@ function MeetingPreview({ user }: { user: User }) {
         <div className="mt-5 grid grid-cols-2 gap-3">
           <PreviewToggle
             label="Microphone"
+            pending={localMedia.pending.microphone}
             enabled={microphone}
             onClick={() => localMedia.toggle('microphone')}
           >
@@ -349,6 +354,7 @@ function MeetingPreview({ user }: { user: User }) {
             Mic {microphone ? 'on' : 'off'}
           </PreviewToggle>
           <PreviewToggle
+            pending={localMedia.pending.camera}
             label="Camera"
             enabled={camera}
             onClick={() => localMedia.toggle('camera')}

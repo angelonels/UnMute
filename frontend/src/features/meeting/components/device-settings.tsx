@@ -3,11 +3,13 @@ import { Settings2, X } from 'lucide-react';
 import type { MediaSource } from '../../media';
 
 export function DeviceSettings({
+  error,
   devices,
   streams,
   pending,
   onSelect,
 }: {
+  error: string;
   devices: MediaDeviceInfo[];
   streams: Record<MediaSource, MediaStream | null>;
   pending: Record<MediaSource, boolean>;
@@ -65,6 +67,14 @@ export function DeviceSettings({
               </label>
             );
           })}
+          {error && (
+            <p
+              role="alert"
+              className="mt-4 rounded-xl bg-error/10 p-3 text-xs leading-6 text-error"
+            >
+              {error}
+            </p>
+          )}
           <p className="mt-5 text-xs leading-6 text-muted">
             Choosing an input turns it on. Changing an active input keeps the current device until
             its replacement is ready.
