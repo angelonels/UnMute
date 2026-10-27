@@ -19,7 +19,7 @@ import type {
   ReactNode,
   RefObject,
 } from 'react';
-import { AnimatePresence, animate, motion, useMotionValue } from 'motion/react';
+import { AnimatePresence, animate, m as motion, useMotionValue } from 'motion/react';
 import type { Transition } from 'motion/react';
 import { ArrowDown, ArrowUp, FileText, Paperclip, RotateCw, SmilePlus, X } from 'lucide-react';
 import { motionTokens } from '../lib/motion-tokens';

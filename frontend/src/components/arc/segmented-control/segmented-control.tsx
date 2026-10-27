@@ -8,7 +8,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { LayoutGroup, motion, useReducedMotion } from 'motion/react';
+import { LayoutGroup, m as motion, useReducedMotion } from 'motion/react';
 
 const styles = {
   root: 'inline-flex min-w-0 max-w-full rounded-xl border border-border bg-surface p-1',
@@ -22,6 +22,7 @@ const styles = {
 export interface Segment {
   value: string;
   label: string;
+  icon?: ReactNode;
   /** Optional content after the label, such as a badge. */ accessory?: ReactNode;
 }
 export interface SegmentedControlProps {
@@ -126,6 +127,8 @@ export default function SegmentedControl({
               className={styles.button}
               type="button"
               data-value={option.value}
+              aria-label={option.label}
+              title={option.label}
               aria-pressed={value === option.value}
               tabIndex={index === selectedIndex ? 0 : -1}
               onClick={() => onValueChange(option.value)}
@@ -141,7 +144,8 @@ export default function SegmentedControl({
                 />
               )}
               <span className={styles.label}>
-                {option.label}
+                {option.icon}
+                <span className={option.icon ? 'sr-only' : undefined}>{option.label}</span>
                 {option.accessory}
               </span>
             </button>

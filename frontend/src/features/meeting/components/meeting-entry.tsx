@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { LazyMotion, domAnimation } from 'motion/react';
 import { authClient } from '../../../api/auth-client';
 import { AuthPage } from '../../auth';
 import { MeetingPage } from './meeting-page';
@@ -18,15 +17,13 @@ export function MeetingEntry({
   const developmentDemo = import.meta.env.DEV && demo;
   if (!developmentDemo && (!session || isPending || error)) return <AuthPage />;
   return (
-    <LazyMotion features={domAnimation}>
-      <MeetingPage
-        key={revision}
-        userName={developmentDemo ? 'Alex Morgan' : (session?.user.name ?? 'You')}
-        demo={developmentDemo}
-        initialMicrophone={microphone}
-        initialCamera={camera}
-        onRestart={() => setRevision((previous) => previous + 1)}
-      />
-    </LazyMotion>
+    <MeetingPage
+      key={revision}
+      userName={developmentDemo ? 'Alex Morgan' : (session?.user.name ?? 'You')}
+      demo={developmentDemo}
+      initialMicrophone={microphone}
+      initialCamera={camera}
+      onRestart={() => setRevision((previous) => previous + 1)}
+    />
   );
 }

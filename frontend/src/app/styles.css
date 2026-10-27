@@ -35,7 +35,18 @@
   --ease-out-expo: var(--ease-out);
 }
 
+/* Brand material tokens belong to the original AI character, not status surfaces. */
 :root {
+  --companion-paper-light: oklch(0.98 0.012 85);
+  --companion-paper-body: oklch(0.89 0.018 85);
+  --companion-paper-shade: oklch(0.75 0.025 85);
+  --companion-paper-face: oklch(0.23 0.025 255);
+  --companion-light: oklch(0.42 0.055 255);
+  --companion-body: oklch(0.29 0.04 255);
+  --companion-shade: oklch(0.2 0.025 255);
+  --companion-face: oklch(0.97 0.015 85);
+  --companion-edge: oklch(0.74 0.035 255);
+  --companion-fold: oklch(0.57 0.075 255);
   --person-sage: #dbe7df;
   --person-sage-ink: #355346;
   --person-clay: #f0e1d8;
@@ -77,6 +88,12 @@
   -webkit-font-smoothing: antialiased;
 }
 :root.dark {
+  --companion-light: oklch(0.98 0.012 85);
+  --companion-body: oklch(0.89 0.018 85);
+  --companion-shade: oklch(0.75 0.025 85);
+  --companion-face: oklch(0.23 0.025 255);
+  --companion-edge: oklch(1 0 0);
+  --companion-fold: oklch(0.66 0.055 255);
   --person-sage: #233a31;
   --person-sage-ink: #bdcebf;
   --person-clay: #443128;
@@ -131,7 +148,7 @@
   --text-secondary: var(--muted);
   --text-muted: var(--disabled);
   --surface-raised: var(--surface);
-  --surface-muted: color-mix(in oklab, var(--primary) 5%, var(--surface));
+  --surface-muted: color-mix(in oklab, var(--text) 4%, var(--surface));
   --border-strong: var(--input);
   --danger: var(--error);
   --input: oklch(0.61 0.025 255);

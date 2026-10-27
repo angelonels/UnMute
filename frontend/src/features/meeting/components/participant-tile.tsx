@@ -1,3 +1,4 @@
+import { m, useReducedMotion } from 'motion/react';
 import { LocalVideo } from '../../media';
 import { AudioLines, Hand, MicOff, Pin, PinOff, Video, VideoOff } from 'lucide-react';
 import { initials, type Participant } from '../meeting-model';
@@ -12,6 +13,8 @@ const tones = {
 };
 
 export function ParticipantTile({
+  reflowKey,
+  animateReflow,
   person,
   speaking,
   pinned,
@@ -19,6 +22,8 @@ export function ParticipantTile({
   compact = false,
   stream,
 }: {
+  reflowKey: string;
+  animateReflow: boolean;
   person: Participant;
   speaking: boolean;
   pinned: boolean;
@@ -26,8 +31,12 @@ export function ParticipantTile({
   compact?: boolean;
   stream?: MediaStream | null;
 }) {
+  const reduced = useReducedMotion();
   return (
-    <article
+    <m.article
+      layout={animateReflow && !reduced ? 'position' : false}
+      layoutDependency={reflowKey}
+      transition={{ type: 'spring', stiffness: 420, damping: 42 }}
       aria-label={`${person.name}${person.self ? ', you' : ''}${speaking ? ', speaking' : ''}`}
       className={`group relative flex h-full min-h-0 min-w-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border ${speaking ? 'border-success' : 'border-border/60'} ${stream ? 'text-white bg-black' : 'bg-surface text-text'}`}
     >
@@ -63,12 +72,15 @@ export function ParticipantTile({
           {pinned ? <PinOff size={15} aria-hidden="true" /> : <Pin size={15} aria-hidden="true" />}
         </button>
       </div>
-      <div
+      <m.div
+        layout={animateReflow && !reduced ? 'position' : false}
+        layoutDependency={reflowKey}
+        transition={{ type: 'spring', stiffness: 420, damping: 42 }}
         className={`${stream ? 'invisible' : ''} grid shrink-0 place-items-center rounded-full font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-12 text-lg' : 'size-[clamp(3.5rem,8vw,6.5rem)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
         aria-hidden="true"
       >
         {initials(person.name)}
-      </div>
+      </m.div>
       {!compact && !stream && <span className="mt-3 text-xs opacity-75">{person.role}</span>}
       <div className="absolute inset-x-3 bottom-3 flex min-w-0 items-center gap-2">
         <span title={person.name} className="min-w-0 truncate text-xs font-medium text-shadow-sm">
@@ -100,6 +112,6 @@ export function ParticipantTile({
           )}
         </span>
       </div>
-    </article>
+    </m.article>
   );
 }

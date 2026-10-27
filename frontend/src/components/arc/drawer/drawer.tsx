@@ -3,7 +3,13 @@
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react';
-import { AnimatePresence, animate, motion, useMotionValue, useReducedMotion } from 'motion/react';
+import {
+  AnimatePresence,
+  animate,
+  m as motion,
+  useMotionValue,
+  useReducedMotion,
+} from 'motion/react';
 import type { PanInfo, Transition } from 'motion/react';
 import { X } from 'lucide-react';
 import { motionTokens } from '../lib/motion-tokens';

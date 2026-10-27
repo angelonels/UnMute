@@ -1,3 +1,4 @@
+import { useCompanionMotion } from '../../../components/companion/motion-preference';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Settings2, X } from 'lucide-react';
 import type { MediaSource } from '../../media';
@@ -15,6 +16,7 @@ export function DeviceSettings({
   pending: Record<MediaSource, boolean>;
   onSelect: (source: MediaSource, deviceId?: string) => void;
 }) {
+  const [companionMotion, setCompanionMotion] = useCompanionMotion();
   return (
     <Dialog.Root>
       <Dialog.Trigger
@@ -67,6 +69,15 @@ export function DeviceSettings({
               </label>
             );
           })}
+          <label className="mt-6 flex min-h-11 cursor-pointer items-center justify-between gap-4 border-t border-border pt-4 text-sm">
+            Companion animation
+            <input
+              type="checkbox"
+              checked={companionMotion}
+              onChange={(event) => setCompanionMotion(event.target.checked)}
+              className="size-4 accent-primary"
+            />
+          </label>
           {error && (
             <p
               role="alert"

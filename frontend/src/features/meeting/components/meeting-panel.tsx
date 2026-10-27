@@ -1,3 +1,4 @@
+import { AICompanion } from '../../../components/ai-companion';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, m, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
@@ -14,6 +15,7 @@ export function MeetingPanel({
   trigger,
   keyboard,
   onKeyboard,
+  companionExpanded = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -23,6 +25,7 @@ export function MeetingPanel({
   children: ReactNode;
   modal: boolean;
   trigger: RefObject<HTMLButtonElement | null>;
+  companionExpanded?: boolean;
   keyboard: boolean;
   onKeyboard: () => void;
 }) {
@@ -70,14 +73,22 @@ export function MeetingPanel({
         >
           <header className="flex shrink-0 items-start justify-between gap-2 px-5 pt-5 pb-4">
             <div>
-              <Dialog.Title className="text-sm font-medium tracking-tight">{title}</Dialog.Title>
+              <Dialog.Title className="flex items-center gap-2 text-sm font-medium tracking-tight">
+                {title === 'UnMute AI' && (
+                  <AICompanion
+                    size={companionExpanded ? 48 : 28}
+                    label={companionExpanded ? 'UnMute AI companion' : undefined}
+                  />
+                )}
+                <span>{title}</span>
+              </Dialog.Title>
               <Dialog.Description className="mt-1 text-xs text-muted">
                 {description}
               </Dialog.Description>
             </div>
             <Dialog.Close
               aria-label={`Close ${title === 'UnMute AI' ? 'UnMute AI' : 'meeting chat'}`}
-              className="-me-2 -mt-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-xl text-muted hover:bg-surface-muted"
+              className="-me-2 -mt-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-muted transition-colors duration-150 hover:bg-surface-muted motion-reduce:transition-none"
             >
               <X size={18} aria-hidden="true" />
             </Dialog.Close>

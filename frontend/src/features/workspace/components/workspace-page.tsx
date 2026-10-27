@@ -1,10 +1,11 @@
+import { m, useReducedMotion } from 'motion/react';
+import { AICompanion } from '../../../components/ai-companion';
 import { useLocalMedia, LocalVideo } from '../../media';
 import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ArrowRight,
-  AudioLines,
   CircleHelp,
   LayoutGrid,
   LogOut,
@@ -13,7 +14,6 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightOpen,
-  Plus,
   Video,
   VideoOff,
   X,
@@ -29,6 +29,8 @@ import { Drawer, DrawerContent, DrawerTrigger } from '../../../components/arc/dr
 type User = typeof authClient.$Infer.Session.user;
 
 export function WorkspacePage({ user }: { user: User }) {
+  const reduced = useReducedMotion();
+  const [greeting, setGreeting] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
@@ -50,7 +52,7 @@ export function WorkspacePage({ user }: { user: User }) {
               aria-expanded={navigationOpen}
               aria-controls="navigation-content"
               onClick={() => setNavigationOpen(!navigationOpen)}
-              className="grid size-10 cursor-pointer place-items-center rounded-xl text-muted hover:bg-surface-muted hover:text-text"
+              className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none hover:text-text"
             >
               {navigationOpen ? (
                 <PanelLeftClose size={19} aria-hidden="true" />
@@ -69,15 +71,6 @@ export function WorkspacePage({ user }: { user: User }) {
               <LayoutGrid size={18} aria-hidden="true" />
               {navigationOpen && 'Overview'}
             </a>
-            {navigationOpen && (
-              <div className="mt-10 px-3">
-                <span className="text-xs text-muted">A space for what’s next</span>
-                <div className="mt-4 space-y-3" aria-hidden="true">
-                  <div className="h-1.5 w-24 rounded-full bg-border/50" />
-                  <div className="h-1.5 w-16 rounded-full bg-border/35" />
-                </div>
-              </div>
-            )}
           </nav>
           <div className="mt-8 border-t border-border/60 pt-3">
             <Help compact={!navigationOpen} />
@@ -98,7 +91,10 @@ export function WorkspacePage({ user }: { user: User }) {
             )}
           </div>
         </aside>
-        <main
+        <m.main
+          layout={reduced ? false : 'position'}
+          layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
+          transition={{ type: 'spring', stiffness: 420, damping: 42 }}
           className={`relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell ${sidePanelOpen ? 'xl:mr-84' : ''}`}
         >
           <div className="flex min-h-16 items-center justify-between gap-3 px-5 sm:px-8">
@@ -109,7 +105,7 @@ export function WorkspacePage({ user }: { user: User }) {
                     <button
                       type="button"
                       aria-label="Open navigation"
-                      className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted hover:bg-surface-muted"
+                      className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none"
                     >
                       <PanelLeftOpen size={19} aria-hidden="true" />
                     </button>
@@ -176,9 +172,12 @@ export function WorkspacePage({ user }: { user: User }) {
                   className="xl:top-4! xl:right-4! xl:bottom-4! xl:w-80! xl:rounded-[1.75rem]!"
                 >
                   <div className="flex min-h-80 flex-col items-center justify-center text-center">
-                    <span className="grid size-14 place-items-center rounded-2xl bg-primary/8 text-primary">
-                      <PanelRightOpen size={24} strokeWidth={1.5} aria-hidden="true" />
-                    </span>
+                    <PanelRightOpen
+                      size={28}
+                      strokeWidth={1.35}
+                      className="text-muted/60"
+                      aria-hidden="true"
+                    />
                     <p className="mt-5 text-base font-medium">Room for more.</p>
                     <p className="mt-2 max-w-56 text-sm leading-relaxed text-muted">
                       Your workspace tools will live here.
@@ -188,16 +187,15 @@ export function WorkspacePage({ user }: { user: User }) {
               </Drawer>
             </div>
           </div>
-          <div className="flex flex-1 flex-col items-center justify-center px-5 pt-8 pb-10 text-center sm:px-8 sm:pt-16 sm:pb-24">
-            <div
-              className="relative mb-7 grid size-24 sm:mb-9 sm:size-28 place-items-center rounded-[2rem] bg-primary/7 text-primary shadow-[inset_0_1px_0_color-mix(in_oklab,var(--primary)_10%,transparent)]"
-              aria-hidden="true"
-            >
-              <AudioLines size={48} strokeWidth={1.5} />
-              <span className="absolute -right-2 -bottom-2 grid size-9 place-items-center rounded-xl border-4 border-surface bg-accent text-[#513512]">
-                <Plus size={17} strokeWidth={2} />
-              </span>
-            </div>
+          <m.div
+            layout={reduced ? false : 'position'}
+            layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
+            transition={{ type: 'spring', stiffness: 420, damping: 42 }}
+            className="flex flex-1 flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-14"
+            onPointerEnter={() => setGreeting(true)}
+            onPointerLeave={() => setGreeting(false)}
+          >
+            <AICompanion size={112} active={greeting} className="mb-6" />
             <p className="mb-3 text-sm text-muted">Your next good conversation</p>
             <h2 className="max-w-2xl text-[clamp(2rem,4.5vw,4rem)] leading-[1.07] font-medium tracking-[-0.055em]">
               A little more presence.
@@ -206,14 +204,12 @@ export function WorkspacePage({ user }: { user: User }) {
             </h2>
             <p className="mt-6 max-w-sm text-sm leading-7 text-muted sm:text-base">
               A clear space to meet, listen, and be heard.
-              <br />
-              It starts with a conversation.
             </p>
             <Dialog.Root open={previewOpen} onOpenChange={setPreviewOpen}>
               <Dialog.Trigger asChild>
                 <Button
                   size="lg"
-                  className="mt-9 !min-h-14 !rounded-2xl !bg-primary !px-7 !text-on-primary"
+                  className="mt-8 !min-h-14 !rounded-2xl !bg-primary !px-7 !text-on-primary hover:!bg-primary-hover"
                 >
                   <Video size={20} strokeWidth={1.75} aria-hidden="true" />
                   Start meeting
@@ -222,7 +218,6 @@ export function WorkspacePage({ user }: { user: User }) {
               </Dialog.Trigger>
               {previewOpen && <MeetingPreview user={user} />}
             </Dialog.Root>
-            <span className="mt-4 text-xs text-muted">Your space. Your pace.</span>
             {import.meta.env.DEV && (
               <Link
                 to="/meeting"
@@ -232,7 +227,7 @@ export function WorkspacePage({ user }: { user: User }) {
                 Open meeting playground
               </Link>
             )}
-          </div>
+          </m.div>
           <footer className="mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 py-5 text-xs text-muted sm:mx-8">
             <span className="inline-flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-muted/50" />
@@ -240,7 +235,7 @@ export function WorkspacePage({ user }: { user: User }) {
             </span>
             <span>UnMute © {new Date().getFullYear()}</span>
           </footer>
-        </main>
+        </m.main>
       </div>
     </div>
   );

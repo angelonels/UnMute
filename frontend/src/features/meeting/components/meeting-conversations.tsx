@@ -1,5 +1,6 @@
-import { useEffect, useRef, type KeyboardEvent } from 'react';
-import { ArrowDown, ArrowUp, LockKeyhole, Sparkles, Users } from 'lucide-react';
+import { AICompanion } from '../../../components/ai-companion';
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { ArrowDown, ArrowUp, Users } from 'lucide-react';
 import { ChatThread } from '../../../components/arc/chat-thread/chat-thread';
 import { initials, type MeetingMessage, type Participant } from '../meeting-model';
 
@@ -24,26 +25,29 @@ export function MessageComposer({
   }
   return (
     <div className="shrink-0 border-t border-border/70 p-4">
-      <div className="rounded-2xl border border-input bg-surface p-3 focus-within:ring-2 focus-within:ring-focus/20">
+      <div className="rounded-[1.25rem] border border-border/80 bg-surface-muted/40 p-3 transition-[border-color,background-color] duration-150 ease-out-expo focus-within:border-input focus-within:bg-surface motion-reduce:transition-none">
         <textarea
           aria-label={label}
           placeholder={disabled ? 'Reconnect to send' : label}
           value={value}
           maxLength={2000}
-          rows={2}
+          rows={1}
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={keyDown}
-          className="block max-h-36 min-h-14 w-full resize-none bg-transparent text-sm leading-6 text-text outline-none! placeholder:text-muted disabled:opacity-50"
+          className="block max-h-36 min-h-11 [field-sizing:content] w-full resize-none bg-transparent text-sm leading-6 text-text outline-none! placeholder:text-muted disabled:opacity-50"
         />
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-muted">Local preview · {value.length}/2000</span>
+          <span className="text-[10px] text-muted">
+            Local only
+            {value.length > 0 && <span className="ms-2 tabular-nums">{value.length}/2000</span>}
+          </span>
           <button
             type="button"
             aria-label={label === 'Ask UnMute AI' ? 'Send AI prompt' : 'Send message'}
             disabled={!value.trim() || disabled}
             onClick={onSend}
-            className="grid size-9 cursor-pointer place-items-center rounded-xl bg-text text-surface disabled:cursor-default disabled:opacity-30"
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30"
           >
             <ArrowUp size={17} aria-hidden="true" />
           </button>
@@ -70,7 +74,7 @@ export function MeetingChat({
 }) {
   return (
     <>
-      <div className="mx-4 mb-3 flex items-center gap-2 rounded-xl bg-surface-muted px-3 py-2 text-[11px] text-muted">
+      <div className="mx-5 mb-1 flex items-center gap-2 py-1 text-[11px] text-muted">
         <Users size={13} aria-hidden="true" />
         Everyone in this preview
       </div>
@@ -130,76 +134,89 @@ export function AIConversation({
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const following = useRef(true);
+  const [away, setAway] = useState(false);
   useEffect(() => {
     if (following.current)
       bottomRef.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }, [messages]);
   return (
     <>
-      <div className="mx-4 flex items-center gap-2 rounded-xl bg-surface-muted px-3 py-2 text-[11px] text-muted">
-        <LockKeyhole size={13} aria-hidden="true" />
-        Only visible to you
-      </div>
       <div
         ref={scrollRef}
         onScroll={(event) => {
           const node = event.currentTarget;
           following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 60;
+          setAway(!following.current);
         }}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 py-6"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-4 [scrollbar-width:thin]"
       >
-        <div className="mb-6">
-          <span className="mb-4 grid size-11 place-items-center rounded-2xl bg-primary/8 text-primary">
-            <Sparkles size={21} strokeWidth={1.5} aria-hidden="true" />
-          </span>
-          <h2 className="text-xl leading-tight font-medium tracking-[-0.035em]">
-            A little help.
-            <br />
-            More room to listen.
-          </h2>
-          <p className="mt-3 text-xs leading-6 text-muted">
-            {demo
-              ? 'Explore sample answers from the demo discussion.'
-              : 'Your private assistant will live here. AI is not connected in this preview.'}
-          </p>
-        </div>
-        <div className="mb-6 flex flex-col gap-2">
-          {['Summarize the discussion', 'List action items', 'What did I miss?'].map((prompt) => (
-            <button
-              type="button"
-              disabled={disabled}
-              key={prompt}
-              onClick={() => onSuggestion(prompt)}
-              className="flex min-h-11 cursor-pointer items-center justify-between gap-2 rounded-xl border border-border px-3 text-left text-xs hover:bg-surface-muted disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {prompt}
-              <ArrowUp className="shrink-0 rotate-45 text-muted" size={13} aria-hidden="true" />
-            </button>
-          ))}
-        </div>
+        {messages.length === 0 ? (
+          <div className="my-auto py-6">
+            <AICompanion
+              size={104}
+              active={false}
+              label="UnMute AI companion"
+              className="mb-4 -ms-2"
+            />
+            <h2 className="text-2xl leading-tight font-medium tracking-[-0.04em]">
+              A little room
+              <br />
+              to think.
+            </h2>
+            <p className="mt-3 max-w-60 text-xs leading-6 text-muted">
+              {demo
+                ? 'Explore the sample discussion, or ask a question of your own.'
+                : 'Your private space for meeting questions. AI is not connected yet.'}
+            </p>
+            <div className="mt-7 flex flex-col">
+              {['Summarize the discussion', 'List action items', 'What did I miss?'].map(
+                (prompt) => (
+                  <button
+                    type="button"
+                    key={prompt}
+                    disabled={disabled}
+                    onClick={() => onSuggestion(prompt)}
+                    className="group flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-lg py-2 text-left text-xs text-muted transition-colors duration-150 hover:text-text disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                  >
+                    {prompt}
+                    <ArrowUp
+                      size={14}
+                      strokeWidth={1.5}
+                      className="shrink-0 rotate-45 opacity-50 group-hover:opacity-100"
+                      aria-hidden="true"
+                    />
+                  </button>
+                ),
+              )}
+            </div>
+          </div>
+        ) : null}
         <div
           role="log"
           aria-label="Private AI conversation"
           aria-live="polite"
           aria-relevant="additions"
-          className="space-y-5"
+          className="space-y-6"
         >
           {messages.map((message) => (
             <div
               key={message.id}
-              className={message.authorId === 'self' ? 'ms-4 rounded-2xl bg-surface-muted p-3' : ''}
+              className={
+                message.authorId === 'self' ? 'ms-7 rounded-2xl bg-surface-muted px-4 py-3' : ''
+              }
             >
               <span className="mb-2 flex items-center gap-2 text-[11px] font-medium text-muted">
                 {message.authorId === 'self' ? (
                   'You'
                 ) : (
                   <>
-                    <Sparkles size={12} aria-hidden="true" />
-                    UnMute AI · {demo ? 'sample' : 'preview'}
+                    <AICompanion size={24} />
+                    UnMute AI{' '}
+                    <span className="font-normal opacity-65">{demo ? 'Sample' : 'Preview'}</span>
                   </>
                 )}
               </span>
-              <p className="text-xs leading-6 whitespace-pre-wrap [overflow-wrap:anywhere]">
+              <p className="text-sm leading-7 whitespace-pre-wrap [overflow-wrap:anywhere]">
                 {message.text}
               </p>
             </div>
@@ -207,16 +224,17 @@ export function AIConversation({
         </div>
         <div ref={bottomRef} />
       </div>
-      {messages.length > 0 && (
+      {messages.length > 0 && away && (
         <button
           type="button"
-          className="mx-auto mb-2 flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full bg-surface-muted px-3 text-[10px] text-muted"
+          className="mx-auto mb-2 flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full bg-surface-muted px-3 text-xs text-muted"
           onClick={() => {
             following.current = true;
+            setAway(false);
             bottomRef.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
           }}
         >
-          <ArrowDown size={11} aria-hidden="true" />
+          <ArrowDown size={12} aria-hidden="true" />
           Latest answer
         </button>
       )}

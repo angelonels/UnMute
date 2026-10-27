@@ -1,10 +1,12 @@
 import { LocalVideo } from '../../media';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, AudioLines, MonitorUp, Pin } from 'lucide-react';
+import { ArrowLeft, ArrowRight, AudioLines, MonitorUp } from 'lucide-react';
 import { focusOrder, galleryGeometry, type Participant } from '../meeting-model';
 import { ParticipantTile } from './participant-tile';
 
 export function MeetingStage({
+  reflowKey,
+  animateReflow,
   selfSpeaking,
   cameraStream,
   screenStream,
@@ -18,6 +20,8 @@ export function MeetingStage({
   onPin,
   onFocus,
 }: {
+  reflowKey: string;
+  animateReflow: boolean;
   selfSpeaking: boolean;
   cameraStream: MediaStream | null;
   screenStream: MediaStream | null;
@@ -68,6 +72,8 @@ export function MeetingStage({
   );
   const tile = (person: Participant, compact = false) => (
     <ParticipantTile
+      reflowKey={`${reflowKey}:${Math.round(size.width)}`}
+      animateReflow={animateReflow}
       key={person.id}
       person={person}
       stream={person.self ? cameraStream : null}
@@ -78,43 +84,29 @@ export function MeetingStage({
     />
   );
   return (
-    <section className="flex min-h-0 min-w-0 flex-1 flex-col gap-3" aria-label="Meeting stage">
-      <div className="flex min-h-8 shrink-0 items-center justify-between gap-2 px-1 text-xs text-muted">
-        <span className="inline-flex min-w-0 items-center gap-2">
-          {sharing ? (
-            <>
-              <MonitorUp size={14} className="text-success" aria-hidden="true" />
-              Your screen · local capture
-            </>
-          ) : pinnedId && layout === 'focus' ? (
-            <>
-              <Pin size={13} aria-hidden="true" />
-              Pinned to your view
-            </>
-          ) : speaker ? (
-            <>
-              <AudioLines size={14} className="text-success" aria-hidden="true" />
-              <span className="truncate">{speaker.name} is speaking</span>
-            </>
-          ) : (
-            'Your room to connect'
-          )}
-        </span>
-        {!focused && speaker && !visible.some((person) => person.id === speakerId) && (
-          <button className="min-h-8 shrink-0 cursor-pointer px-2 text-primary" onClick={onFocus}>
-            Show speaker
-          </button>
-        )}
-        <span className="shrink-0 tabular-nums">
-          {people.length} {people.length === 1 ? 'person' : 'people'}
-        </span>
-      </div>
+    <section
+      className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-3"
+      aria-label="Meeting stage"
+    >
+      <span className="sr-only" role="status">
+        {sharing
+          ? 'Your screen · local capture'
+          : pinnedId && layout === 'focus'
+            ? 'Pinned to your view'
+            : speaker
+              ? `${speaker.name} is speaking`
+              : 'Your room to connect'}
+      </span>
       <div ref={stageRef} className="flex min-h-0 flex-1 flex-col gap-3">
         {focused ? (
           <>
             <div className="flex min-h-0 flex-1 flex-col">
               {sharing && screenStream ? (
                 <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
+                  <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
+                    <MonitorUp size={13} className="text-success" aria-hidden="true" />
+                    Your screen · local capture
+                  </span>
                   <LocalVideo stream={screenStream} label="Your shared screen" contain />
                 </div>
               ) : focus ? (
@@ -163,6 +155,16 @@ export function MeetingStage({
           aria-label="Participant pages"
           className="flex h-9 shrink-0 items-center justify-center gap-4"
         >
+          {!focused && speaker && !visible.some((person) => person.id === speakerId) && (
+            <button
+              type="button"
+              onClick={onFocus}
+              className="me-auto inline-flex min-h-9 items-center gap-1.5 px-2 text-xs text-muted hover:text-text"
+            >
+              <AudioLines size={13} aria-hidden="true" />
+              Show speaker
+            </button>
+          )}
           <button
             type="button"
             aria-label="Previous participants"

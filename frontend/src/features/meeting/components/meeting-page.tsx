@@ -1,3 +1,6 @@
+import { AICompanion } from '../../../components/ai-companion';
+import { MeetingLayoutIcon } from '../../../components/icons/meeting-layout';
+import { m, useReducedMotion } from 'motion/react';
 import {
   MessageCircleIcon,
   type MessageCircleIconHandle,
@@ -6,16 +9,12 @@ import SegmentedControl from '../../../components/arc/segmented-control/segmente
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
-  AudioLines,
   Captions,
   Hand,
-  LockKeyhole,
   Mic,
   MicOff,
   MonitorUp,
   PhoneOff,
-  Pin,
-  Sparkles,
   Users,
   Video,
   VideoOff,
@@ -60,6 +59,7 @@ export function MeetingPage({
   initialMicrophone: boolean;
   initialCamera: boolean;
 }) {
+  const reducedMotion = useReducedMotion();
   const width = useSyncExternalStore(subscribe, snapshot, serverSnapshot);
   const [captureMode, setCaptureMode] = useState('native');
   const localMedia = useLocalMedia(
@@ -92,7 +92,6 @@ export function MeetingPage({
   const [aiDraft, setAiDraft] = useState('');
   const [peopleSearch, setPeopleSearch] = useState('');
   const [ended, setEnded] = useState(false);
-  const [notice] = useState('');
   const aiTrigger = useRef<HTMLButtonElement>(null);
   const chatIcon = useRef<MessageCircleIconHandle>(null);
   const chatTrigger = useRef<HTMLButtonElement>(null);
@@ -192,7 +191,7 @@ export function MeetingPage({
       onKeyDownCapture={() => setKeyboard(true)}
       onPointerDownCapture={() => setKeyboard(false)}
     >
-      <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 pb-3 sm:gap-5">
+      <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 pb-3 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:gap-x-5">
         <div className="flex min-w-0 items-center gap-3 sm:gap-5">
           <div className="hidden sm:block">
             <Brand compact />
@@ -201,16 +200,22 @@ export function MeetingPage({
             <h1 className="truncate text-sm font-medium tracking-tight">
               {demo ? 'Design sync' : 'Your meeting'}
             </h1>
-            <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted">
-              <LockKeyhole size={10} aria-hidden="true" />
-              {import.meta.env.DEV && demo && captureMode === 'synthetic'
-                ? 'Synthetic devices'
-                : 'Local meeting'}
-              <span className="hidden md:inline"> · not connected</span>
-            </p>
+            <span
+              role="status"
+              aria-label="Connection status"
+              className={`mt-0.5 block truncate text-[10px] ${connection === 'ready' ? 'text-muted' : connection === 'offline' ? 'text-error' : 'text-warning'}`}
+            >
+              {connection === 'ready'
+                ? import.meta.env.DEV && demo && captureMode === 'synthetic'
+                  ? 'Synthetic devices · local preview'
+                  : 'Local preview'
+                : connection === 'offline'
+                  ? 'Disconnected'
+                  : 'Reconnecting…'}
+            </span>
           </div>
         </div>
-        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+        <div className="order-2 flex shrink-0 items-center gap-1 lg:order-3">
           {import.meta.env.DEV && demo && (
             <DemoControls
               captureMode={captureMode}
@@ -233,22 +238,6 @@ export function MeetingPage({
               onReset={onRestart}
             />
           )}
-          <span
-            role="status"
-            aria-label="Connection status"
-            className={`hidden items-center gap-1.5 rounded-full px-3 py-1.5 text-[10px] sm:inline-flex ${connection === 'ready' ? 'text-muted' : connection === 'reconnecting' ? 'bg-warning/10 text-warning' : 'bg-error/10 text-error'}`}
-          >
-            {connection === 'offline' ? (
-              <WifiOff size={12} aria-hidden="true" />
-            ) : (
-              <Wifi size={12} aria-hidden="true" />
-            )}
-            {connection === 'ready'
-              ? 'Local preview'
-              : connection === 'reconnecting'
-                ? 'Reconnecting…'
-                : 'Disconnected'}
-          </span>
           <DeviceSettings
             error={localMedia.error}
             devices={localMedia.devices}
@@ -258,61 +247,61 @@ export function MeetingPage({
           />
           <ThemeToggle />
         </div>
-      </header>
-      <div className="flex min-h-10 shrink-0 items-center justify-between gap-2 pb-3">
-        <MeetingControl
-          ref={aiTrigger}
-          aria-label="Open UnMute AI"
-          aria-expanded={showLeft}
-          aria-controls="meeting-ai"
-          tone={showLeft ? 'primary' : 'neutral'}
-          onClick={() => openPanel('left', !showLeft)}
-          icon={<Sparkles size={18} strokeWidth={1.65} aria-hidden="true" />}
-        >
-          <span className="hidden min-[420px]:inline">UnMute AI</span>
-        </MeetingControl>
-        <SegmentedControl
-          label="Meeting layout"
-          options={[
-            { value: 'gallery', label: 'Gallery' },
-            { value: 'focus', label: 'Focus' },
-          ]}
-          value={layout}
-          onValueChange={(value) => setLayout(value === 'focus' ? 'focus' : 'gallery')}
-        />
-        <div className="flex gap-2">
+        <div className="order-3 col-span-2 flex min-h-11 items-center justify-between gap-2 lg:order-2 lg:col-span-1 lg:gap-4">
           <MeetingControl
-            ref={peopleTrigger}
-            aria-label="Open participants"
-            aria-expanded={panels.right && rightTab === 'people'}
-            onClick={() => {
-              setRightOpener('people');
-              setRightTab('people');
-              openPanel('right', true);
-            }}
-            icon={<Users size={18} strokeWidth={1.65} aria-hidden="true" />}
+            ref={aiTrigger}
+            aria-label="Open UnMute AI"
+            aria-expanded={showLeft}
+            aria-controls="meeting-ai"
+            tone={showLeft ? 'primary' : 'neutral'}
+            onClick={() => openPanel('left', !showLeft)}
+            icon={<AICompanion size={28} active={showLeft && !keyboard} />}
           >
-            <span className="tabular-nums">{people.length}</span>
+            <span className="hidden min-[420px]:inline">UnMute AI</span>
           </MeetingControl>
-          <MeetingControl
-            ref={chatTrigger}
-            aria-label="Open meeting chat"
-            aria-expanded={panels.right}
-            aria-controls="meeting-chat"
-            tone={panels.right ? 'primary' : 'neutral'}
-            onClick={() => {
-              if (!panels.right && !keyboard) chatIcon.current?.startAnimation();
-              else chatIcon.current?.stopAnimation();
-              setRightOpener('chat');
-              setRightTab('chat');
-              openPanel('right', !panels.right);
-            }}
-            icon={<MessageCircleIcon ref={chatIcon} size={18} aria-hidden="true" />}
-          >
-            <span className="hidden min-[420px]:inline">Chat</span>
-          </MeetingControl>
+          <SegmentedControl
+            label="Meeting layout"
+            options={[
+              { value: 'gallery', label: 'Gallery', icon: <MeetingLayoutIcon /> },
+              { value: 'focus', label: 'Focus', icon: <MeetingLayoutIcon focus /> },
+            ]}
+            value={layout}
+            onValueChange={(value) => setLayout(value === 'focus' ? 'focus' : 'gallery')}
+          />
+          <div className="flex gap-2">
+            <MeetingControl
+              ref={peopleTrigger}
+              aria-label="Open participants"
+              aria-expanded={panels.right && rightTab === 'people'}
+              onClick={() => {
+                setRightOpener('people');
+                setRightTab('people');
+                openPanel('right', true);
+              }}
+              icon={<Users size={18} strokeWidth={1.65} aria-hidden="true" />}
+            >
+              <span className="tabular-nums">{people.length}</span>
+            </MeetingControl>
+            <MeetingControl
+              ref={chatTrigger}
+              aria-label="Open meeting chat"
+              aria-expanded={panels.right}
+              aria-controls="meeting-chat"
+              tone={panels.right ? 'primary' : 'neutral'}
+              onClick={() => {
+                if (!panels.right && !keyboard) chatIcon.current?.startAnimation();
+                else chatIcon.current?.stopAnimation();
+                setRightOpener('chat');
+                setRightTab('chat');
+                openPanel('right', !panels.right);
+              }}
+              icon={<MessageCircleIcon ref={chatIcon} size={18} aria-hidden="true" />}
+            >
+              <span className="hidden min-[420px]:inline">Chat</span>
+            </MeetingControl>
+          </div>
         </div>
-      </div>
+      </header>
       {connection !== 'ready' && (
         <p
           className={`mb-3 flex shrink-0 items-center gap-2 rounded-xl px-4 py-2 text-xs ${connection === 'offline' ? 'bg-error/10 text-error' : 'bg-warning/10 text-warning'}`}
@@ -335,7 +324,8 @@ export function MeetingPage({
           onOpenChange={(open) => openPanel('left', open)}
           side="left"
           title="UnMute AI"
-          description="A private space to think along."
+          companionExpanded={aiMessages.length > 0}
+          description="Only visible to you"
           modal={width < 1024}
           trigger={aiTrigger}
           keyboard={keyboard}
@@ -353,8 +343,15 @@ export function MeetingPage({
             />
           </div>
         </MeetingPanel>
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col">
+        <m.main
+          layout={keyboard || reducedMotion ? false : 'position'}
+          layoutDependency={`${showLeft}:${panels.right}:${width}`}
+          transition={{ type: 'spring', stiffness: 420, damping: 42 }}
+          className="flex min-h-0 min-w-0 flex-1 flex-col"
+        >
           <MeetingStage
+            reflowKey={`${showLeft}:${panels.right}`}
+            animateReflow={!keyboard}
             selfSpeaking={microphoneLevel.speaking}
             cameraStream={localMedia.streams.camera}
             screenStream={localMedia.streams.screen}
@@ -371,7 +368,7 @@ export function MeetingPage({
               setLayout('focus');
             }}
           />
-        </main>
+        </m.main>
         <MeetingPanel
           open={panels.right}
           onOpenChange={(open) => openPanel('right', open)}
@@ -476,23 +473,10 @@ export function MeetingPage({
         </div>
       )}
       <footer className="flex shrink-0 flex-col pt-3">
-        <div
-          className="flex min-h-6 items-center justify-center gap-2 px-2 text-center text-[10px] text-muted"
-          role="status"
-        >
-          {notice ||
-            (pinnedId ? (
-              <>
-                <Pin size={11} aria-hidden="true" />
-                Your pin changes only your view.
-              </>
-            ) : (
-              <>
-                <AudioLines size={12} aria-hidden="true" />A little less noise. A little more you.
-              </>
-            ))}
-        </div>
-        <div className="mx-auto mt-2 flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
+        <span role="status" className="sr-only">
+          {pinnedId ? 'Your pin changes only your view.' : ''}
+        </span>
+        <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
           <MeetingControl
             aria-label={`Microphone ${media.microphone ? 'on' : 'off'}`}
             aria-pressed={media.microphone}
