@@ -3,12 +3,12 @@ import { AudioLines, Hand, MicOff, Pin, PinOff, Video, VideoOff } from 'lucide-r
 import { initials, type Participant } from '../meeting-model';
 
 const tones = {
-  sage: 'bg-[#dbe7df] text-[#355346] dark:bg-[#233a31] dark:text-[#bdcebf]',
-  clay: 'bg-[#f0e1d8] text-[#795741] dark:bg-[#443128] dark:text-[#dbc0ab]',
-  lavender: 'bg-[#e5dff1] text-[#65507f] dark:bg-[#352d46] dark:text-[#cfc0e1]',
-  slate: 'bg-[#dce4ed] text-[#465b74] dark:bg-[#293644] dark:text-[#bdcbdc]',
-  sand: 'bg-[#ebe6d5] text-[#6e6344] dark:bg-[#3d3828] dark:text-[#d3cba9]',
-  rose: 'bg-[#f1dfe1] text-[#7b4d55] dark:bg-[#452c32] dark:text-[#d9b7be]',
+  sage: 'bg-person-sage text-person-sage-ink',
+  clay: 'bg-person-clay text-person-clay-ink',
+  lavender: 'bg-person-lavender text-person-lavender-ink',
+  slate: 'bg-person-slate text-person-slate-ink',
+  sand: 'bg-person-sand text-person-sand-ink',
+  rose: 'bg-person-rose text-person-rose-ink',
 };
 
 export function ParticipantTile({
@@ -69,7 +69,7 @@ export function ParticipantTile({
       </div>
       {!compact && !stream && <span className="mt-3 text-xs opacity-75">{person.role}</span>}
       <div className="absolute inset-x-3 bottom-3 flex min-w-0 items-center gap-2">
-        <span className="min-w-0 truncate text-xs font-medium text-shadow-sm">
+        <span title={person.name} className="min-w-0 truncate text-xs font-medium text-shadow-sm">
           {person.name}
           {person.self ? ' (you)' : ''}
         </span>

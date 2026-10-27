@@ -490,13 +490,11 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
       }));
     if (next.length) setFiles((current) => [...current, ...next]);
   };
-  const remove = (id: string) =>
-    setFiles((current) =>
-      current.filter((entry) => {
-        if (entry.id === id && entry.url) URL.revokeObjectURL(entry.url);
-        return entry.id !== id;
-      }),
-    );
+  const remove = (id: string) => {
+    const entry = files.find((file) => file.id === id);
+    if (entry?.url) URL.revokeObjectURL(entry.url);
+    setFiles((current) => current.filter((file) => file.id !== id));
+  };
 
   const send = () => {
     if (!ready) return;
@@ -550,12 +548,10 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
           <motion.div
             key="tray"
             className={styles.trayClip}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={
-              reduced ? { duration: 0 } : { height: GROW, opacity: { duration: duration.fast } }
-            }
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={reduced ? { duration: 0 } : { duration: duration.fast }}
           >
             <ul className={styles.tray} aria-label={t.attachments}>
               <AnimatePresence initial={false} mode="popLayout">
@@ -756,9 +752,10 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
 
   const receipts = useMemo(() => {
     const map = new Map<string, ChatParticipant[]>();
+    const byId = new Map(messages.map((message) => [message.id, message]));
     for (const [personId, messageId] of Object.entries(readBy ?? {})) {
       const who = people.get(personId);
-      const read = messages.find((message) => message.id === messageId);
+      const read = byId.get(messageId);
       // A reader's avatar under their own message says nothing new, so it stays hidden until they read past it.
       if (!who || personId === currentUserId || !read || read.authorId === personId) continue;
       map.set(messageId, [...(map.get(messageId) ?? []), who]);
@@ -824,12 +821,12 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
   }, [y]);
 
   // Your own message always brings the thread back to the bottom.
-  const known = useRef(new Set(messages.map((message) => message.id)));
+  const [known] = useState(() => new Set(messages.map((message) => message.id)));
   useLayoutEffect(() => {
-    const fresh = messages.filter((message) => !known.current.has(message.id));
-    fresh.forEach((message) => known.current.add(message.id));
+    const fresh = messages.filter((message) => !known.has(message.id));
+    fresh.forEach((message) => known.add(message.id));
     if (fresh.some((message) => message.authorId === currentUserId)) stick.current = true;
-  }, [currentUserId, messages]);
+  }, [currentUserId, messages, known]);
 
   const onScroll = () => {
     const scroller = scrollRef.current;
@@ -882,6 +879,11 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     );
   };
 
+  const ownedAttachmentUrls = useRef(new Set<string>());
+  useEffect(() => {
+    const urls = ownedAttachmentUrls.current;
+    return () => urls.forEach((url) => URL.revokeObjectURL(url));
+  }, []);
   const counter = useRef(0);
   const send = (draft: ChatDraft) => {
     stick.current = true;
@@ -894,14 +896,19 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
       kind: file.type.startsWith('image/') ? 'image' : 'file',
       url: URL.createObjectURL(file),
     }));
+    attachments.forEach((attachment) => {
+      if (attachment.url) ownedAttachmentUrls.current.add(attachment.url);
+    });
+    const id = `local-${Date.now()}-${++counter.current}`;
+    const createdAt = new Date();
     setInner((current) => [
       ...current,
       {
-        id: `local-${Date.now()}-${++counter.current}`,
+        id,
         authorId: currentUserId,
         text: draft.text || undefined,
         attachments,
-        createdAt: new Date(),
+        createdAt,
         status: 'sent',
       },
     ]);
@@ -1085,14 +1092,10 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
                               <motion.div
                                 key="reactions"
                                 className={styles.reactionClip}
-                                initial={{ height: 0, opacity: 0 }}
-                                animate={{ height: 'auto', opacity: 1 }}
-                                exit={{ height: 0, opacity: 0 }}
-                                transition={
-                                  reduced
-                                    ? { duration: 0 }
-                                    : { height: GROW, opacity: { duration: duration.fast } }
-                                }
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                transition={reduced ? { duration: 0 } : { duration: duration.fast }}
                               >
                                 <ul className={styles.reactions} aria-label={t.reactions}>
                                   <AnimatePresence initial={false} mode="popLayout">

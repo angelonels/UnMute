@@ -1,6 +1,6 @@
 import { LocalVideo } from '../../media';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, AudioLines, MonitorUp, Pin, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, AudioLines, MonitorUp, Pin } from 'lucide-react';
 import { focusOrder, galleryGeometry, type Participant } from '../meeting-model';
 import { ParticipantTile } from './participant-tile';
 
@@ -113,8 +113,6 @@ export function MeetingStage({
                 <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
                   <LocalVideo stream={screenStream} label="Your shared screen" contain />
                 </div>
-              ) : sharing ? (
-                <SharedScreen />
               ) : focus ? (
                 tile(focus, size.height < 220)
               ) : null}
@@ -184,48 +182,6 @@ export function MeetingStage({
           </button>
         </nav>
       )}
-    </section>
-  );
-}
-
-function SharedScreen() {
-  return (
-    <section
-      className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl bg-[#f6f4ef] text-[#333b36]"
-      aria-label="Shared screen preview"
-    >
-      <div className="flex h-9 shrink-0 items-center justify-between border-b border-black/8 px-4 text-[10px] text-[#68716a]">
-        <span>UnMute / design direction</span>
-        <span>Sample screen</span>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col justify-center overflow-y-auto overscroll-contain p-[clamp(1rem,4vw,3rem)]">
-        <span className="mb-4 inline-flex items-center gap-2 text-[10px] font-medium tracking-widest text-[#6f7868]">
-          <Sparkles size={13} aria-hidden="true" />
-          MAKE ROOM FOR THE MOMENT
-        </span>
-        <h2 className="max-w-xl text-[clamp(1.5rem,3.5vw,3.5rem)] leading-[1.06] font-medium tracking-[-0.055em]">
-          A clearer space
-          <br />
-          to connect.
-        </h2>
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          <div className="rounded-xl bg-[#dce6dc] p-3 text-[10px] sm:p-5">
-            <span className="block text-xl sm:text-3xl">01</span>
-            <p className="mt-2">People first</p>
-          </div>
-          <div className="rounded-xl bg-[#e7ddd3] p-3 text-[10px] sm:p-5">
-            <span className="block text-xl sm:text-3xl">02</span>
-            <p className="mt-2">Less noise</p>
-          </div>
-          <div className="rounded-xl bg-[#e2dff0] p-3 text-[10px] sm:p-5">
-            <span className="block text-xl sm:text-3xl">03</span>
-            <p className="mt-2">More presence</p>
-          </div>
-        </div>
-        <p className="mt-5 text-[10px] text-[#68716a]">
-          Frontend preview • no screen is being captured
-        </p>
-      </div>
     </section>
   );
 }

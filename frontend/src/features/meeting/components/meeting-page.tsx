@@ -1,10 +1,10 @@
+import SegmentedControl from '../../../components/arc/segmented-control/segmented-control';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   AudioLines,
   Captions,
   Hand,
-  LayoutGrid,
   LockKeyhole,
   MessageCircle,
   Mic,
@@ -90,6 +90,8 @@ export function MeetingPage({
   const [notice] = useState('');
   const aiTrigger = useRef<HTMLButtonElement>(null);
   const chatTrigger = useRef<HTMLButtonElement>(null);
+  const peopleTrigger = useRef<HTMLButtonElement>(null);
+  const [rightOpener, setRightOpener] = useState<'chat' | 'people'>('chat');
   const self: Participant = {
     id: 'self',
     name: userName,
@@ -190,12 +192,12 @@ export function MeetingPage({
             <Brand compact />
           </div>
           <div className="min-w-0">
-            <h1 className="truncate text-sm font-semibold tracking-tight">
+            <h1 className="truncate text-sm font-medium tracking-tight">
               {demo ? 'Design sync' : 'Your meeting'}
             </h1>
             <p className="mt-0.5 flex items-center gap-1.5 text-[10px] text-muted">
               <LockKeyhole size={10} aria-hidden="true" />
-              {import.meta.env.DEV && demo && captureMode !== 'native'
+              {import.meta.env.DEV && demo && captureMode === 'synthetic'
                 ? 'Synthetic devices'
                 : 'Local meeting'}
               <span className="hidden md:inline"> · not connected</span>
@@ -262,24 +264,22 @@ export function MeetingPage({
         >
           <span className="hidden min-[420px]:inline">UnMute AI</span>
         </MeetingControl>
-        <label className="flex min-w-0 items-center gap-2 text-xs text-muted">
-          <LayoutGrid size={14} aria-hidden="true" />
-          <span className="sr-only">Meeting layout</span>
-          <select
-            aria-label="Meeting layout"
-            value={layout}
-            onChange={(event) => setLayout(event.target.value as 'gallery' | 'focus')}
-            className="min-h-11 max-w-28 cursor-pointer rounded-xl bg-transparent px-1 text-xs text-text"
-          >
-            <option value="gallery">Gallery</option>
-            <option value="focus">Focus</option>
-          </select>
-        </label>
+        <SegmentedControl
+          label="Meeting layout"
+          options={[
+            { value: 'gallery', label: 'Gallery' },
+            { value: 'focus', label: 'Focus' },
+          ]}
+          value={layout}
+          onValueChange={(value) => setLayout(value === 'focus' ? 'focus' : 'gallery')}
+        />
         <div className="flex gap-2">
           <MeetingControl
+            ref={peopleTrigger}
             aria-label="Open participants"
             aria-expanded={panels.right && rightTab === 'people'}
             onClick={() => {
+              setRightOpener('people');
               setRightTab('people');
               openPanel('right', true);
             }}
@@ -294,6 +294,7 @@ export function MeetingPage({
             aria-controls="meeting-chat"
             tone={panels.right ? 'primary' : 'neutral'}
             onClick={() => {
+              setRightOpener('chat');
               setRightTab('chat');
               openPanel('right', !panels.right);
             }}
@@ -368,7 +369,7 @@ export function MeetingPage({
           title="Meeting chat"
           description="Keep everyone in the conversation."
           modal={width < 1024}
-          trigger={chatTrigger}
+          trigger={rightOpener === 'people' ? peopleTrigger : chatTrigger}
           keyboard={keyboard}
           onKeyboard={() => setKeyboard(true)}
         >
@@ -386,7 +387,12 @@ export function MeetingPage({
                 aria-controls="meeting-chat-tabpanel"
                 tabIndex={rightTab === 'chat' ? 0 : -1}
                 onKeyDown={(event) => {
-                  if (event.key === 'ArrowRight') {
+                  if (
+                    event.key === 'ArrowRight' ||
+                    event.key === 'ArrowLeft' ||
+                    event.key === 'End'
+                  ) {
+                    event.preventDefault();
                     setRightTab('people');
                     document.getElementById('meeting-people-tab')?.focus();
                   }
@@ -404,7 +410,12 @@ export function MeetingPage({
                 aria-controls="meeting-people-tabpanel"
                 tabIndex={rightTab === 'people' ? 0 : -1}
                 onKeyDown={(event) => {
-                  if (event.key === 'ArrowLeft') {
+                  if (
+                    event.key === 'ArrowRight' ||
+                    event.key === 'ArrowLeft' ||
+                    event.key === 'Home'
+                  ) {
+                    event.preventDefault();
                     setRightTab('chat');
                     document.getElementById('meeting-chat-tab')?.focus();
                   }
@@ -471,7 +482,7 @@ export function MeetingPage({
               </>
             ))}
         </div>
-        <div className="mx-auto mt-2 flex max-w-full flex-wrap items-center justify-center gap-1 rounded-2xl border border-transparent bg-surface p-1.5 shadow-shell sm:gap-3 sm:p-2 sm:px-3">
+        <div className="mx-auto mt-2 flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-transparent bg-surface p-1 shadow-shell sm:gap-3 sm:p-2 sm:px-3">
           <MeetingControl
             aria-label={`Microphone ${media.microphone ? 'on' : 'off'}`}
             aria-pressed={media.microphone}

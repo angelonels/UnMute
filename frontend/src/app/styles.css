@@ -19,11 +19,35 @@
   --color-disabled: var(--disabled);
   --color-selection: var(--selection);
   --color-panel: var(--panel);
+  --color-person-sage: var(--person-sage);
+  --color-person-sage-ink: var(--person-sage-ink);
+  --color-person-clay: var(--person-clay);
+  --color-person-clay-ink: var(--person-clay-ink);
+  --color-person-lavender: var(--person-lavender);
+  --color-person-lavender-ink: var(--person-lavender-ink);
+  --color-person-slate: var(--person-slate);
+  --color-person-slate-ink: var(--person-slate-ink);
+  --color-person-sand: var(--person-sand);
+  --color-person-sand-ink: var(--person-sand-ink);
+  --color-person-rose: var(--person-rose);
+  --color-person-rose-ink: var(--person-rose-ink);
   --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --ease-out-expo: var(--ease-out);
 }
 
 :root {
+  --person-sage: #dbe7df;
+  --person-sage-ink: #355346;
+  --person-clay: #f0e1d8;
+  --person-clay-ink: #795741;
+  --person-lavender: #e5dff1;
+  --person-lavender-ink: #65507f;
+  --person-slate: #dce4ed;
+  --person-slate-ink: #465b74;
+  --person-sand: #ebe6d5;
+  --person-sand-ink: #6e6344;
+  --person-rose: #f1dfe1;
+  --person-rose-ink: #7b4d55;
   color-scheme: light;
   --canvas: oklch(0.982 0.004 255);
   --surface: oklch(1 0 0);
@@ -53,6 +77,18 @@
   -webkit-font-smoothing: antialiased;
 }
 :root.dark {
+  --person-sage: #233a31;
+  --person-sage-ink: #bdcebf;
+  --person-clay: #443128;
+  --person-clay-ink: #dbc0ab;
+  --person-lavender: #352d46;
+  --person-lavender-ink: #cfc0e1;
+  --person-slate: #293644;
+  --person-slate-ink: #bdcbdc;
+  --person-sand: #3d3828;
+  --person-sand-ink: #d3cba9;
+  --person-rose: #452c31;
+  --person-rose-ink: #d9b7be;
   color-scheme: dark;
   --canvas: oklch(0.17 0.014 255);
   --surface: oklch(0.205 0.016 255);
@@ -83,7 +119,7 @@
     @apply bg-selection;
   }
   :focus-visible {
-    @apply outline-3 outline-offset-5 outline-focus;
+    @apply outline-2 outline-offset-3 outline-focus;
     outline-style: solid;
   }
 }

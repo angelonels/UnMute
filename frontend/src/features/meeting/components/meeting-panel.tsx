@@ -70,7 +70,7 @@ export function MeetingPanel({
         >
           <header className="flex shrink-0 items-start justify-between gap-2 px-5 pt-5 pb-4">
             <div>
-              <Dialog.Title className="text-sm font-semibold tracking-tight">{title}</Dialog.Title>
+              <Dialog.Title className="text-sm font-medium tracking-tight">{title}</Dialog.Title>
               <Dialog.Description className="mt-1 text-xs text-muted">
                 {description}
               </Dialog.Description>
