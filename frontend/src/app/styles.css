@@ -87,3 +87,67 @@
     outline-style: solid;
   }
 }
+
+/* Arc's semantic token adapter keeps the vendored components on UnMute's palette. */
+:root {
+  --background: var(--canvas);
+  --foreground: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: var(--disabled);
+  --surface-raised: var(--surface);
+  --surface-muted: color-mix(in oklab, var(--primary) 5%, var(--surface));
+  --border-strong: var(--input);
+  --danger: var(--error);
+  --input: oklch(0.61 0.025 255);
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --control-height-sm: 2.75rem;
+  --control-height-md: 2.75rem;
+  --control-height-lg: 3rem;
+  --radius-control: 0.75rem;
+  --radius-pill: 9999px;
+  --text-sm: 0.875rem;
+  --text-lg: 1.125rem;
+  --leading-body: 1.5;
+  --font-body: var(--font-sans);
+  --tracking-body: 0;
+  --duration-instant: 150ms;
+  --duration-fast: 150ms;
+  --duration-standard: 250ms;
+  --duration-considered: 250ms;
+  --duration-spring: 250ms;
+  --ease-standard: var(--ease-out);
+  --ease-enter: var(--ease-out);
+  --ease-spring: var(--ease-out);
+  --shadow-resting: 0 1px 2px #10275608, 0 2px 8px #10275606;
+  --shadow-floating: 0 4px 16px #1027560a, 0 24px 64px #1027561a;
+  --shadow-shell:
+    0 0 0 1px color-mix(in oklab, var(--border) 45%, transparent), 0 4px 24px #10275604;
+}
+:root.dark {
+  --input: oklch(0.57 0.025 255);
+  --shadow-floating: 0 4px 16px #0002, 0 24px 64px #0004;
+}
+@theme inline {
+  --color-surface-muted: var(--surface-muted);
+  --color-input: var(--input);
+  --shadow-shell: var(--shadow-shell);
+  --shadow-floating: var(--shadow-floating);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [role='dialog'] {
+    background: var(--surface);
+    backdrop-filter: none;
+  }
+}
+@media (prefers-contrast: more) {
+  [role='dialog'],
+  main,
+  aside {
+    border: 1px solid var(--text);
+  }
+}

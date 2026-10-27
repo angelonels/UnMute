@@ -1,1 +1,1 @@
-export { AuthPage } from './components/auth-page';
+export { AuthPage, useAuthActions } from './components/auth-page';
