@@ -195,6 +195,14 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
                 </button>
               </div>
             )}
+            {import.meta.env.DEV && (
+              <a
+                href="/meeting?demo=true"
+                className="mt-4 flex min-h-11 items-center justify-center text-xs text-muted underline underline-offset-4"
+              >
+                Open meeting playground
+              </a>
+            )}
             <p className="mt-5 text-center text-xs leading-6 text-muted">
               One account. A whole new conversation.
             </p>

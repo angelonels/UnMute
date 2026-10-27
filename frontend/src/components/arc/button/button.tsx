@@ -12,7 +12,26 @@ import {
 } from 'motion/react';
 import type { TargetAndTransition, Variants } from 'motion/react';
 import { motionTokens } from '../lib/motion-tokens';
-import styles from './button.module.css';
+
+const styles = {
+  button:
+    'relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-sm font-medium leading-normal whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress hover:enabled:opacity-90 active:enabled:opacity-80',
+  primary: 'border-text bg-text text-surface',
+  secondary: 'border-border bg-surface text-text hover:enabled:bg-surface-muted',
+  ghost: 'bg-transparent text-muted hover:enabled:bg-surface-muted hover:enabled:text-text',
+  danger:
+    'border-border bg-surface text-error hover:enabled:border-error hover:enabled:bg-error/10',
+  sm: 'min-h-11 px-3',
+  md: 'min-h-11',
+  lg: 'min-h-12 px-5',
+  labelPhase: 'inline-flex items-center justify-center gap-2 whitespace-nowrap [&_svg]:shrink-0',
+  loader: 'absolute top-1/2 left-1/2 -mt-2 -ml-2 grid size-4',
+  spinner:
+    'rounded-full border-[1.5px] border-current border-r-transparent motion-safe:animate-spin',
+  labelSlot: 'relative inline-flex min-w-0 items-center justify-center',
+  loadingLabel: 'opacity-0',
+  labelContent: 'inline-flex flex-none items-center',
+};
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';

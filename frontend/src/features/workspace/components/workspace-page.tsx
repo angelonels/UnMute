@@ -1,4 +1,6 @@
+import { useLocalMedia, LocalVideo } from '../../media';
 import { useState, type ReactNode } from 'react';
+import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ArrowRight,
@@ -33,27 +35,7 @@ export function WorkspacePage({ user }: { user: User }) {
   const { busy, failed, signOut } = useAuthActions(false);
   return (
     <div className="flex min-h-svh flex-col p-3 sm:p-4">
-      <header className="flex h-16 shrink-0 items-center justify-between gap-4 px-3 sm:px-5">
-        <div className="flex items-center gap-6">
-          <Brand />
-          <span className="hidden border-s border-border ps-6 text-sm text-muted sm:block">
-            Your workspace
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="me-3 hidden rounded-full bg-accent/25 px-3 py-1 text-xs font-medium text-text sm:block">
-            A little less noise.
-          </span>
-          <ThemeToggle />
-          <span
-            className="grid size-9 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-            aria-label={`Signed in as ${user.name}`}
-          >
-            {user.name.slice(0, 1).toUpperCase()}
-          </span>
-        </div>
-      </header>
-      <div className="relative mt-3 flex flex-1 gap-3">
+      <div className="relative flex flex-1 gap-3">
         <aside
           className={`hidden shrink-0 flex-col rounded-3xl bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
           aria-label="Workspace navigation"
@@ -61,7 +43,7 @@ export function WorkspacePage({ user }: { user: User }) {
           <div
             className={`flex h-12 items-center ${navigationOpen ? 'justify-between px-2' : 'justify-center'}`}
           >
-            {navigationOpen && <span className="text-xs font-medium text-muted">Workspace</span>}
+            {navigationOpen && <Brand />}
             <button
               type="button"
               aria-label={navigationOpen ? 'Collapse navigation' : 'Expand navigation'}
@@ -119,7 +101,7 @@ export function WorkspacePage({ user }: { user: User }) {
         <main
           className={`relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell ${sidePanelOpen ? 'xl:mr-84' : ''}`}
         >
-          <div className="flex min-h-20 items-center justify-between gap-3 px-5 sm:px-8">
+          <div className="flex min-h-16 items-center justify-between gap-3 px-5 sm:px-8">
             <div className="flex items-center gap-2">
               <div className="lg:hidden">
                 <Drawer>
@@ -164,35 +146,47 @@ export function WorkspacePage({ user }: { user: User }) {
                   </DrawerContent>
                 </Drawer>
               </div>
-              <h1 className="text-sm font-medium">Overview</h1>
+              <span className="lg:hidden">
+                <Brand compact />
+              </span>
+              <h1 className="hidden text-sm font-medium sm:block">Overview</h1>
             </div>
-            <Drawer modal={false} open={sidePanelOpen} onOpenChange={setSidePanelOpen}>
-              <DrawerTrigger asChild>
-                <button
-                  type="button"
-                  className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm text-muted hover:bg-surface-muted hover:text-text"
-                >
-                  <span className="hidden sm:inline">Side panel</span>
-                  <PanelRightOpen size={19} aria-hidden="true" />
-                  <span className="sr-only sm:hidden">Open side panel</span>
-                </button>
-              </DrawerTrigger>
-              <DrawerContent
-                title="Your side panel"
-                description="A little extra space, when you need it."
-                className="xl:top-23! xl:right-4! xl:bottom-4! xl:w-80! xl:rounded-[1.75rem]!"
+            <div className="flex items-center gap-1 sm:gap-2">
+              <ThemeToggle />
+              <span
+                className="me-2 grid size-8 place-items-center rounded-full bg-surface-muted text-xs font-medium"
+                aria-label={`Signed in as ${user.name}`}
               >
-                <div className="flex min-h-80 flex-col items-center justify-center text-center">
-                  <span className="grid size-14 place-items-center rounded-2xl bg-primary/8 text-primary">
-                    <PanelRightOpen size={24} strokeWidth={1.5} aria-hidden="true" />
-                  </span>
-                  <p className="mt-5 text-base font-medium">Room for more.</p>
-                  <p className="mt-2 max-w-56 text-sm leading-relaxed text-muted">
-                    Your workspace tools will live here.
-                  </p>
-                </div>
-              </DrawerContent>
-            </Drawer>
+                {user.name.slice(0, 1).toUpperCase()}
+              </span>
+              <Drawer modal={false} open={sidePanelOpen} onOpenChange={setSidePanelOpen}>
+                <DrawerTrigger asChild>
+                  <button
+                    type="button"
+                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm text-muted hover:bg-surface-muted hover:text-text"
+                  >
+                    <span className="hidden sm:inline">Side panel</span>
+                    <PanelRightOpen size={19} aria-hidden="true" />
+                    <span className="sr-only sm:hidden">Open side panel</span>
+                  </button>
+                </DrawerTrigger>
+                <DrawerContent
+                  title="Your side panel"
+                  description="A little extra space, when you need it."
+                  className="xl:top-4! xl:right-4! xl:bottom-4! xl:w-80! xl:rounded-[1.75rem]!"
+                >
+                  <div className="flex min-h-80 flex-col items-center justify-center text-center">
+                    <span className="grid size-14 place-items-center rounded-2xl bg-primary/8 text-primary">
+                      <PanelRightOpen size={24} strokeWidth={1.5} aria-hidden="true" />
+                    </span>
+                    <p className="mt-5 text-base font-medium">Room for more.</p>
+                    <p className="mt-2 max-w-56 text-sm leading-relaxed text-muted">
+                      Your workspace tools will live here.
+                    </p>
+                  </div>
+                </DrawerContent>
+              </Drawer>
+            </div>
           </div>
           <div className="flex flex-1 flex-col items-center justify-center px-5 pt-8 pb-10 text-center sm:px-8 sm:pt-16 sm:pb-24">
             <div
@@ -226,9 +220,18 @@ export function WorkspacePage({ user }: { user: User }) {
                   <ArrowRight size={18} aria-hidden="true" />
                 </Button>
               </Dialog.Trigger>
-              <MeetingPreview user={user} />
+              {previewOpen && <MeetingPreview user={user} />}
             </Dialog.Root>
             <span className="mt-4 text-xs text-muted">Your space. Your pace.</span>
+            {import.meta.env.DEV && (
+              <Link
+                to="/meeting"
+                search={{ demo: true, microphone: false, camera: false }}
+                className="mt-5 inline-flex min-h-11 items-center text-xs text-muted underline underline-offset-4"
+              >
+                Open meeting playground
+              </Link>
+            )}
           </div>
           <footer className="mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 py-5 text-xs text-muted sm:mx-8">
             <span className="inline-flex items-center gap-2">
@@ -296,8 +299,9 @@ function PreviewToggle({
 }
 
 function MeetingPreview({ user }: { user: User }) {
-  const [microphone, setMicrophone] = useState(false);
-  const [camera, setCamera] = useState(false);
+  const localMedia = useLocalMedia();
+  const microphone = !!localMedia.streams.microphone;
+  const camera = !!localMedia.streams.camera;
   return (
     <Dialog.Portal>
       <Dialog.Overlay className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm motion-reduce:backdrop-blur-none" />
@@ -319,10 +323,13 @@ function MeetingPreview({ user }: { user: User }) {
         <Dialog.Description id="preview-description" className="mt-2 text-sm text-muted">
           Make yourself comfortable.
         </Dialog.Description>
-        <div className="relative mt-6 flex aspect-video items-center justify-center rounded-2xl bg-panel text-white">
+        <div className="relative mt-6 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-panel text-white">
           <span className="grid size-20 place-items-center rounded-full bg-white/15 text-3xl font-medium">
             {user.name.slice(0, 1).toUpperCase()}
           </span>
+          {localMedia.streams.camera && (
+            <LocalVideo stream={localMedia.streams.camera} label="Your camera video" mirror />
+          )}
           <span className="absolute bottom-4 left-4 max-w-[80%] truncate text-sm">{user.name}</span>
           <span className="absolute top-4 right-4 rounded-full bg-black/20 px-3 py-1 text-xs">
             Preview
@@ -332,7 +339,7 @@ function MeetingPreview({ user }: { user: User }) {
           <PreviewToggle
             label="Microphone"
             enabled={microphone}
-            onClick={() => setMicrophone(!microphone)}
+            onClick={() => localMedia.toggle('microphone')}
           >
             {microphone ? (
               <Mic size={18} aria-hidden="true" />
@@ -341,7 +348,11 @@ function MeetingPreview({ user }: { user: User }) {
             )}
             Mic {microphone ? 'on' : 'off'}
           </PreviewToggle>
-          <PreviewToggle label="Camera" enabled={camera} onClick={() => setCamera(!camera)}>
+          <PreviewToggle
+            label="Camera"
+            enabled={camera}
+            onClick={() => localMedia.toggle('camera')}
+          >
             {camera ? (
               <Video size={18} aria-hidden="true" />
             ) : (
@@ -354,8 +365,23 @@ function MeetingPreview({ user }: { user: User }) {
           role="status"
           className="mt-5 rounded-xl bg-surface-muted p-4 text-sm leading-6 text-muted"
         >
-          Preview only. Your devices are not active, and no meeting has started.
+          {localMedia.pending.camera || localMedia.pending.microphone
+            ? 'Waiting for device access…'
+            : 'Your preview stays on this device.'}
         </p>
+        {localMedia.error && (
+          <p role="alert" className="mt-3 text-sm text-error">
+            {localMedia.error}
+          </p>
+        )}
+        <Link
+          to="/meeting"
+          search={{ demo: false, microphone, camera }}
+          className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary"
+        >
+          Enter meeting preview
+          <ArrowRight size={17} aria-hidden="true" />
+        </Link>
         <Dialog.Close asChild>
           <Button variant="secondary" size="lg" className="mt-6 w-full">
             <ArrowLeft size={17} aria-hidden="true" />
