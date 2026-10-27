@@ -155,18 +155,19 @@ export function LocalVideo({
   contain?: boolean;
 }) {
   const video = useRef<HTMLVideoElement>(null);
-  const playbackRequest = useRef(0);
+  const playbackRequest = useRef({ value: 0 });
   const [blocked, setBlocked] = useState(false);
   const play = useCallback(() => {
     const element = video.current;
     if (element) {
-      const request = ++playbackRequest.current;
+      const requests = playbackRequest.current;
+      const request = ++requests.value;
       void element.play().then(
         () => {
-          if (request === playbackRequest.current) setBlocked(false);
+          if (request === requests.value) setBlocked(false);
         },
         () => {
-          if (request === playbackRequest.current) setBlocked(true);
+          if (request === requests.value) setBlocked(true);
         },
       );
     }
@@ -174,10 +175,11 @@ export function LocalVideo({
   useEffect(() => {
     const element = video.current;
     if (!element) return;
+    const requests = playbackRequest.current;
     element.srcObject = stream;
     play();
     return () => {
-      playbackRequest.current++;
+      requests.value++;
       element.srcObject = null;
     };
   }, [stream, play]);
