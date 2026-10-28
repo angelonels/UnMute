@@ -1,3 +1,4 @@
+import type { RefObject } from 'react';
 import { m } from 'motion/react';
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import Markdown from 'react-markdown';
@@ -152,51 +153,11 @@ export function AIConversation({
           setAway(readingHistory);
           ai.setReadingHistory(readingHistory);
         }}
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 [scrollbar-width:thin]"
+        className="min-h-24 flex-1 overflow-y-auto overscroll-contain px-5 [scrollbar-width:thin]"
       >
         <div ref={content} className="flex min-h-full flex-col py-6">
           {!ai.messages.length ? (
-            <div className="my-auto py-2">
-              <h2 className="text-[28px] leading-[1.15] font-medium tracking-[-0.045em]">
-                What’s on
-                <br />
-                <span className="text-muted">your mind?</span>
-              </h2>
-              <p className="mt-4 max-w-64 text-sm leading-6 text-muted">
-                {unavailable
-                  ? 'Mumo will be here when your meeting is connected.'
-                  : 'A fresh perspective, a quick recap, or a place to untangle a thought.'}
-              </p>
-              <div className="mt-6 space-y-2">
-                {suggestions.map(({ title, detail, prompt, icon: Icon }) => (
-                  <button
-                    key={title}
-                    type="button"
-                    aria-label={prompt}
-                    disabled={disabled || unavailable}
-                    onClick={() => send(prompt)}
-                    className="group flex min-h-18 w-full cursor-pointer items-center gap-3 rounded-2xl border border-border/70 px-3 py-3 text-left hover:bg-surface-muted disabled:cursor-default disabled:opacity-45 motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:active:not-focus-visible:scale-[0.98]"
-                  >
-                    <Icon
-                      width={19}
-                      height={19}
-                      className="shrink-0 text-muted"
-                      aria-hidden="true"
-                    />
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-xs font-medium">{title}</span>
-                      <span className="mt-1 block text-[11px] leading-4 text-muted">{detail}</span>
-                    </span>
-                    <ArrowUp
-                      width={14}
-                      height={14}
-                      className="rotate-45 text-muted"
-                      aria-hidden="true"
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
+            <ConversationWelcome unavailable={unavailable} disabled={disabled} send={send} />
           ) : (
             <div
               role="log"
@@ -214,57 +175,22 @@ export function AIConversation({
                     {message.text}
                   </div>
                 ) : (
-                  <article key={message.id} aria-label="Mumo’s answer">
-                    {message.state === 'waiting' ? (
-                      <p className="text-sm text-muted" role="status">
-                        Thinking…
-                      </p>
-                    ) : (
-                      <m.div
-                        key="answer"
-                        initial={{ opacity: keyboard || reduced ? 1 : 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
-                      >
-                        <Answer text={message.text} />
-                      </m.div>
-                    )}
-                    {message.state === 'streaming' && (
-                      <span
-                        className="mt-2 block h-1 w-5 rounded-full bg-primary/50"
-                        aria-hidden="true"
-                      />
-                    )}
-                    {message.state === 'stopped' && (
-                      <p className="mt-2 text-xs text-muted">Stopped</p>
-                    )}
-                    {message.error && (
-                      <p role="alert" className="mt-3 text-xs leading-5 text-error">
-                        {message.error}
-                      </p>
-                    )}
-                    {!ai.busy && (
-                      <div className="-ms-2 mt-2 flex items-center gap-1">
-                        {message.text && <CopyAnswer text={message.text} />}
-                        {index === ai.messages.length - 1 && (
-                          <button
-                            type="button"
-                            disabled={disabled || unavailable}
-                            onClick={() => {
-                              revealSubmission.current = true;
-                              following.current = true;
-                              setAway(false);
-                              ai.retry();
-                              input.current?.focus();
-                            }}
-                            className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[11px] text-muted hover:bg-surface-muted hover:text-text disabled:opacity-40"
-                          >
-                            <Refresh width={14} height={14} aria-hidden="true" /> Try again
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </article>
+                  <ConversationAnswer
+                    key={message.id}
+                    message={message}
+                    retry={index === ai.messages.length - 1}
+                    ai={ai}
+                    disabled={disabled}
+                    keyboard={keyboard}
+                    reduced={reduced}
+                    onRetry={() => {
+                      revealSubmission.current = true;
+                      following.current = true;
+                      setAway(false);
+                      ai.retry();
+                      input.current?.focus();
+                    }}
+                  />
                 ),
               )}
             </div>
@@ -288,53 +214,176 @@ export function AIConversation({
           <ArrowDown width={13} height={13} /> Latest answer
         </button>
       )}
-      <div className="shrink-0 p-4 pt-3">
-        <div className="rounded-[1.25rem] border border-border bg-surface-muted/35 p-3 focus-within:border-input">
-          <textarea
-            ref={input}
-            aria-label="Message Mumo"
-            placeholder={'Message Mumo…'}
-            value={ai.draft}
-            onFocus={() => ai.setComposerFocused(true)}
-            onBlur={() => ai.setComposerFocused(false)}
-            onChange={(event) => ai.setDraft(event.target.value)}
-            maxLength={2000}
+      <ConversationComposer ai={ai} disabled={disabled} input={input} send={send} />
+    </>
+  );
+}
+
+function ConversationWelcome({
+  unavailable,
+  disabled,
+  send,
+}: {
+  unavailable: boolean;
+  disabled: boolean;
+  send: (prompt: string) => void;
+}) {
+  return (
+    <div className="my-auto py-2">
+      <h2 className="text-[28px] leading-[1.15] font-medium tracking-[-0.045em]">
+        What’s on
+        <br />
+        <span className="text-muted">your mind?</span>
+      </h2>
+      <p className="mt-4 max-w-64 text-sm leading-6 text-muted">
+        {unavailable
+          ? 'Mumo will be here when your meeting is connected.'
+          : 'A fresh perspective, a quick recap, or a place to untangle a thought.'}
+      </p>
+      <div className="mt-6 space-y-2">
+        {suggestions.map(({ title, detail, prompt, icon: Icon }) => (
+          <button
+            key={title}
+            type="button"
+            aria-label={prompt}
             disabled={disabled || unavailable}
-            rows={1}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
-                event.preventDefault();
-                if (!ai.busy) send();
-              }
-            }}
-            className="block max-h-32 min-h-11 w-full resize-none bg-transparent text-sm leading-6 outline-none! [field-sizing:content] placeholder:text-muted disabled:opacity-50"
-          />
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] text-muted">
-              {ai.busy ? 'Mumo is on it…' : 'Just a thought away'}
-              {ai.draft.length > 1600 && ` · ${ai.draft.length}/2000`}
+            onClick={() => send(prompt)}
+            className="group flex min-h-18 w-full cursor-pointer items-center gap-3 rounded-2xl border border-border/70 px-3 py-3 text-left hover:bg-surface-muted disabled:cursor-default disabled:opacity-45 motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:active:not-focus-visible:scale-[0.98]"
+          >
+            <Icon width={19} height={19} className="shrink-0 text-muted" aria-hidden="true" />
+            <span className="min-w-0 flex-1">
+              <span className="block text-xs font-medium">{title}</span>
+              <span className="mt-1 block text-[11px] leading-4 text-muted">{detail}</span>
             </span>
-            <button
-              type="button"
-              aria-label={ai.busy ? 'Stop response' : 'Send message to Mumo'}
-              aria-disabled={!ai.busy && (unavailable || disabled || !ai.draft.trim())}
-              onClick={() => {
-                if (ai.busy) {
-                  ai.stop();
-                  input.current?.focus();
-                } else if (!unavailable && !disabled && ai.draft.trim()) send();
-              }}
-              className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface aria-disabled:cursor-default aria-disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.96]"
-            >
-              {ai.busy ? (
-                <Square width={15} height={15} strokeWidth={2} aria-hidden="true" />
-              ) : (
-                <ArrowUp width={18} height={18} aria-hidden="true" />
-              )}
-            </button>
-          </div>
+            <ArrowUp width={14} height={14} className="rotate-45 text-muted" aria-hidden="true" />
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ConversationComposer({
+  ai,
+  disabled,
+  input,
+  send,
+}: {
+  ai: Conversation;
+  disabled: boolean;
+  input: RefObject<HTMLTextAreaElement | null>;
+  send: () => void;
+}) {
+  const unavailable = !ai.available;
+  return (
+    <div className="shrink-0 p-4 pt-3">
+      <div className="rounded-[1.25rem] border border-border bg-surface-muted/35 p-3 focus-within:border-input">
+        <textarea
+          ref={input}
+          aria-label="Message Mumo"
+          placeholder={'Message Mumo…'}
+          value={ai.draft}
+          onFocus={() => ai.setComposerFocused(true)}
+          onBlur={() => ai.setComposerFocused(false)}
+          onChange={(event) => ai.setDraft(event.target.value)}
+          maxLength={2000}
+          disabled={disabled || unavailable}
+          rows={1}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              if (!ai.busy) send();
+            }
+          }}
+          className="block max-h-32 min-h-11 w-full resize-none bg-transparent text-base sm:text-sm leading-6 outline-none! [field-sizing:content] placeholder:text-muted disabled:opacity-50"
+        />
+        <div className="flex items-center justify-between gap-2">
+          <span className="text-[10px] text-muted">
+            {ai.busy ? 'Mumo is on it…' : 'Just a thought away'}
+            {ai.draft.length > 1600 && ` · ${ai.draft.length}/2000`}
+          </span>
+          <button
+            type="button"
+            aria-label={ai.busy ? 'Stop response' : 'Send message to Mumo'}
+            aria-disabled={!ai.busy && (unavailable || disabled || !ai.draft.trim())}
+            onClick={() => {
+              if (ai.busy) {
+                ai.stop();
+                input.current?.focus();
+              } else if (!unavailable && !disabled && ai.draft.trim()) send();
+            }}
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface aria-disabled:cursor-default aria-disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.96]"
+          >
+            {ai.busy ? (
+              <Square width={15} height={15} strokeWidth={2} aria-hidden="true" />
+            ) : (
+              <ArrowUp width={18} height={18} aria-hidden="true" />
+            )}
+          </button>
         </div>
       </div>
-    </>
+    </div>
+  );
+}
+
+function ConversationAnswer({
+  message,
+  retry,
+  ai,
+  disabled,
+  keyboard,
+  reduced,
+  onRetry,
+}: {
+  message: Conversation['messages'][number];
+  retry: boolean;
+  ai: Conversation;
+  disabled: boolean;
+  keyboard: boolean;
+  reduced: boolean;
+  onRetry: () => void;
+}) {
+  const unavailable = !ai.available;
+  return (
+    <article aria-label="Mumo’s answer">
+      {message.state === 'waiting' ? (
+        <p className="text-sm text-muted" role="status">
+          Thinking…
+        </p>
+      ) : (
+        <m.div
+          key="answer"
+          initial={{ opacity: keyboard || reduced ? 1 : 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.12, ease: [0.23, 1, 0.32, 1] }}
+        >
+          <Answer text={message.text} />
+        </m.div>
+      )}
+      {message.state === 'streaming' && (
+        <span className="mt-2 block h-1 w-5 rounded-full bg-primary/50" aria-hidden="true" />
+      )}
+      {message.state === 'stopped' && <p className="mt-2 text-xs text-muted">Stopped</p>}
+      {message.error && (
+        <p role="alert" className="mt-3 text-xs leading-5 text-error">
+          {message.error}
+        </p>
+      )}
+      {!ai.busy && (
+        <div className="-ms-2 mt-2 flex items-center gap-1">
+          {message.text && <CopyAnswer text={message.text} />}
+          {retry && (
+            <button
+              type="button"
+              disabled={disabled || unavailable}
+              onClick={onRetry}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[11px] text-muted hover:bg-surface-muted hover:text-text disabled:opacity-40"
+            >
+              <Refresh width={14} height={14} aria-hidden="true" /> Try again
+            </button>
+          )}
+        </div>
+      )}
+    </article>
   );
 }

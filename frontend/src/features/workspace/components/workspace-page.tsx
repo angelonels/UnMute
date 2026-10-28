@@ -46,59 +46,13 @@ export function WorkspacePage({ user }: { user: User }) {
       onPointerDownCapture={() => setKeyboard(false)}
     >
       <div className="relative flex flex-1 gap-3">
-        <aside
-          className={`hidden shrink-0 flex-col rounded-3xl bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
-          aria-label="Workspace navigation"
-        >
-          <div
-            className={`flex h-12 items-center ${navigationOpen ? 'justify-between px-2' : 'justify-center'}`}
-          >
-            {navigationOpen && <Brand />}
-            <button
-              type="button"
-              aria-label={navigationOpen ? 'Collapse navigation' : 'Expand navigation'}
-              aria-expanded={navigationOpen}
-              aria-controls="navigation-content"
-              onClick={() => setNavigationOpen(!navigationOpen)}
-              className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none hover:text-text"
-            >
-              {navigationOpen ? (
-                <PanelLeftClose width={19} height={19} aria-hidden="true" />
-              ) : (
-                <PanelLeftOpen width={19} height={19} aria-hidden="true" />
-              )}
-            </button>
-          </div>
-          <nav id="navigation-content" className="mt-4 flex flex-1 flex-col">
-            <a
-              href="/"
-              aria-current="page"
-              aria-label="Overview"
-              className={`flex h-11 items-center gap-3 rounded-xl bg-primary/9 text-sm font-medium text-primary ${navigationOpen ? 'px-3' : 'justify-center'}`}
-            >
-              <LayoutGrid width={18} height={18} aria-hidden="true" />
-              {navigationOpen && 'Overview'}
-            </a>
-          </nav>
-          <div className="mt-8 border-t border-border/60 pt-3">
-            <Help compact={!navigationOpen} />
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => void signOut()}
-              aria-label="Sign out"
-              className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text disabled:cursor-wait ${navigationOpen ? 'px-3' : 'justify-center'}`}
-            >
-              <LogOut width={18} height={18} aria-hidden="true" />
-              {navigationOpen && (busy ? 'Signing out…' : 'Sign out')}
-            </button>
-            {failed && (
-              <p role="alert" className="px-2 text-xs text-error">
-                Sign-out failed. Try again.
-              </p>
-            )}
-          </div>
-        </aside>
+        <WorkspaceNavigation
+          navigationOpen={navigationOpen}
+          onToggle={() => setNavigationOpen(!navigationOpen)}
+          busy={busy}
+          failed={failed}
+          signOut={signOut}
+        />
         <m.main
           layout={reduced || keyboard ? false : 'position'}
           layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
@@ -414,5 +368,75 @@ function MeetingPreview({
         </Button>
       </Dialog.Close>
     </ModalSurface>
+  );
+}
+
+function WorkspaceNavigation({
+  navigationOpen,
+  onToggle,
+  busy,
+  failed,
+  signOut,
+}: {
+  navigationOpen: boolean;
+  onToggle: () => void;
+  busy: boolean;
+  failed: boolean;
+  signOut: () => Promise<void>;
+}) {
+  return (
+    <aside
+      className={`hidden shrink-0 flex-col rounded-3xl bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
+      aria-label="Workspace navigation"
+    >
+      <div
+        className={`flex h-12 items-center ${navigationOpen ? 'justify-between px-2' : 'justify-center'}`}
+      >
+        {navigationOpen && <Brand />}
+        <button
+          type="button"
+          aria-label={navigationOpen ? 'Collapse navigation' : 'Expand navigation'}
+          aria-expanded={navigationOpen}
+          aria-controls="navigation-content"
+          onClick={onToggle}
+          className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none hover:text-text"
+        >
+          {navigationOpen ? (
+            <PanelLeftClose width={19} height={19} aria-hidden="true" />
+          ) : (
+            <PanelLeftOpen width={19} height={19} aria-hidden="true" />
+          )}
+        </button>
+      </div>
+      <nav id="navigation-content" className="mt-4 flex flex-1 flex-col">
+        <a
+          href="/"
+          aria-current="page"
+          aria-label="Overview"
+          className={`flex h-11 items-center gap-3 rounded-xl bg-primary/9 text-sm font-medium text-primary ${navigationOpen ? 'px-3' : 'justify-center'}`}
+        >
+          <LayoutGrid width={18} height={18} aria-hidden="true" />
+          {navigationOpen && 'Overview'}
+        </a>
+      </nav>
+      <div className="mt-8 border-t border-border/60 pt-3">
+        <Help compact={!navigationOpen} />
+        <button
+          type="button"
+          disabled={busy}
+          onClick={() => void signOut()}
+          aria-label="Sign out"
+          className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text disabled:cursor-wait ${navigationOpen ? 'px-3' : 'justify-center'}`}
+        >
+          <LogOut width={18} height={18} aria-hidden="true" />
+          {navigationOpen && (busy ? 'Signing out…' : 'Sign out')}
+        </button>
+        {failed && (
+          <p role="alert" className="px-2 text-xs text-error">
+            Sign-out failed. Try again.
+          </p>
+        )}
+      </div>
+    </aside>
   );
 }

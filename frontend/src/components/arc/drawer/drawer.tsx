@@ -12,9 +12,9 @@ import {
   useRef,
   useState,
 } from 'react';
-import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode, RefObject, ContextType } from 'react';
 import { AnimatePresence, animate, m as motion, useMotionValue } from 'motion/react';
-import type { PanInfo, Transition } from 'motion/react';
+import type { PanInfo, Transition, TargetAndTransition } from 'motion/react';
 import { Xmark as X } from 'iconoir-react';
 import { motionTokens } from '../lib/motion-tokens';
 
@@ -184,42 +184,13 @@ export function DrawerContent({
   const drawer = useContext(DrawerContext);
   const reduced = useReducedMotion();
   const keyboard = drawer?.keyboard ?? false;
-  const panelRef = useRef<HTMLDivElement>(null);
-  const offset = useMotionValue<number | string>(0);
-  const pan = useRef<number | null>(null);
-  const axis = side === 'left' || side === 'right' ? 'x' : 'y';
-  const sign = side === 'right' || side === 'bottom' ? 1 : -1;
-  const offscreen = { [axis]: `${sign * 100}%` };
+  const policy = drawerMotion(keyboard, reduced);
+  const { panelRef, offset, axis, offscreen, draggable, panStart, panMove, panEnd } = useDrawerPan(
+    side,
+    drawer,
+    reduced,
+  );
   const classes = [styles.content, className].filter(Boolean).join(' ');
-  const draggable = drawer !== null && !reduced;
-
-  const panelSize = () =>
-    (axis === 'x' ? panelRef.current?.offsetWidth : panelRef.current?.offsetHeight) ?? 480;
-
-  // The header is the grab handle. It follows the pointer toward the edge and rubber-bands the other way.
-  function panStart(event: PointerEvent) {
-    const target = event.target instanceof Element ? event.target : null;
-    if (!draggable || target?.closest("button, a, input, select, textarea, [role='button']"))
-      return;
-    // The entrance animates in percent of the panel, so a grab mid-flight converts it to pixels.
-    const value = offset.get();
-    pan.current = typeof value === 'number' ? value : (parseFloat(value) / 100) * panelSize();
-    offset.stop();
-  }
-  function panMove(_: PointerEvent, info: PanInfo) {
-    if (pan.current === null) return;
-    const toward = (pan.current + info.offset[axis]) * sign;
-    offset.set(sign * (toward >= 0 ? toward : -Math.sqrt(-toward)));
-  }
-  // Past a third of the panel, or on a quick flick toward the edge, the drawer closes and keeps its velocity; otherwise it springs back.
-  function panEnd(_: PointerEvent, info: PanInfo) {
-    if (pan.current === null) return;
-    pan.current = null;
-    const toward = Number(offset.get()) * sign;
-    if (toward > panelSize() / 3 || (toward > 0 && info.velocity[axis] * sign > 500))
-      drawer?.fling();
-    else animate(offset, 0, motionTokens.spring.snappy);
-  }
 
   const inner = (
     <>
@@ -279,30 +250,9 @@ export function DrawerContent({
               data-contained={container ? '' : undefined}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              variants={{
-                exit: ({ keyboard: instant }: { keyboard: boolean }) => ({
-                  opacity: 0,
-                  transition: instant
-                    ? { duration: 0 }
-                    : reduced
-                      ? fade
-                      : {
-                          duration: motionTokens.duration.fast,
-                          ease: [...motionTokens.ease.standard],
-                        },
-                }),
-              }}
+              variants={{ exit: policy.overlayExit }}
               exit="exit"
-              transition={
-                keyboard
-                  ? { duration: 0 }
-                  : reduced
-                    ? fade
-                    : {
-                        duration: motionTokens.duration.standard,
-                        ease: [...motionTokens.ease.enter],
-                      }
-              }
+              transition={policy.overlay}
             />
           </DialogPrimitive.Overlay>
           <DialogPrimitive.Content
@@ -322,24 +272,11 @@ export function DrawerContent({
               data-side={side}
               data-contained={container ? '' : undefined}
               style={{ [axis]: offset }}
-              variants={{
-                exit: ({ flung, keyboard: instant }: { flung: boolean; keyboard: boolean }) =>
-                  instant
-                    ? { opacity: 0, transition: { duration: 0 } }
-                    : reduced
-                      ? { opacity: 0, transition: fade }
-                      : { ...offscreen, opacity: [1, 1, 0], transition: flung ? flingOut : leave },
-              }}
-              initial={keyboard ? false : reduced ? { opacity: 0 } : { ...offscreen, opacity: 1 }}
+              variants={{ exit: policy.panelExit(offscreen) }}
+              initial={policy.initial(offscreen)}
               animate={{ [axis]: 0, opacity: 1 }}
               exit="exit"
-              transition={
-                keyboard
-                  ? { duration: 0 }
-                  : reduced
-                    ? { ...fade, [axis]: { duration: 0 } }
-                    : motionTokens.spring.smooth
-              }
+              transition={policy.panel(axis)}
             >
               {inner}
             </motion.div>
@@ -351,3 +288,82 @@ export function DrawerContent({
 }
 
 export default Drawer;
+
+function useDrawerPan(
+  side: NonNullable<DrawerContentProps['side']>,
+  drawer: ContextType<typeof DrawerContext>,
+  reduced: boolean,
+) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const offset = useMotionValue<number | string>(0);
+  const pan = useRef<number | null>(null);
+  const axis = side === 'left' || side === 'right' ? 'x' : 'y';
+  const sign = side === 'right' || side === 'bottom' ? 1 : -1;
+  const offscreen = { [axis]: `${sign * 100}%` };
+  const draggable = drawer !== null && !reduced;
+
+  const panelSize = () =>
+    (axis === 'x' ? panelRef.current?.offsetWidth : panelRef.current?.offsetHeight) ?? 480;
+
+  // The header is the grab handle. It follows the pointer toward the edge and rubber-bands the other way.
+  function panStart(event: PointerEvent) {
+    const target = event.target instanceof Element ? event.target : null;
+    if (!draggable || target?.closest("button, a, input, select, textarea, [role='button']"))
+      return;
+    // The entrance animates in percent of the panel, so a grab mid-flight converts it to pixels.
+    const value = offset.get();
+    pan.current = typeof value === 'number' ? value : (parseFloat(value) / 100) * panelSize();
+    offset.stop();
+  }
+  function panMove(_: PointerEvent, info: PanInfo) {
+    if (pan.current === null) return;
+    const toward = (pan.current + info.offset[axis]) * sign;
+    offset.set(sign * (toward >= 0 ? toward : -Math.sqrt(-toward)));
+  }
+  // Past a third of the panel, or on a quick flick toward the edge, the drawer closes and keeps its velocity; otherwise it springs back.
+  function panEnd(_: PointerEvent, info: PanInfo) {
+    if (pan.current === null) return;
+    pan.current = null;
+    const toward = Number(offset.get()) * sign;
+    if (toward > panelSize() / 3 || (toward > 0 && info.velocity[axis] * sign > 500))
+      drawer?.fling();
+    else animate(offset, 0, motionTokens.spring.snappy);
+  }
+
+  return { panelRef, offset, axis, offscreen, draggable, panStart, panMove, panEnd };
+}
+
+function drawerMotion(keyboard: boolean, reduced: boolean) {
+  const overlay: Transition = keyboard
+    ? { duration: 0 }
+    : reduced
+      ? fade
+      : { duration: motionTokens.duration.standard, ease: [...motionTokens.ease.enter] };
+  return {
+    overlay,
+    overlayExit: ({ keyboard: instant }: { keyboard: boolean }): TargetAndTransition => ({
+      opacity: 0,
+      transition: instant
+        ? { duration: 0 }
+        : reduced
+          ? fade
+          : { duration: motionTokens.duration.fast, ease: [...motionTokens.ease.standard] },
+    }),
+    panelExit:
+      (offscreen: Record<string, string>) =>
+      ({ flung, keyboard: instant }: { flung: boolean; keyboard: boolean }) =>
+        instant
+          ? { opacity: 0, transition: { duration: 0 } }
+          : reduced
+            ? { opacity: 0, transition: fade }
+            : { ...offscreen, opacity: [1, 1, 0], transition: flung ? flingOut : leave },
+    initial: (offscreen: Record<string, string>) =>
+      keyboard ? (false as const) : reduced ? { opacity: 0 } : { ...offscreen, opacity: 1 },
+    panel: (axis: string): Transition =>
+      keyboard
+        ? { duration: 0 }
+        : reduced
+          ? { ...fade, [axis]: { duration: 0 } }
+          : motionTokens.spring.smooth,
+  };
+}

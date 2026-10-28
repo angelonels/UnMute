@@ -97,6 +97,20 @@ export function createCompanionScene(
     const segments = 96,
       rings = 24,
       depth = 0.61;
+    const angles = Array.from(
+      { length: segments },
+      (_, i) => (i / segments) * Math.PI * 2 - Math.PI / 2,
+    );
+    const outlineCos = angles.map(Math.cos),
+      outlineSin = angles.map(Math.sin);
+    const ringSin = Array.from({ length: rings + 1 }, (_, ring) =>
+      Math.sin((ring / rings) * Math.PI),
+    );
+    const ringDepth = Array.from(
+      { length: rings + 1 },
+      (_, ring) => Math.cos((ring / rings) * Math.PI) * depth,
+    );
+    const outlineRadius = new Float64Array(segments);
     const vertices = new Float32Array((rings + 1) * segments * 3);
     const bodyGeometry = geo(new THREE.BufferGeometry());
     bodyGeometry.setAttribute(
@@ -236,22 +250,22 @@ export function createCompanionScene(
       const sx = pose.sx * (1 + 0.7 * frame.squash),
         sy = pose.sy * (1 - frame.squash);
       const bodyPosition = bodyGeometry.getAttribute('position');
+      for (let i = 0; i < segments; i++) {
+        const a = angles[i]!;
+        const wobble =
+          1 +
+          pose.wob *
+            (0.6 * Math.sin(3 * a + time * pose.ws) + 0.4 * Math.sin(5 * a - time * pose.ws * 1.3));
+        outlineRadius[i] = frame.radii[i]! * wobble;
+      }
       for (let ring = 0; ring <= rings; ring++) {
-        const latitude = (ring / rings) * Math.PI;
-        const ringSize = Math.sin(latitude);
         for (let i = 0; i < segments; i++) {
-          const a = (i / segments) * Math.PI * 2 - Math.PI / 2;
-          const wobble =
-            1 +
-            pose.wob *
-              (0.6 * Math.sin(3 * a + time * pose.ws) +
-                0.4 * Math.sin(5 * a - time * pose.ws * 1.3));
-          const radius = frame.radii[i]! * ringSize * wobble;
+          const radius = outlineRadius[i]! * ringSin[ring]!;
           bodyPosition.setXYZ(
             ring * segments + i,
-            Math.cos(a) * radius,
-            -Math.sin(a) * radius,
-            Math.cos(latitude) * depth,
+            outlineCos[i]! * radius,
+            -outlineSin[i]! * radius,
+            ringDepth[ring]!,
           );
         }
       }

@@ -41,7 +41,8 @@ function capture(source: MediaSource, deviceId?: string, mode = 'native') {
 
 /** Owns local capture resources. Late permission responses never outlive their owner. */
 export function useLocalMedia(initialMicrophone = false, initialCamera = false, mode = 'native') {
-  const resources = useRef<Streams>(emptyStreams());
+  const [ownedStreams] = useState(emptyStreams);
+  const resources = useRef(ownedStreams);
   const selected = useRef<Partial<Record<MediaSource, string>>>({});
   const [selectedDevices, setSelectedDevices] = useState<Partial<Record<MediaSource, string>>>({});
   const generations = useRef({ camera: 0, microphone: 0, screen: 0 });

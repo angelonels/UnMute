@@ -203,25 +203,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   );
   // A trigger that anchors a menu, popover, or dialog keeps its rect still while pressed, so the layer never measures a scaled anchor.
   // Radix triggers (asChild) pass aria-haspopup or data-state through; the stylesheet repeats the guard.
-  const popup = props['aria-haspopup'];
-  const anchorsLayer =
-    (popup !== undefined && popup !== false && popup !== 'false') ||
-    props.role === 'combobox' ||
-    (props as Record<string, unknown>)['data-state'] !== undefined;
-  const inert =
-    disabled || loading || props['aria-disabled'] === true || props['aria-disabled'] === 'true';
-  const classes = [
-    styles.button,
-    styles[variant],
-    styles[size],
-    !anchorsLayer && !inert && !keyboard
-      ? 'motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]'
-      : '',
-    keyboard ? 'transition-none!' : '',
-    className,
-  ]
-    .filter(Boolean)
-    .join(' ');
+  const classes = buttonClasses(props, { disabled, loading, keyboard, variant, size, className });
 
   return (
     <motion.button
@@ -250,29 +232,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         onClick?.(event);
       }}
     >
-      {keyboard ? (
-        loading ? (
-          <span className={styles.loader} aria-hidden="true">
-            <span className={styles.spinner} />
-          </span>
-        ) : null
-      ) : (
-        <AnimatePresence initial={false}>
-          {loading ? (
-            <motion.span
-              key="loader"
-              className={styles.loader}
-              aria-hidden="true"
-              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={reduceMotion ? fadeOut : { ...iconOut, scale: 0.95 }}
-              transition={reduceMotion ? { duration: motionTokens.duration.instant } : iconEnter}
-            >
-              <span className={styles.spinner} />
-            </motion.span>
-          ) : null}
-        </AnimatePresence>
-      )}
+      <ButtonLoader loading={loading} instant={keyboard || reduceMotion} />
       <motion.span
         className={[styles.labelSlot, loading ? styles.loadingLabel : ''].filter(Boolean).join(' ')}
         style={{ width: keyboard ? 'auto' : width }}
@@ -300,3 +260,67 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 Button.displayName = 'Button';
 
 export default Button;
+
+function buttonClasses(
+  props: ButtonProps,
+  {
+    disabled,
+    loading,
+    keyboard,
+    variant,
+    size,
+    className,
+  }: {
+    disabled?: boolean;
+    loading: boolean;
+    keyboard: boolean;
+    variant: ButtonVariant;
+    size: ButtonSize;
+    className?: string;
+  },
+) {
+  const popup = props['aria-haspopup'];
+  const anchorsLayer =
+    (popup !== undefined && popup !== false && popup !== 'false') ||
+    props.role === 'combobox' ||
+    (props as Record<string, unknown>)['data-state'] !== undefined;
+  const inert =
+    disabled || loading || props['aria-disabled'] === true || props['aria-disabled'] === 'true';
+  const classes = [
+    styles.button,
+    styles[variant],
+    styles[size],
+    !anchorsLayer && !inert && !keyboard
+      ? 'motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]'
+      : '',
+    keyboard ? 'transition-none!' : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  return classes;
+}
+function ButtonLoader({ loading, instant }: { loading: boolean; instant: boolean }) {
+  return (
+    <AnimatePresence initial={false}>
+      {loading && (
+        <motion.span
+          key="loader"
+          className={styles.loader}
+          aria-hidden="true"
+          initial={instant ? false : { opacity: 0, transform: 'scale(0.95)' }}
+          animate={{ opacity: 1, transform: 'scale(1)' }}
+          exit={
+            instant
+              ? { opacity: 0, transition: { duration: 0 } }
+              : { ...iconOut, transform: 'scale(0.95)' }
+          }
+          transition={instant ? { duration: 0 } : iconEnter}
+        >
+          <span className={styles.spinner} />
+        </motion.span>
+      )}
+    </AnimatePresence>
+  );
+}

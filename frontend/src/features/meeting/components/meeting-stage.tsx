@@ -1,5 +1,5 @@
 import { LocalVideo } from '../../media';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   ArrowRight,
@@ -52,26 +52,15 @@ export function MeetingStage({
     observer.observe(stage);
     return () => observer.disconnect();
   }, []);
-  const focus =
-    people.find((person) => person.id === pinnedId) ??
-    people.find((person) => person.id === speakerId) ??
-    people[0];
-  const focused = layout === 'focus' || sharing;
-  const sticky = sharing ? people.find((person) => person.id === pinnedId) : undefined;
-  const allOrdered = focused
-    ? focusOrder(people, pinnedId, speakerId, sharing ? undefined : focus?.id)
-    : people;
-  const ordered = allOrdered.filter((person) => person.id !== sticky?.id);
-  const geometry = galleryGeometry(size.width, size.height, ordered.length);
-  const slots = focused ? (size.width < 520 ? 2 : size.width < 900 ? 3 : 5) : geometry.capacity;
-  const capacity = Math.max(1, slots - (sticky ? 1 : 0));
-  const pageCount = Math.max(1, Math.ceil(ordered.length / capacity));
-  const currentPage = Math.min(page, pageCount - 1);
-  const visible = [
-    ...(sticky ? [sticky] : []),
-    ...ordered.slice(currentPage * capacity, (currentPage + 1) * capacity),
-  ];
-  const columns = Math.min(geometry.columns, visible.length || 1);
+  const { focus, focused, visible, columns, pageCount, currentPage } = stageSelection(
+    people,
+    pinnedId,
+    speakerId,
+    layout,
+    sharing,
+    size,
+    page,
+  );
   const speaker = people.find(
     (person) => person.id === speakerId && person.microphone && (!person.self || selfSpeaking),
   );
@@ -104,30 +93,14 @@ export function MeetingStage({
       </span>
       <div ref={stageRef} className="flex min-h-0 flex-1 flex-col gap-3">
         {focused ? (
-          <>
-            <div className="flex min-h-0 flex-1 flex-col">
-              {sharing && screenStream ? (
-                <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
-                  <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
-                    <MonitorUp width={13} height={13} className="text-success" aria-hidden="true" />
-                    Your screen · local capture
-                  </span>
-                  <LocalVideo stream={screenStream} label="Your shared screen" contain />
-                </div>
-              ) : focus ? (
-                tile(focus, size.height < 220)
-              ) : null}
-            </div>
-            {visible.length > 0 && size.height >= 280 && (
-              <div
-                className="grid h-32 shrink-0 gap-2 sm:h-36"
-                aria-label="Participant filmstrip"
-                style={{ gridTemplateColumns: `repeat(${visible.length}, minmax(0,1fr))` }}
-              >
-                {visible.map((person) => tile(person, true))}
-              </div>
-            )}
-          </>
+          <FocusedStage
+            sharing={sharing}
+            screenStream={screenStream}
+            focus={focus}
+            height={size.height}
+            visible={visible}
+            tile={tile}
+          />
         ) : (
           <div
             role="region"
@@ -155,7 +128,90 @@ export function MeetingStage({
             : 'Live captions will be available when meeting services are connected.'}
         </div>
       )}
-      {pageCount > 1 && (!focused || size.height >= 280) && (
+      <StagePages
+        pageCount={pageCount}
+        focused={focused}
+        height={size.height}
+        speaker={speaker}
+        visible={visible}
+        speakerId={speakerId}
+        currentPage={currentPage}
+        setPage={setPage}
+        onFocus={onFocus}
+      />
+    </section>
+  );
+}
+
+function stageSelection(
+  people: Participant[],
+  pinnedId: string | null,
+  speakerId: string,
+  layout: 'gallery' | 'focus',
+  sharing: boolean,
+  size: { width: number; height: number },
+  page: number,
+) {
+  const focus =
+    people.find((person) => person.id === pinnedId) ??
+    people.find((person) => person.id === speakerId) ??
+    people[0];
+  const focused = layout === 'focus' || sharing;
+  const sticky = sharing ? people.find((person) => person.id === pinnedId) : undefined;
+  const allOrdered = focused
+    ? focusOrder(people, pinnedId, speakerId, sharing ? undefined : focus?.id)
+    : people;
+  const ordered = allOrdered.filter((person) => person.id !== sticky?.id);
+  const geometry = galleryGeometry(size.width, size.height, ordered.length);
+  const slots = focused ? (size.width < 520 ? 2 : size.width < 900 ? 3 : 5) : geometry.capacity;
+  const capacity = Math.max(1, slots - (sticky ? 1 : 0));
+  const pageCount = Math.max(1, Math.ceil(ordered.length / capacity));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visible = [
+    ...(sticky ? [sticky] : []),
+    ...ordered.slice(currentPage * capacity, (currentPage + 1) * capacity),
+  ];
+  const columns = Math.min(geometry.columns, visible.length || 1);
+  return { focus, focused, visible, columns, pageCount, currentPage };
+}
+
+function SharedScreen({ stream }: { stream: MediaStream }) {
+  return (
+    <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
+      <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
+        <MonitorUp width={13} height={13} className="text-success" aria-hidden="true" />
+        Your screen · local capture
+      </span>
+      <LocalVideo stream={stream} label="Your shared screen" contain />
+    </div>
+  );
+}
+
+function StagePages({
+  pageCount,
+  focused,
+  height,
+  speaker,
+  visible,
+  speakerId,
+  currentPage,
+  setPage,
+  onFocus,
+}: {
+  pageCount: number;
+  focused: boolean;
+  height: number;
+  speaker: Participant | undefined;
+  visible: Participant[];
+  speakerId: string;
+  currentPage: number;
+  setPage: (value: number) => void;
+  onFocus: () => void;
+}) {
+  return (
+    <>
+      {' '}
+      {pageCount > 1 && (!focused || height >= 280) && (
         <nav
           aria-label="Participant pages"
           className="flex h-9 shrink-0 items-center justify-center gap-4"
@@ -193,6 +249,43 @@ export function MeetingStage({
           </button>
         </nav>
       )}
-    </section>
+    </>
+  );
+}
+
+function FocusedStage({
+  sharing,
+  screenStream,
+  focus,
+  height,
+  visible,
+  tile,
+}: {
+  sharing: boolean;
+  screenStream: MediaStream | null;
+  focus: Participant | undefined;
+  height: number;
+  visible: Participant[];
+  tile: (person: Participant, compact?: boolean) => ReactNode;
+}) {
+  return (
+    <>
+      <div className="flex min-h-0 flex-1 flex-col">
+        {sharing && screenStream ? (
+          <SharedScreen stream={screenStream} />
+        ) : focus ? (
+          tile(focus, height < 220)
+        ) : null}
+      </div>
+      {visible.length > 0 && height >= 280 && (
+        <div
+          className="grid h-32 shrink-0 gap-2 sm:h-36"
+          aria-label="Participant filmstrip"
+          style={{ gridTemplateColumns: `repeat(${visible.length}, minmax(0,1fr))` }}
+        >
+          {visible.map((person) => tile(person, true))}
+        </div>
+      )}
+    </>
   );
 }

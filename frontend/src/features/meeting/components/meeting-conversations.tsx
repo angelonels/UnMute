@@ -1,7 +1,7 @@
-import { type KeyboardEvent, type Ref } from 'react';
+import { useMemo, useState, type KeyboardEvent, type Ref } from 'react';
 import { ArrowUp, Group as Users } from 'iconoir-react';
 import { ChatThread } from '../../../components/arc/chat-thread/chat-thread';
-import { initials, type MeetingMessage, type Participant } from '../meeting-model';
+import { formatCount, initials, type MeetingMessage, type Participant } from '../meeting-model';
 
 export function MessageComposer({
   value,
@@ -37,7 +37,7 @@ export function MessageComposer({
           disabled={disabled}
           onChange={(event) => onChange(event.target.value)}
           onKeyDown={keyDown}
-          className="block max-h-36 min-h-11 [field-sizing:content] w-full resize-none bg-transparent text-sm leading-6 text-text outline-none! placeholder:text-muted disabled:opacity-50"
+          className="block max-h-36 min-h-11 [field-sizing:content] w-full resize-none bg-transparent text-base sm:text-sm leading-6 text-text outline-none! placeholder:text-muted disabled:opacity-50"
         />
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] text-muted">
@@ -80,7 +80,7 @@ export function MeetingChat({
         <Users width={13} height={13} aria-hidden="true" />
         Everyone
       </div>
-      <div className="min-h-0 flex-1 [--accent:var(--primary)] [--accent-foreground:var(--on-primary)]">
+      <div className="min-h-36 flex-1 [--accent:var(--primary)] [--accent-foreground:var(--on-primary)]">
         {messages.length ? (
           <ChatThread
             participants={people}
@@ -126,28 +126,39 @@ export function PeopleList({
   search: string;
   onSearch: (text: string) => void;
 }) {
-  const filtered = people
-    .filter((person) => person.name.toLowerCase().includes(search.toLowerCase()))
-    .sort((left, right) => Number(right.hand) - Number(left.hand));
+  const [page, setPage] = useState(0);
+  const filtered = useMemo(
+    () =>
+      people
+        .filter((person) => person.name.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
+        .sort((left, right) => Number(right.hand) - Number(left.hand)),
+    [people, search],
+  );
+  const pageCount = Math.max(1, Math.ceil(filtered.length / 50));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visible = filtered.slice(currentPage * 50, (currentPage + 1) * 50);
   return (
-    <div className="flex min-h-0 flex-1 flex-col px-4 pb-4">
+    <div className="flex min-h-48 flex-1 flex-col px-4 pb-4">
       <input
         type="search"
         aria-label="Find a participant"
         placeholder="Find someone"
         value={search}
-        onChange={(event) => onSearch(event.target.value)}
-        className="mb-4 min-h-11 w-full rounded-xl border border-input bg-transparent px-3 text-sm"
+        onChange={(event) => {
+          setPage(0);
+          onSearch(event.target.value);
+        }}
+        className="mb-4 min-h-11 w-full rounded-xl border border-input bg-transparent px-3 text-base sm:text-sm"
       />
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
         <ul className="space-y-2">
-          {filtered.map((person) => (
+          {visible.map((person) => (
             <li key={person.id} className="flex items-center gap-3 rounded-xl p-2">
               <span className="grid size-9 shrink-0 place-items-center rounded-full bg-surface-muted text-xs font-medium">
                 {initials(person.name)}
               </span>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-medium">
+                <p title={person.name} dir="auto" className="truncate text-xs font-medium">
                   {person.name}
                   {person.self ? ' (you)' : ''}
                 </p>
@@ -160,7 +171,7 @@ export function PeopleList({
                 aria-label={`${pinnedId === person.id ? 'Unpin' : 'Pin'} ${person.name}`}
                 aria-pressed={pinnedId === person.id}
                 onClick={() => onPin(person.id)}
-                className="min-h-11 cursor-pointer px-2 text-xs text-primary"
+                className="min-h-11 shrink-0 cursor-pointer px-2 text-xs text-primary"
               >
                 {pinnedId === person.id ? 'Unpin' : 'Pin'}
               </button>
@@ -171,6 +182,32 @@ export function PeopleList({
           <p className="py-8 text-center text-xs text-muted">No matching participants.</p>
         )}
       </div>
+      {pageCount > 1 && (
+        <nav
+          aria-label="People pages"
+          className="flex shrink-0 items-center justify-between gap-2 pt-3 text-xs tabular-nums"
+        >
+          <button
+            type="button"
+            disabled={currentPage === 0}
+            onClick={() => setPage(currentPage - 1)}
+            className="min-h-11 rounded-lg px-2 disabled:opacity-35"
+          >
+            Previous
+          </button>
+          <span>
+            {formatCount(currentPage + 1)} / {formatCount(pageCount)}
+          </span>
+          <button
+            type="button"
+            disabled={currentPage === pageCount - 1}
+            onClick={() => setPage(currentPage + 1)}
+            className="min-h-11 rounded-lg px-2 disabled:opacity-35"
+          >
+            Next
+          </button>
+        </nav>
+      )}
     </div>
   );
 }

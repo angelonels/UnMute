@@ -114,3 +114,74 @@ export const createDemoAIStream =
       cancel: clear,
     });
   };
+
+export type DemoDataMode = 'demo' | 'worst' | 'empty' | 'one' | 'large';
+
+const worstNames = [
+  'Aleksandra Wiśniewska-Kowalczyk',
+  'Christopher Alexander Montgomery III',
+  'Jo',
+  '👩🏽‍💻 Amara Okafor',
+  'محمد عبد الرحمن',
+  'Nguyễn Thị Thanh Huyền',
+  '山田 太郎',
+];
+const worstRoles = [
+  'Principal accessibility and internationalization design systems researcher',
+  '',
+  'Engineering',
+  'Customer experience and accessibility',
+  'باحث تجربة المستخدم',
+];
+
+export function fixtureParticipants(mode: DemoDataMode, count: number, self: Participant) {
+  if (mode === 'demo') return demoParticipants(count, self);
+  if (mode === 'empty' || mode === 'one') return [self];
+  const people = demoParticipants(mode === 'large' ? 1284 : 8, self);
+  return people.map((person, index) =>
+    person.self
+      ? person
+      : {
+          ...person,
+          name: worstNames[(index - 1) % worstNames.length] ?? person.name,
+          role: worstRoles[(index - 1) % worstRoles.length] ?? '',
+          hand: index === 2,
+        },
+  );
+}
+
+export function fixtureMessages(mode: DemoDataMode): MeetingMessage[] {
+  if (mode === 'empty') return [];
+  if (mode === 'one')
+    return [
+      {
+        id: 'one-message',
+        authorId: 'self',
+        text: 'One message in the meeting.',
+        createdAt: '2026-10-28T09:30:00Z',
+      },
+    ];
+  if (mode === 'demo') return demoMessages;
+  return [
+    {
+      id: 'worst-1',
+      authorId: 'demo-1',
+      text: 'Please review https://example.com/projects/accessibility-internationalization/customer-onboarding/very-long-reference-document?view=complete&section=participant-experience before our next meeting.',
+      createdAt: '2026-10-28T09:30:00Z',
+    },
+    {
+      id: 'worst-2',
+      authorId: 'demo-2',
+      text:
+        'Line one: a note about the design.\nLine two: **bold** and <script>alert(1)</script> should stay literal.\n\n' +
+        'Accessibility, language, and keyboard support need review before the release. '.repeat(18),
+      createdAt: '2026-10-28T09:31:00Z',
+    },
+    {
+      id: 'worst-3',
+      authorId: 'demo-3',
+      text: '👍🏽 ありがとう — شكراً',
+      createdAt: '2026-10-28T09:32:00Z',
+    },
+  ];
+}

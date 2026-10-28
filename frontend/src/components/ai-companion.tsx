@@ -54,16 +54,7 @@ export function AICompanion({
     () => ({ poke: () => character.current?.poke(), blink: () => character.current?.blink() }),
     [],
   );
-  const face =
-    expression === undefined
-      ? emotion === 'curious'
-        ? 'inspecting'
-        : emotion === 'calm'
-          ? 'calm'
-          : emotion === 'happy' || state === 'idle'
-            ? 'happy'
-            : null
-      : expression;
+  const face = companionExpression(expression, emotion, state);
   const common = {
     ...props,
     state,
@@ -280,4 +271,15 @@ function Companion3D({
       )}
     </span>
   );
+}
+
+function companionExpression(
+  expression: ExpressionName | null | undefined,
+  emotion: CompanionEmotion,
+  state: StateName,
+) {
+  if (expression !== undefined) return expression;
+  if (emotion === 'curious') return 'inspecting';
+  if (emotion === 'calm') return 'calm';
+  return emotion === 'happy' || state === 'idle' ? 'happy' : null;
 }

@@ -17,6 +17,8 @@ import type {
   DragEvent as ReactDragEvent,
   KeyboardEvent as ReactKeyboardEvent,
   ReactNode,
+  Dispatch,
+  SetStateAction,
   RefObject,
 } from 'react';
 import { AnimatePresence, animate, m as motion, useMotionValue } from 'motion/react';
@@ -30,6 +32,8 @@ import {
   Emoji as SmilePlus,
   Xmark as X,
 } from 'iconoir-react';
+import { personInitials as initials } from '../../../lib/person-initials';
+import { createObjectUrlOwner } from './object-urls';
 import { motionTokens } from '../lib/motion-tokens';
 
 const styles = {
@@ -44,8 +48,8 @@ const styles = {
   row: 'group/message relative mt-1 flex items-end gap-2 data-[first]:mt-4 data-[mine]:justify-end',
   gutter: 'w-7 flex-none self-end',
   stack: 'flex min-w-0 max-w-[84%] flex-col items-start gap-1 group-data-[mine]/message:items-end',
-  meta: 'mb-0.5 flex items-baseline gap-1.5 px-3 text-[10px] text-muted tabular-nums',
-  author: 'font-medium text-muted',
+  meta: '[&_time]:shrink-0 [&_time]:whitespace-nowrap mb-0.5 flex items-baseline gap-1.5 px-3 text-[10px] text-muted tabular-nums',
+  author: 'min-w-0 font-medium text-muted [overflow-wrap:anywhere]',
   line: 'relative flex max-w-full items-center gap-1.5 group-data-[mine]/message:flex-row-reverse',
   face: 'absolute bottom-0 -left-9 flex',
   parts: 'flex min-w-0 flex-col items-start gap-1 group-data-[mine]/message:items-end',
@@ -99,9 +103,9 @@ const styles = {
     'grid size-9 shrink-0 cursor-pointer place-items-center rounded-xl text-muted disabled:opacity-40',
   box: 'flex min-w-0 flex-1 items-end rounded-xl border border-input bg-surface p-2',
   field: 'relative min-w-0 flex-1 overflow-hidden',
-  mirror: 'invisible break-words whitespace-pre-wrap text-sm leading-[22px]',
+  mirror: 'invisible break-words whitespace-pre-wrap text-base sm:text-sm leading-[22px]',
   textarea:
-    'absolute inset-0 size-full resize-none overflow-y-auto bg-transparent text-sm leading-[22px] text-text outline-none placeholder:text-muted disabled:opacity-40',
+    'absolute inset-0 size-full resize-none overflow-y-auto bg-transparent text-base sm:text-sm leading-[22px] text-text outline-none placeholder:text-muted disabled:opacity-40',
   send: 'grid size-9 shrink-0 cursor-pointer place-items-center overflow-hidden rounded-xl bg-text text-surface aria-disabled:cursor-default aria-disabled:opacity-35',
   sendIcon: 'inline-flex',
 };
@@ -344,19 +348,10 @@ function withCount(text: string, value: number, node: ReactNode) {
   );
 }
 
-export function formatBytes(bytes = 0) {
+function formatBytes(bytes = 0) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 ** 2) return `${Math.round(bytes / 1024)} KB`;
   return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
-}
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('');
 }
 
 function Avatar({ person, size }: { person: ChatParticipant; size: number }) {
@@ -476,14 +471,8 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
 
   useImperativeHandle(ref, () => ({ focus: () => areaRef.current?.focus() }), []);
 
-  const filesRef = useRef(files);
-  useEffect(() => {
-    filesRef.current = files;
-  }, [files]);
-  useEffect(
-    () => () => filesRef.current.forEach((entry) => entry.url && URL.revokeObjectURL(entry.url)),
-    [],
-  );
+  const [previews] = useState(createObjectUrlOwner);
+  useEffect(() => () => previews.clear(), [previews]);
 
   const add = (list: FileList | File[] | null) => {
     if (!allowAttachments || !list) return;
@@ -492,20 +481,20 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
       .map((file) => ({
         id: `file-${++counter.current}`,
         file,
-        url: file.type.startsWith('image/') ? URL.createObjectURL(file) : undefined,
+        url: file.type.startsWith('image/') ? previews.create(file) : undefined,
       }));
     if (next.length) setFiles((current) => [...current, ...next]);
   };
   const remove = (id: string) => {
     const entry = files.find((file) => file.id === id);
-    if (entry?.url) URL.revokeObjectURL(entry.url);
+    if (entry?.url) previews.release(entry.url);
     setFiles((current) => current.filter((file) => file.id !== id));
   };
 
   const send = () => {
     if (!ready) return;
     onSend({ text: text.trim(), files: files.map((entry) => entry.file) });
-    files.forEach((entry) => entry.url && URL.revokeObjectURL(entry.url));
+    files.forEach((entry) => entry.url && previews.release(entry.url));
     setFiles([]);
     setText('');
     setSent((count) => count + 1);
@@ -723,38 +712,10 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
   );
   const composerRef = useRef<ChatComposerHandle>(null);
 
-  const rows = useMemo<Row[]>(() => {
-    const out: Row[] = [];
-    let lastDay = '';
-    messages.forEach((message, index) => {
-      const date = toDate(message.createdAt);
-      const key = dayKey(date);
-      if (key !== lastDay) {
-        out.push({
-          type: 'day',
-          key: `day-${key}`,
-          label: hydrated ? dayLabel(date, locale, t) : '',
-        });
-        lastDay = key;
-      }
-      const joins = (other: ChatMessage | undefined) =>
-        !!other &&
-        other.authorId === message.authorId &&
-        dayKey(toDate(other.createdAt)) === key &&
-        Math.abs(toDate(other.createdAt).getTime() - date.getTime()) <= groupWindow;
-      out.push({
-        type: 'message',
-        key: message.id,
-        message,
-        index,
-        author: people.get(message.authorId) ?? { id: message.authorId, name: t.unknownAuthor },
-        mine: message.authorId === currentUserId,
-        first: !joins(messages[index - 1]),
-        last: !joins(messages[index + 1]),
-      });
-    });
-    return out;
-  }, [currentUserId, groupWindow, hydrated, locale, messages, people, t]);
+  const rows = useMemo(
+    () => messageRows(messages, people, currentUserId, hydrated, locale, t, groupWindow),
+    [messages, people, currentUserId, hydrated, locale, t, groupWindow],
+  );
 
   const receipts = useMemo(() => {
     const map = new Map<string, ChatParticipant[]>();
@@ -789,70 +750,8 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     [locale],
   );
 
-  /* Pinning. While the reader is at the bottom, every growth of the content keeps the newest message in view:
-     the scroll jumps to the end before paint and the content springs up from where it was, so nothing snaps. */
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const y = useMotionValue(0);
-  const stick = useRef(true);
-  const lastHeight = useRef(0);
-  const reducedRef = useRef(reduced);
-  useEffect(() => {
-    reducedRef.current = reduced;
-  }, [reduced]);
-  const [atBottom, setAtBottom] = useState(true);
-  const [far, setFar] = useState(false);
-  const [seen, setSeen] = useState(() => messages.length);
-
-  useLayoutEffect(() => {
-    const scroller = scrollRef.current,
-      content = contentRef.current;
-    if (!scroller || !content) return;
-    lastHeight.current = content.offsetHeight;
-    scroller.scrollTop = scroller.scrollHeight;
-    if (typeof ResizeObserver === 'undefined') return;
-    const observer = new ResizeObserver(() => {
-      const height = content.offsetHeight,
-        delta = height - lastHeight.current;
-      lastHeight.current = height;
-      if (!stick.current) return;
-      scroller.scrollTop = scroller.scrollHeight;
-      if (delta > 0 && delta < scroller.clientHeight && !reducedRef.current) {
-        y.jump(y.get() + delta);
-        animate(y, 0, SETTLE);
-      }
-    });
-    observer.observe(content);
-    return () => observer.disconnect();
-  }, [y]);
-
-  // Your own message always brings the thread back to the bottom.
-  const [known] = useState(() => new Set(messages.map((message) => message.id)));
-  useLayoutEffect(() => {
-    const fresh = messages.filter((message) => !known.has(message.id));
-    fresh.forEach((message) => known.add(message.id));
-    if (fresh.some((message) => message.authorId === currentUserId)) stick.current = true;
-  }, [currentUserId, messages, known]);
-
-  const onScroll = () => {
-    const scroller = scrollRef.current;
-    if (!scroller) return;
-    const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    stick.current = distance < STICK_DISTANCE;
-    setAtBottom(stick.current);
-    setFar(distance > FAR_DISTANCE);
-    if (stick.current) setSeen(messages.length);
-  };
-
-  const scrollToBottom = useCallback((smooth = true) => {
-    const scroller = scrollRef.current;
-    if (!scroller) return;
-    stick.current = true;
-    scroller.scrollTo({
-      top: scroller.scrollHeight,
-      behavior: smooth && !reducedRef.current ? 'smooth' : 'auto',
-    });
-  }, []);
+  const { scrollRef, contentRef, y, stickRef, atBottom, far, seen, onScroll, scrollToBottom } =
+    useThreadScroll(messages, currentUserId);
 
   useImperativeHandle(
     ref,
@@ -885,14 +784,11 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     );
   };
 
-  const ownedAttachmentUrls = useRef(new Set<string>());
-  useEffect(() => {
-    const urls = ownedAttachmentUrls.current;
-    return () => urls.forEach((url) => URL.revokeObjectURL(url));
-  }, []);
+  const [attachmentsOwner] = useState(createObjectUrlOwner);
+  useEffect(() => () => attachmentsOwner.clear(), [attachmentsOwner]);
   const counter = useRef(0);
   const send = (draft: ChatDraft) => {
-    stick.current = true;
+    stickRef.current = true;
     const result = onSend?.(draft);
     if (controlled) return result;
     const attachments: ChatAttachment[] = draft.files.map((file, index) => ({
@@ -900,11 +796,8 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
       name: file.name,
       size: file.size,
       kind: file.type.startsWith('image/') ? 'image' : 'file',
-      url: URL.createObjectURL(file),
+      url: attachmentsOwner.create(file),
     }));
-    attachments.forEach((attachment) => {
-      if (attachment.url) ownedAttachmentUrls.current.add(attachment.url);
-    });
     const id = `local-${Date.now()}-${++counter.current}`;
     const createdAt = new Date();
     setInner((current) => [
@@ -946,239 +839,24 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
                           <span suppressHydrationWarning>{row.label}</span>
                         </li>
                       );
-                    const { message, author, mine, first, last, index } = row;
-                    const date = toDate(message.createdAt);
-                    const seenBy = receipts.get(message.id) ?? [];
-                    const showStatus = index === lastMine && mine;
-                    const status =
-                      message.status === 'failed'
-                        ? 'failed'
-                        : message.status === 'sending'
-                          ? 'sending'
-                          : readIndex >= index
-                            ? 'read'
-                            : (message.status ?? 'sent');
-                    const images =
-                      message.attachments?.filter((entry) => entry.kind === 'image' && entry.url) ??
-                      [];
-                    const files =
-                      message.attachments?.filter(
-                        (entry) => entry.kind !== 'image' || !entry.url,
-                      ) ?? [];
                     return (
-                      <motion.li
+                      <ThreadMessage
                         key={row.key}
-                        className={styles.row}
-                        data-mine={mine || undefined}
-                        data-first={first || undefined}
-                        data-last={last || undefined}
-                        data-failed={message.status === 'failed' || undefined}
-                        data-message-motion={mine ? 'instant' : 'fade'}
-                        initial={mine ? false : { opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0, transition: { duration: duration.exit } }}
-                        transition={{ duration: mine ? 0 : duration.fast }}
-                        style={{ transformOrigin: mine ? '100% 100%' : '0 100%' }}
-                      >
-                        {!mine && <div className={styles.gutter} />}
-                        <div className={styles.stack}>
-                          {first && (
-                            <p className={styles.meta}>
-                              {!mine && <span className={styles.author}>{author.name}</span>}
-                              <time dateTime={date.toISOString()} suppressHydrationWarning>
-                                {hydrated ? time.format(date) : ''}
-                              </time>
-                            </p>
-                          )}
-                          <div className={styles.line}>
-                            {!mine && last && (
-                              <span className={styles.face}>
-                                <Avatar person={author} size={28} />
-                              </span>
-                            )}
-                            <div className={styles.parts}>
-                              {images.length > 0 && (
-                                <div
-                                  className={styles.gallery}
-                                  data-count={Math.min(images.length, 4)}
-                                >
-                                  {images.slice(0, 4).map((image, at) => (
-                                    <a
-                                      key={image.id}
-                                      className={styles.image}
-                                      href={image.url}
-                                      target="_blank"
-                                      rel="noreferrer"
-                                      style={
-                                        images.length === 1 && image.width && image.height
-                                          ? { aspectRatio: `${image.width} / ${image.height}` }
-                                          : undefined
-                                      }
-                                    >
-                                      <img
-                                        src={image.url}
-                                        alt={image.alt ?? image.name}
-                                        loading="lazy"
-                                      />
-                                      {at === 3 && images.length > 4 && (
-                                        <span className={styles.more}>+{images.length - 4}</span>
-                                      )}
-                                    </a>
-                                  ))}
-                                </div>
-                              )}
-                              {files.map((file) => (
-                                <a
-                                  key={file.id}
-                                  className={styles.file}
-                                  href={file.url}
-                                  download={file.name}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                >
-                                  <FileText
-                                    width={18}
-                                    height={18}
-                                    strokeWidth={1.5}
-                                    aria-hidden="true"
-                                  />
-                                  <span className={styles.fileText}>
-                                    <span className={styles.fileName}>{file.name}</span>
-                                    {file.size !== undefined && (
-                                      <span className={styles.fileSize}>
-                                        {formatBytes(file.size)}
-                                      </span>
-                                    )}
-                                  </span>
-                                </a>
-                              ))}
-                              {message.text && (
-                                <div
-                                  className={styles.bubble}
-                                  title={
-                                    hydrated
-                                      ? date.toLocaleString(locale, {
-                                          dateStyle: 'medium',
-                                          timeStyle: 'short',
-                                        })
-                                      : undefined
-                                  }
-                                >
-                                  {message.text}
-                                </div>
-                              )}
-                            </div>
-                            {reactions.length > 0 && (
-                              <ReactionPicker
-                                open={picker === message.id}
-                                mine={mine}
-                                reactions={reactions}
-                                reduced={reduced}
-                                labels={t}
-                                id={`${uid}-picker-${message.id}`}
-                                onToggle={() =>
-                                  setPicker((current) =>
-                                    current === message.id ? null : message.id,
-                                  )
-                                }
-                                onClose={() => setPicker(null)}
-                                onPick={(emoji) => react(message.id, emoji)}
-                              />
-                            )}
-                          </div>
-                          <AnimatePresence initial={false}>
-                            {!!message.reactions?.length && (
-                              <motion.div
-                                key="reactions"
-                                className={styles.reactionClip}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                transition={reduced ? { duration: 0 } : { duration: duration.fast }}
-                              >
-                                <ul className={styles.reactions} aria-label={t.reactions}>
-                                  <AnimatePresence initial={false} mode="popLayout">
-                                    {message.reactions.map((reaction) => (
-                                      <motion.li
-                                        key={reaction.emoji}
-                                        layout={!reduced}
-                                        initial={
-                                          reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6 }
-                                        }
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
-                                        transition={POP}
-                                      >
-                                        <button
-                                          type="button"
-                                          className={styles.reaction}
-                                          aria-pressed={!!reaction.mine}
-                                          aria-label={t.reactionCount(
-                                            reaction.emoji,
-                                            reaction.count,
-                                            !!reaction.mine,
-                                          )}
-                                          onClick={() => react(message.id, reaction.emoji)}
-                                        >
-                                          <span aria-hidden="true">{reaction.emoji}</span>
-                                          <Count value={reaction.count} reduced={reduced} />
-                                        </button>
-                                      </motion.li>
-                                    ))}
-                                  </AnimatePresence>
-                                </ul>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                          {(showStatus || seenBy.length > 0) && (
-                            <div className={styles.receipts}>
-                              {showStatus && (
-                                <span className={styles.status} data-status={status}>
-                                  {status === 'failed' ? (
-                                    <>
-                                      {t.failed}
-                                      {onRetry && (
-                                        <button
-                                          type="button"
-                                          className={styles.retry}
-                                          onClick={() => onRetry(message.id)}
-                                        >
-                                          <RotateCw
-                                            width={12}
-                                            height={12}
-                                            strokeWidth={1.5}
-                                            aria-hidden="true"
-                                          />
-                                          {t.retry}
-                                        </button>
-                                      )}
-                                    </>
-                                  ) : (
-                                    t[status]
-                                  )}
-                                </span>
-                              )}
-                              {seenBy.length > 0 && (
-                                <span
-                                  className={styles.readers}
-                                  aria-label={t.readBy(seenBy.map((entry) => entry.name))}
-                                >
-                                  {seenBy.map((entry) => (
-                                    <motion.span
-                                      key={entry.id}
-                                      layoutId={reduced ? undefined : `${uid}-receipt-${entry.id}`}
-                                      className={styles.reader}
-                                      transition={SETTLE}
-                                    >
-                                      <Avatar person={entry} size={16} />
-                                    </motion.span>
-                                  ))}
-                                </span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </motion.li>
+                        row={row}
+                        receipts={receipts}
+                        lastMine={lastMine}
+                        readIndex={readIndex}
+                        time={time}
+                        hydrated={hydrated}
+                        locale={locale}
+                        reactions={reactions}
+                        picker={picker}
+                        setPicker={setPicker}
+                        t={t}
+                        uid={uid}
+                        react={react}
+                        onRetry={onRetry}
+                      />
                     );
                   })}
                   {typers.length > 0 && (
@@ -1223,62 +901,7 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
         <span className={styles.srOnly} role="status">
           {typingLabel}
         </span>
-        <AnimatePresence>
-          {pill && (
-            <motion.button
-              key="pill"
-              type="button"
-              className={styles.pill}
-              onClick={() => scrollToBottom()}
-              layout={!reduced}
-              style={{ borderRadius: 16 }}
-              initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.94 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={
-                reduced
-                  ? { opacity: 0 }
-                  : {
-                      opacity: 0,
-                      y: 12,
-                      scale: 0.94,
-                      transition: { duration: duration.exit, ease: standard },
-                    }
-              }
-              transition={
-                reduced
-                  ? { duration: duration.fast }
-                  : { ...spring.morph, opacity: { duration: duration.fast } }
-              }
-            >
-              {/* Icon and label hold their own size while the pill's width morphs, so the text never stretches. */}
-              <motion.span
-                className={styles.pillIcon}
-                layout={reduced ? false : 'position'}
-                transition={spring.morph}
-              >
-                <ArrowDown width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
-              </motion.span>
-              <AnimatePresence initial={false} mode="popLayout">
-                <motion.span
-                  key={unread > 0 ? 'new' : 'latest'}
-                  layout={reduced ? false : 'position'}
-                  initial={{ opacity: 0, filter: `blur(${blur.subtle}px)` }}
-                  animate={{ opacity: 1, filter: 'blur(0px)' }}
-                  exit={{ opacity: 0, filter: `blur(${blur.subtle}px)` }}
-                  transition={{ duration: duration.fast }}
-                >
-                  {unread > 0
-                    ? withCount(
-                        t.newMessages(unread),
-                        unread,
-                        <Count value={unread} reduced={reduced} />,
-                      )
-                    : t.jumpToLatest}
-                </motion.span>
-              </AnimatePresence>
-            </motion.button>
-          )}
-        </AnimatePresence>
+        <LatestMessages visible={pill} unread={unread} labels={t} onClick={scrollToBottom} />
       </div>
       {composer && (
         <ChatComposer
@@ -1431,3 +1054,520 @@ function ReactionPicker({
 }
 
 export default ChatThread;
+
+type MessageRow = Extract<Row, { type: 'message' }>;
+interface ThreadMessageProps {
+  row: MessageRow;
+  receipts: Map<string, ChatParticipant[]>;
+  lastMine: number;
+  readIndex: number;
+  time: Intl.DateTimeFormat;
+  hydrated: boolean;
+  locale: string;
+  reactions: string[];
+  picker: string | null;
+  setPicker: Dispatch<SetStateAction<string | null>>;
+  t: Required<ChatThreadLabels>;
+  uid: string;
+  react: (id: string, emoji: string) => void;
+  onRetry?: ChatThreadProps['onRetry'];
+}
+function ThreadMessage({
+  row,
+  receipts,
+  lastMine,
+  readIndex,
+  time,
+  hydrated,
+  locale,
+  reactions,
+  picker,
+  setPicker,
+  t,
+  uid,
+  react,
+  onRetry,
+}: ThreadMessageProps) {
+  const reduced = true;
+  const { message, author, mine, first, last, index } = row;
+  const date = toDate(message.createdAt);
+  const seenBy = receipts.get(message.id) ?? [];
+  const showStatus = index === lastMine && mine;
+  const status = deliveryStatus(message.status, readIndex >= index);
+  return (
+    <motion.li
+      className={styles.row}
+      data-mine={mine || undefined}
+      data-first={first || undefined}
+      data-last={last || undefined}
+      data-failed={message.status === 'failed' || undefined}
+      data-message-motion={mine ? 'instant' : 'fade'}
+      initial={mine ? false : { opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, transition: { duration: duration.exit } }}
+      transition={{ duration: mine ? 0 : duration.fast }}
+      style={{ transformOrigin: mine ? '100% 100%' : '0 100%' }}
+    >
+      {!mine && <div className={styles.gutter} />}
+      <div className={styles.stack}>
+        <MessageMeta
+          first={first}
+          mine={mine}
+          author={author}
+          date={date}
+          hydrated={hydrated}
+          time={time}
+        />
+        <div className={styles.line}>
+          {!mine && last && (
+            <span className={styles.face}>
+              <Avatar person={author} size={28} />
+            </span>
+          )}
+          <MessageContent message={message} date={date} hydrated={hydrated} locale={locale} />
+          {reactions.length > 0 && (
+            <ReactionPicker
+              open={picker === message.id}
+              mine={mine}
+              reactions={reactions}
+              reduced={reduced}
+              labels={t}
+              id={`${uid}-picker-${message.id}`}
+              onToggle={() => setPicker((current) => (current === message.id ? null : message.id))}
+              onClose={() => setPicker(null)}
+              onPick={(emoji) => react(message.id, emoji)}
+            />
+          )}
+        </div>
+        <MessageReactions message={message} t={t} onReact={(emoji) => react(message.id, emoji)} />
+        <MessageReceipts
+          showStatus={showStatus}
+          seenBy={seenBy}
+          status={status}
+          messageId={message.id}
+          t={t}
+          onRetry={onRetry}
+        />
+      </div>
+    </motion.li>
+  );
+}
+
+function MessageContent({
+  message,
+  date,
+  hydrated,
+  locale,
+}: {
+  message: ChatMessage;
+  date: Date;
+  hydrated: boolean;
+  locale: string;
+}) {
+  const images = message.attachments?.filter((entry) => entry.kind === 'image' && entry.url) ?? [];
+  const files = message.attachments?.filter((entry) => entry.kind !== 'image' || !entry.url) ?? [];
+  return (
+    <div className={styles.parts}>
+      {images.length > 0 && (
+        <div className={styles.gallery} data-count={Math.min(images.length, 4)}>
+          {images.slice(0, 4).map((image, at) => (
+            <a
+              key={image.id}
+              className={styles.image}
+              href={image.url}
+              target="_blank"
+              rel="noreferrer"
+              style={
+                images.length === 1 && image.width && image.height
+                  ? { aspectRatio: `${image.width} / ${image.height}` }
+                  : undefined
+              }
+            >
+              <img src={image.url} alt={image.alt ?? image.name} loading="lazy" />
+              {at === 3 && images.length > 4 && (
+                <span className={styles.more}>+{images.length - 4}</span>
+              )}
+            </a>
+          ))}
+        </div>
+      )}
+      {files.map((file) => (
+        <a
+          key={file.id}
+          className={styles.file}
+          href={file.url}
+          download={file.name}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <FileText width={18} height={18} strokeWidth={1.5} aria-hidden="true" />
+          <span className={styles.fileText}>
+            <span className={styles.fileName}>{file.name}</span>
+            {file.size !== undefined && (
+              <span className={styles.fileSize}>{formatBytes(file.size)}</span>
+            )}
+          </span>
+        </a>
+      ))}
+      {message.text && (
+        <div
+          className={styles.bubble}
+          title={
+            hydrated
+              ? date.toLocaleString(locale, {
+                  dateStyle: 'medium',
+                  timeStyle: 'short',
+                })
+              : undefined
+          }
+        >
+          {message.text}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function MessageReactions({
+  message,
+  t,
+  onReact,
+}: {
+  message: ChatMessage;
+  t: Required<ChatThreadLabels>;
+  onReact: (emoji: string) => void;
+}) {
+  const reduced = true;
+  return (
+    <AnimatePresence initial={false}>
+      {!!message.reactions?.length && (
+        <motion.div
+          key="reactions"
+          className={styles.reactionClip}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={reduced ? { duration: 0 } : { duration: duration.fast }}
+        >
+          <ul className={styles.reactions} aria-label={t.reactions}>
+            <AnimatePresence initial={false} mode="popLayout">
+              {message.reactions.map((reaction) => (
+                <motion.li
+                  key={reaction.emoji}
+                  layout={!reduced}
+                  initial={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={reduced ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
+                  transition={POP}
+                >
+                  <button
+                    type="button"
+                    className={styles.reaction}
+                    aria-pressed={!!reaction.mine}
+                    aria-label={t.reactionCount(reaction.emoji, reaction.count, !!reaction.mine)}
+                    onClick={() => onReact(reaction.emoji)}
+                  >
+                    <span aria-hidden="true">{reaction.emoji}</span>
+                    <Count value={reaction.count} reduced={reduced} />
+                  </button>
+                </motion.li>
+              ))}
+            </AnimatePresence>
+          </ul>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function messageRows(
+  messages: ChatMessage[],
+  people: Map<string, ChatParticipant>,
+  currentUserId: string,
+  hydrated: boolean,
+  locale: string,
+  t: Required<ChatThreadLabels>,
+  groupWindow: number,
+): Row[] {
+  const out: Row[] = [];
+  let lastDay = '';
+  messages.forEach((message, index) => {
+    const date = toDate(message.createdAt);
+    const key = dayKey(date);
+    if (key !== lastDay) {
+      out.push({
+        type: 'day',
+        key: `day-${key}`,
+        label: hydrated ? dayLabel(date, locale, t) : '',
+      });
+      lastDay = key;
+    }
+    const joins = (other: ChatMessage | undefined) =>
+      !!other &&
+      other.authorId === message.authorId &&
+      dayKey(toDate(other.createdAt)) === key &&
+      Math.abs(toDate(other.createdAt).getTime() - date.getTime()) <= groupWindow;
+    out.push({
+      type: 'message',
+      key: message.id,
+      message,
+      index,
+      author: people.get(message.authorId) ?? { id: message.authorId, name: t.unknownAuthor },
+      mine: message.authorId === currentUserId,
+      first: !joins(messages[index - 1]),
+      last: !joins(messages[index + 1]),
+    });
+  });
+  return out;
+}
+
+function useThreadScroll(messages: ChatMessage[], currentUserId: string) {
+  const reduced = true;
+  /* Pinning. While the reader is at the bottom, every growth of the content keeps the newest message in view:
+     the scroll jumps to the end before paint and the content springs up from where it was, so nothing snaps. */
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const y = useMotionValue(0);
+  const stick = useRef(true);
+  const lastHeight = useRef(0);
+  const reducedRef = useRef(reduced);
+  useEffect(() => {
+    reducedRef.current = reduced;
+  }, [reduced]);
+  const [atBottom, setAtBottom] = useState(true);
+  const [far, setFar] = useState(false);
+  const [seen, setSeen] = useState(() => messages.length);
+
+  useLayoutEffect(() => {
+    const scroller = scrollRef.current,
+      content = contentRef.current;
+    if (!scroller || !content) return;
+    lastHeight.current = content.offsetHeight;
+    scroller.scrollTop = scroller.scrollHeight;
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      const height = content.offsetHeight,
+        delta = height - lastHeight.current;
+      lastHeight.current = height;
+      if (!stick.current) return;
+      scroller.scrollTop = scroller.scrollHeight;
+      if (delta > 0 && delta < scroller.clientHeight && !reducedRef.current) {
+        y.jump(y.get() + delta);
+        animate(y, 0, SETTLE);
+      }
+    });
+    observer.observe(content);
+    return () => observer.disconnect();
+  }, [y]);
+
+  // Your own message always brings the thread back to the bottom.
+  const [known] = useState(() => new Set(messages.map((message) => message.id)));
+  useLayoutEffect(() => {
+    const fresh = messages.filter((message) => !known.has(message.id));
+    fresh.forEach((message) => known.add(message.id));
+    if (fresh.some((message) => message.authorId === currentUserId)) stick.current = true;
+  }, [currentUserId, messages, known]);
+
+  const onScroll = () => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    stick.current = distance < STICK_DISTANCE;
+    setAtBottom(stick.current);
+    setFar(distance > FAR_DISTANCE);
+    if (stick.current) setSeen(messages.length);
+  };
+
+  const scrollToBottom = useCallback((smooth = true) => {
+    const scroller = scrollRef.current;
+    if (!scroller) return;
+    stick.current = true;
+    scroller.scrollTo({
+      top: scroller.scrollHeight,
+      behavior: smooth && !reducedRef.current ? 'smooth' : 'auto',
+    });
+  }, []);
+
+  return {
+    scrollRef,
+    contentRef,
+    y,
+    stickRef: stick,
+    atBottom,
+    far,
+    seen,
+    onScroll,
+    scrollToBottom,
+  };
+}
+
+function LatestMessages({
+  visible,
+  unread,
+  labels,
+  onClick,
+}: {
+  visible: boolean;
+  unread: number;
+  labels: Required<ChatThreadLabels>;
+  onClick: () => void;
+}) {
+  const reduced = true;
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.button
+          key="pill"
+          type="button"
+          className={styles.pill}
+          onClick={() => onClick()}
+          layout={!reduced}
+          style={{ borderRadius: 16 }}
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.94 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={
+            reduced
+              ? { opacity: 0 }
+              : {
+                  opacity: 0,
+                  y: 12,
+                  scale: 0.94,
+                  transition: { duration: duration.exit, ease: standard },
+                }
+          }
+          transition={
+            reduced
+              ? { duration: duration.fast }
+              : { ...spring.morph, opacity: { duration: duration.fast } }
+          }
+        >
+          {/* Icon and label hold their own size while the pill's width morphs, so the text never stretches. */}
+          <motion.span
+            className={styles.pillIcon}
+            layout={reduced ? false : 'position'}
+            transition={spring.morph}
+          >
+            <ArrowDown width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
+          </motion.span>
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.span
+              key={unread > 0 ? 'new' : 'latest'}
+              layout={reduced ? false : 'position'}
+              initial={{ opacity: 0, filter: `blur(${blur.subtle}px)` }}
+              animate={{ opacity: 1, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, filter: `blur(${blur.subtle}px)` }}
+              transition={{ duration: duration.fast }}
+            >
+              {unread > 0
+                ? withCount(
+                    labels.newMessages(unread),
+                    unread,
+                    <Count value={unread} reduced={reduced} />,
+                  )
+                : labels.jumpToLatest}
+            </motion.span>
+          </AnimatePresence>
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function MessageReceipts({
+  showStatus,
+  seenBy,
+  status,
+  messageId,
+  t,
+  onRetry,
+}: {
+  showStatus: boolean;
+  seenBy: ChatParticipant[];
+  status: NonNullable<ChatMessage['status']> | 'read';
+  messageId: string;
+  t: Required<ChatThreadLabels>;
+  onRetry: ChatThreadProps['onRetry'];
+}) {
+  return (
+    <>
+      {' '}
+      {(showStatus || seenBy.length > 0) && (
+        <div className={styles.receipts}>
+          {showStatus && (
+            <span className={styles.status} data-status={status}>
+              {status === 'failed' ? (
+                <>
+                  {t.failed}
+                  {onRetry && (
+                    <button
+                      type="button"
+                      className={styles.retry}
+                      onClick={() => onRetry(messageId)}
+                    >
+                      <RotateCw width={12} height={12} strokeWidth={1.5} aria-hidden="true" />
+                      {t.retry}
+                    </button>
+                  )}
+                </>
+              ) : (
+                t[status]
+              )}
+            </span>
+          )}
+          {seenBy.length > 0 && (
+            <span
+              className={styles.readers}
+              aria-label={t.readBy(seenBy.map((entry) => entry.name))}
+            >
+              {seenBy.map((entry) => (
+                <motion.span
+                  key={entry.id}
+
+                  className={styles.reader}
+                  transition={SETTLE}
+                >
+                  <Avatar person={entry} size={16} />
+                </motion.span>
+              ))}
+            </span>
+          )}
+        </div>
+      )}
+    </>
+  );
+}
+
+function deliveryStatus(status: ChatMessage['status'], read: boolean) {
+  if (status === 'failed' || status === 'sending') return status;
+  return read ? 'read' : (status ?? 'sent');
+}
+
+function MessageMeta({
+  first,
+  mine,
+  author,
+  date,
+  hydrated,
+  time,
+}: {
+  first: boolean;
+  mine: boolean;
+  author: ChatParticipant;
+  date: Date;
+  hydrated: boolean;
+  time: Intl.DateTimeFormat;
+}) {
+  return (
+    <>
+      {' '}
+      {first && (
+        <p className={styles.meta}>
+          {!mine && <span className={styles.author}>{author.name}</span>}
+          <time dateTime={date.toISOString()} suppressHydrationWarning>
+            {hydrated ? time.format(date) : ''}
+          </time>
+        </p>
+      )}
+    </>
+  );
+}

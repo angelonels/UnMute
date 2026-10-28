@@ -25,16 +25,7 @@ export const initialMedia: MediaPreferences = {
   captions: false,
 };
 
-export function initials(name: string) {
-  return (
-    name
-      .trim()
-      .split(/\s+/)
-      .slice(0, 2)
-      .map((part) => part[0]?.toUpperCase())
-      .join('') || '?'
-  );
-}
+export { personInitials as initials } from '../../lib/person-initials';
 
 /** Gallery order stays stable while capacity follows the usable stage, including open panels. */
 export function galleryGeometry(width: number, height: number, count: number) {
@@ -73,3 +64,6 @@ export function focusOrder(
     return person && person.id !== excludeId ? [person] : [];
   });
 }
+
+const counts = new Intl.NumberFormat();
+export const formatCount = (count: number) => counts.format(count);
