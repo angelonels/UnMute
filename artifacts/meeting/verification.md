@@ -28,3 +28,26 @@ Standalone browser-launch Playwright UI specs, including the new companion specs
 6. Enter the normal workspace with a valid session and use Start meeting; the normal room has no fixture participants or simulated AI response.
 
 Screenshots in this folder are browser verification artifacts. `desktop-*`, `mobile-*`, `signin-*`, and `workspace-compact-*` capture the visual pass; `local-capture-dark.png` and `mobile-chat-light.png` preserve the earlier functional media/chat checks. These are implementation evidence, not research assets. No external research files are in the repository.
+
+## Motion and component refinement — 2026-10-28
+
+Source commits: `9306f70`, `20c26c8`, `c2ce251`, `8168c51` on `feat/meeting-room`.
+
+- Final `pnpm verify` passed after the mixed-input button fix: formatting, zero-warning ESLint, strict frontend/backend typechecks, all four existing tests, generated contracts, and both production builds.
+- React Doctor: 81/100 with 15 warnings. Complexity/size and mixed-export findings remain advisory. The object URL findings have explicit cleanup paths. The Button presence warning concerns switching to immediate keyboard rendering, where removing the animation wrapper is intentional. The media ref initializer creates a small empty resource record; it performs no capture or external work. No checks were disabled.
+- The lazy Three.js scene still triggers Vite's chunk advisory: approximately 560.6 KB minified / 140.4 KB gzip.
+- Added repeatable motion E2E scenarios in `frontend/e2e/motion.spec.ts` before their implementation. Standalone browser-launch Playwright specs remain unrun because review used the permitted Codex in-app browser. Browser interaction checks below are separate from a Playwright CLI suite pass.
+
+Verified in the in-app browser:
+
+- Keyboard device-settings opening is immediate; Escape returns focus to its trigger.
+- Both custom device pickers expose the expected options, selected check, keyboard navigation, and Escape focus return. Default-device aliases are deduplicated. The menu remained within the 320px viewport.
+- Own chat messages render immediately after Enter. AI suggestion activation transfers focus to its composer as the welcome content leaves.
+- Workspace prejoin and side drawer open by keyboard and return focus on Escape. Switching from keyboard activation back to pointer activation opens the prejoin on the first click after the shared Button fix.
+- Pointer theme switching drives thumb translation plus sun/moon rotation, scale, and opacity. Keyboard switching is immediate. Live reduced-motion emulation changed an open modal between `reduced` and `pointer` without reloading. Temporary emulation was cleared.
+- Meeting and workspace renders checked in light/dark themes at desktop and 320 CSS pixels. No horizontal overflow was observed. Compact prejoin fits the narrow viewport.
+- Compact AI toolbar uses the real dimensional companion; larger autonomous companion rendering remains active. No floating pause control was added.
+
+The current review tab logged the existing React warning emitted by next-themes' client-rendered script; no capture or application exception was observed in this pass. Physical camera/microphone and the native screen-share picker were not repeated; earlier explicit synthetic media checks remain recorded above. Meeting transport and live AI integration remain outside this frontend scope.
+
+`polished-*` PNGs capture this refinement pass. They are verification artifacts, not research. External references and research remain in the temporary directory outside the repository.
