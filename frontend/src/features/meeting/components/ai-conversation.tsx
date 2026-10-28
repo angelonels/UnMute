@@ -1,7 +1,7 @@
 import { m } from 'motion/react';
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import Markdown from 'react-markdown';
-import { memo, useDeferredValue, useEffect, useRef, useState } from 'react';
+import { memo, useDeferredValue, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ArrowDown, ArrowUp, Check, Copy, List, Refresh, Square, Text } from 'iconoir-react';
 import type { useAIConversation } from '../use-ai-conversation';
 
@@ -95,6 +95,7 @@ export function AIConversation({
   const viewport = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const following = useRef(true);
+  const revealSubmission = useRef(false);
   const [away, setAway] = useState(false);
   const unavailable = !ai.available;
   const lastAnswer = ai.messages.at(-1);
@@ -115,7 +116,16 @@ export function AIConversation({
     observer.observe(body);
     return () => observer.disconnect();
   }, []);
+  // Explicit submission changes reading intent, even when the transcript height stays the same.
+  useLayoutEffect(() => {
+    if (!revealSubmission.current) return;
+    revealSubmission.current = false;
+    following.current = true;
+    const node = viewport.current;
+    if (node) node.scrollTop = node.scrollHeight;
+  }, [ai.messages]);
   const send = (prompt?: string) => {
+    revealSubmission.current = true;
     following.current = true;
     setAway(false);
     ai.send(prompt);
@@ -229,7 +239,13 @@ export function AIConversation({
                           <button
                             type="button"
                             disabled={disabled || unavailable}
-                            onClick={ai.retry}
+                            onClick={() => {
+                              revealSubmission.current = true;
+                              following.current = true;
+                              setAway(false);
+                              ai.retry();
+                              input.current?.focus();
+                            }}
                             className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[11px] text-muted hover:bg-surface-muted hover:text-text disabled:opacity-40"
                           >
                             <Refresh width={14} height={14} aria-hidden="true" /> Try again
@@ -290,9 +306,14 @@ export function AIConversation({
             <button
               type="button"
               aria-label={ai.busy ? 'Stop response' : 'Send message to Mumo'}
-              disabled={!ai.busy && (unavailable || disabled || !ai.draft.trim())}
-              onClick={() => (ai.busy ? ai.stop() : send())}
-              className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.96]"
+              aria-disabled={!ai.busy && (unavailable || disabled || !ai.draft.trim())}
+              onClick={() => {
+                if (ai.busy) {
+                  ai.stop();
+                  input.current?.focus();
+                } else if (!unavailable && !disabled && ai.draft.trim()) send();
+              }}
+              className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface aria-disabled:cursor-default aria-disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.96]"
             >
               {ai.busy ? (
                 <Square width={15} height={15} strokeWidth={2} aria-hidden="true" />

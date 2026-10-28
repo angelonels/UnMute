@@ -156,10 +156,12 @@ test('AI streams, stops without losing partial text, retries and retains drafts'
   await page.getByRole('button', { name: 'Stop response', exact: true }).click();
   await expect(log).toHaveAttribute('aria-busy', 'false');
   await expect(log).toContainText('Stopped');
+  await expect(page.getByRole('textbox', { name: 'Message Mumo', exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Try again', exact: true }).click();
   await expect(log).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
   await expect(log.getByRole('article')).toHaveCount(1);
   await expect(log).toContainText('sample discussion');
+  await expect(page.getByRole('textbox', { name: 'Message Mumo', exact: true })).toBeFocused();
   await page.getByRole('textbox', { name: 'Message Mumo', exact: true }).fill('A follow-up draft');
   await page.getByRole('button', { name: 'Close Mumo', exact: true }).click();
   await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
@@ -265,7 +267,7 @@ test('companion studio exposes Dotty states, shape morphing and system reduced m
     ['Bunny', 'Bouncing'],
     ['Bunny', 'Celebrating'],
     ['Drop', 'Celebrating'],
-  ]) {
+  ] as const) {
     await studio.getByRole('combobox', { name: 'Companion shape' }).click();
     await page.getByRole('option', { name: shape, exact: true }).click();
     await studio.getByRole('combobox', { name: 'Companion state' }).click();

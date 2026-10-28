@@ -64,3 +64,36 @@ test('Mumo attends to the composer and follows the response lifecycle', async ({
   await expect(character).not.toHaveAttribute('data-companion-activity', 'composing');
   await page.screenshot({ path: info.outputPath('mumo-contextual-attention.png'), fullPage: true });
 });
+
+test('short Mumo panels reveal explicit submissions while preserving passive reading', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 390, height: 500 });
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
+  const character = page.locator('[data-companion-activity] canvas');
+  await expect.poll(() => character.evaluate((el) => el.getBoundingClientRect().height)).toBe(64);
+  await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();
+  const log = page.getByRole('log', { name: 'Private conversation with Mumo' });
+  await expect(log).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
+  const viewport = log.locator('xpath=../..');
+  await viewport.evaluate((el) => {
+    el.scrollTop = 0;
+  });
+  const composer = page.getByRole('textbox', { name: 'Message Mumo', exact: true });
+  await composer.fill('What is next?');
+  await composer.press('Enter');
+  await expect
+    .poll(() => viewport.evaluate((el) => el.scrollHeight - el.scrollTop - el.clientHeight))
+    .toBeLessThan(48);
+  await viewport.evaluate((el) => {
+    el.scrollTop = 0;
+  });
+  await expect(log).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
+  await expect.poll(() => viewport.evaluate((el) => el.scrollTop)).toBe(0);
+  await expect(page.getByRole('button', { name: 'Latest answer', exact: true })).toBeVisible();
+  await page.screenshot({
+    path: info.outputPath('mumo-short-passive-reading.png'),
+    fullPage: true,
+  });
+});

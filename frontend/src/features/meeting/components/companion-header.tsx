@@ -25,9 +25,10 @@ export function CompanionHeader({
       >
         <Xmark width={17} height={17} aria-hidden="true" />
       </Dialog.Close>
-      <div className="flex h-36 items-center justify-center">
+      <div className="flex h-36 items-center justify-center [@media(max-height:700px)]:h-16">
         <AICompanion
           size={144}
+          className="[@media(max-height:700px)]:h-16! [@media(max-height:700px)]:w-16!"
           dimensional
           pokeable
           state={behavior.state}
@@ -37,14 +38,9 @@ export function CompanionHeader({
         />
       </div>
       <div className="flex items-end justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xl font-medium tracking-[-0.04em]">
-            Mumo<span className="text-primary">.</span>
-          </p>
-          <p className="mt-0.5 truncate text-[11px] text-muted">
-            {available ? behavior.caption : 'Not connected yet'}
-          </p>
-        </div>
+        <p className="text-xl font-medium tracking-[-0.04em]">
+          Mumo<span className="text-primary">.</span>
+        </p>
         <span
           className="mb-0.5 flex shrink-0 items-center gap-1.5 text-[10px] text-muted"
           title="Private conversation"
@@ -53,6 +49,9 @@ export function CompanionHeader({
           {demo ? 'Sample meeting' : 'Just us'}
         </span>
       </div>
+      <p className="mt-0.5 text-[11px] leading-4 text-muted">
+        {available ? behavior.caption : 'Not connected yet'}
+      </p>
     </header>
   );
 }
