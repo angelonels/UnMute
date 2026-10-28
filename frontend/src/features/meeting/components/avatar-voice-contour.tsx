@@ -41,8 +41,9 @@ export function AvatarVoiceContour({ source }: { source: AudioVisualSource }) {
         previous = 0;
         return false;
       }
-      const elapsed = previous ? Math.min(100, now - previous) : 33;
-      if (previous && elapsed < (reduced ? 250 : 32)) return true;
+      const gap = previous ? now - previous : 33;
+      if (previous && gap < (reduced ? 250 : 32)) return true;
+      const elapsed = Math.min(100, gap);
       previous = now;
       for (let i = 0; i < levels.length; i++) {
         const target = incoming.current[i]!;

@@ -7,7 +7,7 @@ export function voiceContour(levels: ArrayLike<number>, phase: number) {
   const energy = Math.max(...bands);
   const weight = bands.reduce((sum, band, i) => sum + band * [0.48, 0.28, 0.16, 0.08][i]!, 0);
   const time = Number.isFinite(phase) ? phase : 0;
-  const harmonics = [2, 3, 5, 7];
+  const harmonics = [3, 4, 6, 8];
   const weights = [0.48, 0.28, 0.16, 0.08];
   const points = Array.from({ length: 48 }, (_, i) => {
     const angle = (i / 48) * Math.PI * 2;
