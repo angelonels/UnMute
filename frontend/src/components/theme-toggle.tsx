@@ -1,58 +1,95 @@
 import { useReducedMotion } from '../hooks/use-reduced-motion';
-import { HalfMoon as Moon, SunLight as Sun } from 'iconoir-react';
 import { m } from 'motion/react';
 import { useTheme } from 'next-themes';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 
+/** A single celestial glyph changes silhouette, rather than presenting two tiny choices. */
 export function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
   const reduced = useReducedMotion();
   const [pointer, setPointer] = useState(false);
+  const id = useId();
   const dark = resolvedTheme === 'dark';
   const animated = pointer && !reduced;
-  const transition = animated
-    ? { type: 'spring' as const, stiffness: 460, damping: 30, mass: 0.7 }
-    : { duration: 0 };
+  const transition = { duration: animated ? 0.28 : 0, ease: [0.23, 1, 0.32, 1] as const };
   return (
     <button
       type="button"
-      className="group relative flex h-11 w-16 shrink-0 cursor-pointer items-center justify-center rounded-full"
       aria-label={dark ? 'Use light mode' : 'Use dark mode'}
       title={dark ? 'Use light mode' : 'Use dark mode'}
       onPointerDown={() => setPointer(true)}
       onKeyDown={() => setPointer(false)}
       onClick={(event) => {
-        if (event.detail === 0) setPointer(false);
+        if (!event.detail) setPointer(false);
         setTheme(dark ? 'light' : 'dark');
       }}
+      className="group grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-border/70 bg-surface text-text hover:border-muted/60 hover:bg-surface-muted motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.94]"
     >
-      <span className="relative grid h-8 w-14 grid-cols-2 items-center rounded-full px-[3px] border border-border/65 bg-surface-muted text-muted group-hover:border-muted/45">
-        <m.span
-          aria-hidden="true"
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 32 32"
+        fill="none"
+        aria-hidden="true"
+        className="overflow-visible"
+      >
+        <defs>
+          <mask id={id}>
+            <rect width="32" height="32" fill="white" />
+            <m.circle
+              cx="24"
+              cy="8"
+              r="9"
+              fill="black"
+              initial={false}
+              animate={{ transform: dark ? 'translate(0px, 0px)' : 'translate(13px, -13px)' }}
+              transition={transition}
+            />
+          </mask>
+        </defs>
+        <m.g
           initial={false}
-          animate={{ x: dark ? 24 : 0 }}
+          animate={{ transform: dark ? 'rotate(-20deg)' : 'rotate(0deg)' }}
+          style={{ transformOrigin: '16px 16px' }}
           transition={transition}
-          className="absolute top-[3px] left-[3px] size-6 rounded-full border border-border/45 bg-surface shadow-sm"
-        />
-        <m.span
-          aria-hidden="true"
-          initial={false}
-          animate={{ rotate: dark ? -60 : 0, scale: dark ? 0.85 : 1, opacity: dark ? 0.55 : 1 }}
-          transition={transition}
-          className={`relative grid place-items-center ${dark ? 'text-muted' : 'text-text'}`}
         >
-          <Sun width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
-        </m.span>
-        <m.span
-          aria-hidden="true"
+          <circle
+            cx="16"
+            cy="16"
+            r="8.5"
+            fill={dark ? 'currentColor' : 'var(--accent)'}
+            stroke="currentColor"
+            strokeWidth="1.25"
+            mask={`url(#${id})`}
+          />
+        </m.g>
+        <m.g
           initial={false}
-          animate={{ rotate: dark ? 0 : 30, scale: dark ? 1 : 0.85, opacity: dark ? 1 : 0.55 }}
+          animate={{
+            opacity: dark ? 0 : 1,
+            transform: dark ? 'rotate(45deg) scale(0.6)' : 'rotate(0deg) scale(1)',
+          }}
+          style={{ transformOrigin: '16px 16px' }}
           transition={transition}
-          className={`relative grid place-items-center ${dark ? 'text-text' : 'text-muted'}`}
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
         >
-          <Moon width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
-        </m.span>
-      </span>
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => (
+            <path key={angle} d="M16 2.5V4" transform={`rotate(${angle} 16 16)`} />
+          ))}
+        </m.g>
+        <m.g
+          initial={false}
+          animate={{ opacity: dark ? 1 : 0, transform: dark ? 'scale(1)' : 'scale(0.6)' }}
+          style={{ transformOrigin: '25px 8px' }}
+          transition={transition}
+          fill="currentColor"
+        >
+          <path d="m25 2 .8 2.2L28 5l-2.2.8L25 8l-.8-2.2L22 5l2.2-.8Z" />
+          <circle cx="28" cy="12" r="1" />
+        </m.g>
+      </svg>
     </button>
   );
 }

@@ -39,6 +39,7 @@ import { MeetingControl } from './meeting-control';
 import { MeetingStage } from './meeting-stage';
 import { MeetingPanel } from './meeting-panel';
 import { MeetingChat, PeopleList } from './meeting-conversations';
+import { CompanionHeader } from './companion-header';
 import { AIConversation } from './ai-conversation';
 import { useAIConversation } from '../use-ai-conversation';
 import type { AIStreamSource } from '../ai-stream';
@@ -188,7 +189,7 @@ export function MeetingPage({
       onKeyDownCapture={() => setKeyboard(true)}
       onPointerDownCapture={() => setKeyboard(false)}
     >
-      <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 pb-3 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:gap-x-5">
+      <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 pb-3 min-[1100px]:grid-cols-[minmax(0,1fr)_auto_auto] min-[1100px]:gap-x-5">
         <div className="flex min-w-0 items-center gap-3 sm:gap-5">
           <div className="hidden sm:block">
             <Brand compact />
@@ -212,7 +213,7 @@ export function MeetingPage({
             </span>
           </div>
         </div>
-        <div className="order-2 flex shrink-0 items-center gap-1 lg:order-3">
+        <div className="order-2 flex shrink-0 items-center gap-1 min-[1100px]:order-3">
           {import.meta.env.DEV && demo && (
             <DemoControls
               keyboard={keyboard}
@@ -249,16 +250,8 @@ export function MeetingPage({
           />
           <ThemeToggle />
         </div>
-        <div className="order-3 col-span-2 flex min-h-11 items-center justify-end gap-2 lg:order-2 lg:col-span-1">
-          <SegmentedControl
-            label="Meeting layout"
-            options={[
-              { value: 'gallery', label: 'Gallery', icon: <MeetingLayoutIcon /> },
-              { value: 'focus', label: 'Focus', icon: <MeetingLayoutIcon focus /> },
-            ]}
-            value={layout}
-            onValueChange={(value) => setLayout(value === 'focus' ? 'focus' : 'gallery')}
-          />
+        <div className="hidden min-h-11 items-center justify-end min-[1100px]:order-2 min-[1100px]:flex">
+          <LayoutPicker layout={layout} onChange={setLayout} />
         </div>
       </header>
       {connection !== 'ready' && (
@@ -282,8 +275,8 @@ export function MeetingPage({
           open={showLeft}
           onOpenChange={(open) => openPanel('left', open)}
           side="left"
-          title="UnMute AI"
-          companionExpanded={ai.messages.length > 0}
+          title="Mumo"
+          header={<CompanionHeader behavior={ai.companion} available={ai.available} demo={demo} />}
           description="Only visible to you"
           modal={width < 1024}
           trigger={aiTrigger}
@@ -294,7 +287,6 @@ export function MeetingPage({
             <AIConversation
               keyboard={keyboard}
               conversation={ai}
-              demo={demo}
               disabled={connection !== 'ready'}
             />
           </div>
@@ -432,15 +424,27 @@ export function MeetingPage({
         <div className="col-start-1 row-start-1">
           <MeetingControl
             ref={aiTrigger}
-            aria-label="Open UnMute AI"
+            aria-label="Open Mumo"
             aria-expanded={showLeft}
             aria-controls="meeting-ai"
             tone={showLeft ? 'primary' : 'neutral'}
             onClick={() => openPanel('left', !showLeft)}
-            icon={<AICompanion size={36} dimensional active={showLeft && !keyboard} />}
+            icon={
+              <AICompanion
+                size={44}
+                dimensional
+                state={ai.companion.state}
+                expression={ai.companion.expression}
+                attention={ai.companion.attention}
+                active={showLeft && !keyboard}
+              />
+            }
           >
-            <span className="hidden min-[420px]:inline">UnMute AI</span>
+            <span className="hidden min-[420px]:inline">Mumo</span>
           </MeetingControl>
+        </div>
+        <div className="col-start-2 row-start-1 justify-self-center min-[1100px]:hidden">
+          <LayoutPicker layout={layout} onChange={setLayout} />
         </div>
         <div className="col-start-3 row-start-1">
           <div className="flex gap-2">
@@ -575,5 +579,25 @@ export function MeetingPage({
         </div>
       </footer>
     </div>
+  );
+}
+
+function LayoutPicker({
+  layout,
+  onChange,
+}: {
+  layout: 'gallery' | 'focus';
+  onChange: (value: 'gallery' | 'focus') => void;
+}) {
+  return (
+    <SegmentedControl
+      label="Meeting layout"
+      options={[
+        { value: 'gallery', label: 'Gallery', icon: <MeetingLayoutIcon /> },
+        { value: 'focus', label: 'Focus', icon: <MeetingLayoutIcon focus /> },
+      ]}
+      value={layout}
+      onValueChange={(value) => onChange(value === 'focus' ? 'focus' : 'gallery')}
+    />
   );
 }

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Effect } from 'effect';
 import { consumeAIStream, type AIStreamSource } from './ai-stream';
+import type { StateName } from '../../components/companion/dotty-engine';
+import { companionBehavior } from './companion-behavior';
 import type { MeetingMessage } from './meeting-model';
 
 export type AIMessage = MeetingMessage & {
@@ -11,6 +13,16 @@ export type AIMessage = MeetingMessage & {
 export function useAIConversation(source: AIStreamSource | undefined, enabled: boolean) {
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [draft, setDraft] = useState('');
+  const [composerFocused, setComposerAttentive] = useState(false);
+  const attentionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const attendToComposer = (focused: boolean) => {
+    clearTimeout(attentionTimer.current);
+    setComposerAttentive(focused);
+    if (focused) attentionTimer.current = setTimeout(() => setComposerAttentive(false), 5000);
+  };
+  const [readingHistory, setReadingHistory] = useState(false);
+  const [companionState, setCompanionState] = useState<StateName>('idle');
+  const reactionTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [busy, setBusy] = useState(false);
   const active = useRef<{
     controller: AbortController;
@@ -22,6 +34,9 @@ export function useAIConversation(source: AIStreamSource | undefined, enabled: b
   const stop = useCallback(() => {
     const current = active.current;
     if (!current) return;
+    clearTimeout(reactionTimer.current);
+    setCompanionState('listening');
+    reactionTimer.current = setTimeout(() => setCompanionState('idle'), 900);
     active.current = null;
     clearTimeout(current.flush);
     clearTimeout(current.timeout);
@@ -37,6 +52,13 @@ export function useAIConversation(source: AIStreamSource | undefined, enabled: b
     if (!enabled) stop();
     return stop;
   }, [enabled, source, stop]);
+  useEffect(
+    () => () => {
+      clearTimeout(reactionTimer.current);
+      clearTimeout(attentionTimer.current);
+    },
+    [],
+  );
   const run = (history: AIMessage[]) => {
     if (!source || !enabled || active.current) return;
     const id = crypto.randomUUID();
@@ -58,10 +80,13 @@ export function useAIConversation(source: AIStreamSource | undefined, enabled: b
         state: 'waiting',
       },
     ]);
+    clearTimeout(reactionTimer.current);
+    setCompanionState('thinking');
     setBusy(true);
     const publish = () => {
       current.flush = undefined;
       if (active.current !== current) return;
+      setCompanionState('working');
       setMessages((previous) =>
         previous.map((message) =>
           message.id === id ? { ...message, text: current.text, state: 'streaming' } : message,
@@ -81,6 +106,8 @@ export function useAIConversation(source: AIStreamSource | undefined, enabled: b
         ),
       );
       setBusy(false);
+      setCompanionState(error ? 'alert' : 'celebrating');
+      reactionTimer.current = setTimeout(() => setCompanionState('idle'), 2400);
     };
     const armTimeout = () => {
       clearTimeout(current.timeout);
@@ -116,8 +143,21 @@ export function useAIConversation(source: AIStreamSource | undefined, enabled: b
   };
   return {
     messages,
+    companionState: enabled ? companionState : ('idle' as StateName),
+    companion: companionBehavior({
+      response: enabled ? companionState : 'idle',
+      busy,
+      focused: composerFocused,
+      draft,
+      reading: readingHistory,
+    }),
+    setComposerFocused: attendToComposer,
+    setReadingHistory,
     draft,
-    setDraft,
+    setDraft: (text: string) => {
+      setDraft(text);
+      attendToComposer(true);
+    },
     busy,
     stop,
     available: !!source,

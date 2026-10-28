@@ -21,9 +21,9 @@ test('development room supports local controls, pinning, sharing, and chats', as
   await expect(page.getByText('Pinned to your view', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Share screen', exact: true }).click();
   await expect(page.getByLabel('Your shared screen')).toBeVisible();
-  await page.getByRole('button', { name: 'Open UnMute AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
   await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();
-  await expect(page.getByRole('log', { name: 'Private AI conversation' })).toContainText(
+  await expect(page.getByRole('log', { name: 'Private conversation with Mumo' })).toContainText(
     'A clearer meeting space',
   );
   await page.getByRole('button', { name: 'Open meeting chat', exact: true }).click();
@@ -148,9 +148,9 @@ test('AI streams, stops without losing partial text, retries and retains drafts'
   page,
 }, info) => {
   await page.goto('/meeting?demo=true&microphone=false&camera=false');
-  await page.getByRole('button', { name: 'Open UnMute AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
   await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();
-  const log = page.getByRole('log', { name: 'Private AI conversation' });
+  const log = page.getByRole('log', { name: 'Private conversation with Mumo' });
   await expect(log).toHaveAttribute('aria-busy', 'true');
   await expect(log.getByRole('article')).toContainText('A clearer meeting space');
   await page.getByRole('button', { name: 'Stop response', exact: true }).click();
@@ -160,10 +160,10 @@ test('AI streams, stops without losing partial text, retries and retains drafts'
   await expect(log).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
   await expect(log.getByRole('article')).toHaveCount(1);
   await expect(log).toContainText('sample discussion');
-  await page.getByRole('textbox', { name: 'Ask UnMute AI', exact: true }).fill('A follow-up draft');
-  await page.getByRole('button', { name: 'Close UnMute AI', exact: true }).click();
-  await page.getByRole('button', { name: 'Open UnMute AI', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: 'Ask UnMute AI', exact: true })).toHaveValue(
+  await page.getByRole('textbox', { name: 'Message Mumo', exact: true }).fill('A follow-up draft');
+  await page.getByRole('button', { name: 'Close Mumo', exact: true }).click();
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Message Mumo', exact: true })).toHaveValue(
     'A follow-up draft',
   );
   await page.screenshot({ path: info.outputPath('ai-stream-complete.png'), fullPage: true });
@@ -230,4 +230,78 @@ test('device choice survives off/on and a late capture is stopped after leaving'
     )
     .toBe(true);
   await page.screenshot({ path: info.outputPath('late-capture-stopped.png') });
+});
+
+test('companion studio exposes Dotty states, shape morphing and system reduced motion', async ({
+  page,
+}, info) => {
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await page.getByRole('button', { name: 'Demo controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Open companion studio', exact: true }).click();
+  const studio = page.getByRole('dialog', { name: 'Companion studio', exact: true });
+  for (const state of [
+    'Thinking',
+    'Working',
+    'Celebrating',
+    'Listening',
+    'Sleeping',
+    'Alert',
+    'Shapeshift',
+    'Bouncing',
+    'Idle',
+  ]) {
+    await studio.getByRole('combobox', { name: 'Companion state' }).click();
+    await page.getByRole('option', { name: state, exact: true }).click();
+    await expect(studio.locator('[data-companion-state]')).toHaveAttribute(
+      'data-companion-state',
+      state.toLowerCase(),
+    );
+    await expect(studio.locator('canvas[data-engine="dotty"]')).toBeVisible();
+  }
+  await studio.getByRole('combobox', { name: 'Companion shape' }).click();
+  await page.getByRole('option', { name: 'Cloud', exact: true }).click();
+  // Long silhouettes must remain framed even at the peak of a bounce or spin.
+  for (const [shape, state] of [
+    ['Bunny', 'Bouncing'],
+    ['Bunny', 'Celebrating'],
+    ['Drop', 'Celebrating'],
+  ]) {
+    await studio.getByRole('combobox', { name: 'Companion shape' }).click();
+    await page.getByRole('option', { name: shape, exact: true }).click();
+    await studio.getByRole('combobox', { name: 'Companion state' }).click();
+    await page.getByRole('option', { name: state, exact: true }).click();
+    await page.screenshot({
+      path: info.outputPath(`companion-${shape}-${state}.png`),
+      fullPage: true,
+    });
+  }
+  await studio.getByRole('button', { name: 'Poke', exact: true }).click();
+  await studio.getByRole('button', { name: 'Blink', exact: true }).click();
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(studio.locator('canvas')).toHaveAttribute('data-motion', 'still');
+  await page.screenshot({ path: info.outputPath('companion-studio-reduced.png'), fullPage: true });
+});
+
+test('AI preserves a partial interrupted answer and recovers without a duplicate prompt', async ({
+  page,
+}, info) => {
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await page.getByRole('button', { name: 'Demo controls', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Demo AI response' }).click();
+  await page.getByRole('option', { name: 'Interrupt response', exact: true }).click();
+  await page.getByRole('button', { name: 'Close demo controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
+  await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();
+  const log = page.getByRole('log', { name: 'Private conversation with Mumo' });
+  await expect(log.getByRole('alert')).toContainText('Response interrupted');
+  await expect(log.getByRole('heading', { name: 'A clearer meeting space' })).toBeVisible();
+  await page.getByRole('button', { name: 'Demo controls', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Demo AI response' }).click();
+  await page.getByRole('option', { name: 'Stream normally', exact: true }).click();
+  await page.getByRole('button', { name: 'Close demo controls', exact: true }).click();
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(log).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
+  await expect(log.getByRole('article')).toHaveCount(1);
+  await expect(log.getByRole('alert')).toHaveCount(0);
+  await page.screenshot({ path: info.outputPath('ai-recovered.png'), fullPage: true });
 });

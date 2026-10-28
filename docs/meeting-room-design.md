@@ -6,7 +6,7 @@ This pass implements local interface behavior and real browser camera, microphon
 
 1. People or shared content occupy the stage. Meeting chrome stays quiet.
 2. A bottom control dock always exposes microphone, camera, share, hand, captions, and leave. Red off states never resemble the blue brand action.
-3. UnMute AI lives on the left and meeting chat/people on the right. A panel's close control stays in its header and restores focus to its opener.
+3. Mumo lives on the left and meeting chat/people on the right. A panel's close control stays in its header and restores focus to its opener.
 4. The header identifies the room and explicitly labels the preview. It also exposes gallery/focus selection, themes, AI, and chat.
 
 ## Colour contracts
@@ -40,7 +40,7 @@ An amber decorative dot beside general footer copy can be mistaken for a warning
 - At 1440px and above, both side panels may be open together. Below that, opening one closes the other. Below 1024px, panels are modal sheets with focus containment, Escape, and a dimmed background. Desktop panels are nonmodal, do not dismiss on routine stage interaction, and use contained scrolling.
 - Chat and people share the right panel, with explicit tab buttons. Unsent draft and message history survive closing a panel. Messages are local and labelled accordingly. There are no simulated delivery/read receipts.
 - The composer accepts Enter to send and Shift+Enter for a line break, respects IME composition, rejects empty input, bounds message length, and preserves draft when unavailable. No file controls are shown before attachments work.
-- AI has a distinct private scope, suggestion prompts, a local conversation, and clear sample-answer labels in demo mode. It never implies that a model listened to the meeting. Normal preview prompts receive an explicit unavailable response.
+- AI has a distinct private scope, suggestion prompts, a local conversation, and clear sample-answer labels in demo mode. It never implies that a model listened to the meeting. Normal preview composers remain unavailable until an AI stream source is supplied.
 - Chat logs have polite additions announcements. Auto-scroll follows new messages only when the reader is near the bottom; otherwise a jump-to-latest action appears. Local histories are bounded to avoid an unbounded DOM.
 - Captions use labelled fixture text in the development demo and an unavailable state in a normal preview. Hand is local state. Mic, camera, and share controls operate real browser tracks. Captions remain an explicitly labelled sample or unavailable state until transcription is connected.
 - Leaving produces an ended view with explicit rejoin and workspace actions. Rejoin begins a fresh local room state; no destructive global “end for everyone” control exists without real authorization.
@@ -79,10 +79,22 @@ The user's Tailwind requirement takes precedence over Arc's CSS-module installat
 
 ## Compact room and companion
 
-Desktop meeting identity, layout choices, panel triggers, and utilities share one header. Small screens use two compact rows. Gallery and focus use custom diagrams with full accessible names. The stage no longer repeats the speaker/count row or footer slogan. Panel reflow uses position transforms with a damped spring; media toggles and paging remain immediate.
+Desktop meeting identity, layout choices and utilities share one compact header. Mumo opens from the bottom left; Chat and People open from the bottom right. Below 1100px, layout choices join the lower tools row and the call dock occupies its own row. Gallery and focus use custom diagrams with full accessible names. The stage no longer repeats the speaker/count row or footer slogan. Panel reflow uses position transforms with a damped spring; media toggles and paging remain immediate.
 
-The original companion is a procedural Three.js mesh with a folded asymmetric contour, ceramic or graphite material, mesh eyes, smile, and studio lighting. Its autonomous pose sequence combines curious glances, blinks, happy eyes, light hops, squash/stretch, and occasional quick full turns. It has no drag interaction or floating animation control. System reduced motion renders a still 3D pose; there is no separate companion-motion setting. Hidden/offscreen characters stop rendering; unmount releases GPU resources. The AI toolbar uses the dimensional companion too. The detailed silhouette remains visible during module loading, then switches directly to the first rendered frame without an opacity delay. Scene setup yields until after the control paints. Small message marks share the silhouette without allocating another renderer.
+Mumo uses the MIT-licensed Dotty Botty numerical engine with a real closed Three.js volume, mesh eyes, studio lighting and pooled effect meshes. All nine states, twenty-seven shapes and twelve expressions remain available in the development Companion studio. The engine drives both the immediate SVG fallback and dimensional rendering. No drag or animation toggle is exposed. System reduced motion renders a settled 3D pose; hidden/offscreen characters stop scheduling frames, and disposal releases observers, engine ownership and GPU resources. The lazy scene is approximately 143 KB gzip and retains Vite's 500 KB minified-chunk advisory.
 
-The renderer loads only when a large character enters view. Its production chunk is approximately 140 KB gzipped and triggers Vite's 500 KB uncompressed chunk advisory. No downloaded models, textures, or research media ship with it. The welcome remains at the top of an empty AI panel; automatic scrolling begins only once messages exist. Once a conversation starts, the live character moves to the header and the welcome disappears.
+The panel header belongs to Mumo, with a full character stage, name and concise contextual caption. The conversation has starter cards, formatted streamed answers, stop, retry, copy and a jump-to-latest control. Identity/privacy rows are not repeated above each answer. The shared theme control uses one custom sun-to-crescent glyph with a 280ms pointer transition; keyboard and reduced-motion changes are immediate.
+
+## Contextual companion behavior
+
+`companion-behavior.ts` resolves actual conversation and attention state into one character behavior. Busy response ownership takes precedence: waiting selects thinking; chunks select working. Typing selects an inspecting face, downward eye gaze and a slight body pitch toward the composer. Focusing an empty composer invites attention; that attention expires five seconds after the last focus/edit so Mumo can resume its own life. Reading older messages directs attention toward the answer. Completion briefly celebrates; failure briefly alerts; stopping settles. New typing interrupts the completion reaction. State changes blend through the engine rather than remounting the renderer.
+
+Between interactions, Mumo breathes, blinks, looks around, stretches periodically and occasionally turns. Explicit attention suppresses wandering turns and stretches, without freezing the character. This is interface attention, not microphone monitoring; no audio or meeting content enters the animation engine.
+
+## Frontend streaming boundary
+
+`AIStreamSource` accepts conversation messages and an AbortSignal and returns decoded text through a `ReadableStream<string>`. A future transport supplies that function; there is no invented backend endpoint or browser model credential. The development source emits real chunks and exposes normal, interrupted and empty response scenarios, excluded from production.
+
+One request owns each response. Chunks batch into React at 40ms, previous answers are memoized, and Markdown rendering is deferred. Stop, disconnect, source replacement, leave and unmount abort ownership; late source acquisition is cancelled. Cancellation does not wait indefinitely on a vendor's cancel promise. Partial text survives interruption and retry replaces its failed assistant answer. Output is capped at 100,000 characters, prompt length at 2,000, history at 40 messages and idle stream time at 45 seconds. Completed/partial results are announced once, rather than announcing every token. Closing the panel preserves the request and draft.
 
 The final Arc MCP review was available after the initial registry implementation. Tailwind adaptations, the custom media room density, original 3D artwork, established brand type/copy, and purpose-built Radix panel behaviour are deliberate exceptions to Arc's default installation and composition conventions. Research references remain in an operating-system temporary directory outside the repository.

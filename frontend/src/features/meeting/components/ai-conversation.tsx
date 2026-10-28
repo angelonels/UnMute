@@ -2,8 +2,7 @@ import { m } from 'motion/react';
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import Markdown from 'react-markdown';
 import { memo, useDeferredValue, useEffect, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, Check, Copy, List, Refresh, Square, Text, Lock } from 'iconoir-react';
-import { AICompanion } from '../../../components/ai-companion';
+import { ArrowDown, ArrowUp, Check, Copy, List, Refresh, Square, Text } from 'iconoir-react';
 import type { useAIConversation } from '../use-ai-conversation';
 
 type Conversation = ReturnType<typeof useAIConversation>;
@@ -55,20 +54,23 @@ function CopyAnswer({ text }: { text: string }) {
     const timer = setTimeout(() => setState('idle'), 2000);
     return () => clearTimeout(timer);
   }, [state]);
+  async function copy() {
+    try {
+      if (!navigator.clipboard) {
+        setState('error');
+        return;
+      }
+      await navigator.clipboard.writeText(text);
+      setState('copied');
+    } catch {
+      setState('error');
+    }
+  }
   return (
     <button
       type="button"
       aria-label="Copy answer"
-      onClick={() => {
-        if (!navigator.clipboard) {
-          setState('error');
-          return;
-        }
-        void navigator.clipboard.writeText(text).then(
-          () => setState('copied'),
-          () => setState('error'),
-        );
-      }}
+      onClick={() => void copy()}
       className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[11px] text-muted hover:bg-surface-muted hover:text-text"
     >
       {state === 'copied' ? <Check width={14} height={14} /> : <Copy width={14} height={14} />}
@@ -81,13 +83,11 @@ function CopyAnswer({ text }: { text: string }) {
 
 export function AIConversation({
   conversation: ai,
-  demo,
   disabled,
   keyboard,
 }: {
   keyboard: boolean;
   conversation: Conversation;
-  demo: boolean;
   disabled: boolean;
 }) {
   const reduced = useReducedMotion();
@@ -99,9 +99,9 @@ export function AIConversation({
   const unavailable = !ai.available;
   const lastAnswer = ai.messages.at(-1);
   const announcement = ai.busy
-    ? 'AI is responding'
+    ? 'Mumo is responding'
     : lastAnswer?.authorId === 'assistant'
-      ? `${lastAnswer.state === 'stopped' ? 'Response stopped.' : lastAnswer.state === 'error' ? lastAnswer.error : 'UnMute AI.'} ${lastAnswer.text}`
+      ? `${lastAnswer.state === 'stopped' ? 'Response stopped.' : lastAnswer.state === 'error' ? lastAnswer.error : 'Mumo.'} ${lastAnswer.text}`
       : '';
   useEffect(() => {
     const node = viewport.current;
@@ -123,39 +123,28 @@ export function AIConversation({
   };
   return (
     <>
-      <div className="mx-5 flex shrink-0 items-center gap-1.5 border-b border-border/60 pb-3 text-[11px] text-muted">
-        <Lock width={12} height={12} aria-hidden="true" /> Private conversation
-        <span className="ms-auto rounded-md bg-surface-muted px-2 py-1">
-          {demo ? 'Sample meeting' : unavailable ? 'Not connected' : 'This meeting'}
-        </span>
-      </div>
       <div
         ref={viewport}
         onScroll={(event) => {
           const node = event.currentTarget;
           following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48;
           setAway(!following.current);
+          ai.setReadingHistory(!following.current);
         }}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 [scrollbar-width:thin]"
       >
         <div ref={content} className="flex min-h-full flex-col py-6">
           {!ai.messages.length ? (
             <div className="my-auto py-2">
-              <AICompanion
-                size={96}
-                dimensional
-                className="-ms-3 mb-3"
-                label="UnMute AI companion"
-              />
               <h2 className="text-[28px] leading-[1.15] font-medium tracking-[-0.045em]">
-                More clarity.
+                What’s on
                 <br />
-                <span className="text-muted">Less catching up.</span>
+                <span className="text-muted">your mind?</span>
               </h2>
               <p className="mt-4 max-w-64 text-sm leading-6 text-muted">
                 {unavailable
-                  ? 'AI will be available when your meeting is connected.'
-                  : 'A thought partner for the conversation you’re in.'}
+                  ? 'Mumo will be here when your meeting is connected.'
+                  : 'A fresh perspective, a quick recap, or a place to untangle a thought.'}
               </p>
               <div className="mt-6 space-y-2">
                 {suggestions.map(({ title, detail, prompt, icon: Icon }) => (
@@ -190,7 +179,7 @@ export function AIConversation({
           ) : (
             <div
               role="log"
-              aria-label="Private AI conversation"
+              aria-label="Private conversation with Mumo"
               aria-live="off"
               aria-busy={ai.busy}
               className="space-y-7"
@@ -204,10 +193,7 @@ export function AIConversation({
                     {message.text}
                   </div>
                 ) : (
-                  <article key={message.id} aria-label="AI answer">
-                    <div className="mb-3 flex items-center gap-2 text-xs font-medium">
-                      <AICompanion size={28} /> UnMute AI
-                    </div>
+                  <article key={message.id} aria-label="Mumo’s answer">
                     {message.state === 'waiting' ? (
                       <p className="text-sm text-muted" role="status">
                         Thinking…
@@ -279,9 +265,11 @@ export function AIConversation({
         <div className="rounded-[1.25rem] border border-border bg-surface-muted/35 p-3 focus-within:border-input">
           <textarea
             ref={input}
-            aria-label="Ask UnMute AI"
-            placeholder={unavailable ? 'AI not connected' : 'Ask about this meeting…'}
+            aria-label="Message Mumo"
+            placeholder={'Message Mumo…'}
             value={ai.draft}
+            onFocus={() => ai.setComposerFocused(true)}
+            onBlur={() => ai.setComposerFocused(false)}
             onChange={(event) => ai.setDraft(event.target.value)}
             maxLength={2000}
             disabled={disabled || unavailable}
@@ -296,12 +284,12 @@ export function AIConversation({
           />
           <div className="flex items-center justify-between gap-2">
             <span className="text-[10px] text-muted">
-              {ai.busy ? 'Responding' : demo ? 'Sample discussion' : 'UnMute AI'}
+              {ai.busy ? 'Mumo is on it…' : 'Just a thought away'}
               {ai.draft.length > 1600 && ` · ${ai.draft.length}/2000`}
             </span>
             <button
               type="button"
-              aria-label={ai.busy ? 'Stop response' : 'Send AI prompt'}
+              aria-label={ai.busy ? 'Stop response' : 'Send message to Mumo'}
               disabled={!ai.busy && (unavailable || disabled || !ai.draft.trim())}
               onClick={() => (ai.busy ? ai.stop() : send())}
               className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.96]"

@@ -46,7 +46,7 @@ export function MessageComposer({
           </span>
           <button
             type="button"
-            aria-label={label === 'Ask UnMute AI' ? 'Send AI prompt' : 'Send message'}
+            aria-label="Send message"
             disabled={!value.trim() || disabled}
             onClick={onSend}
             className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30 motion-safe:transition-transform motion-safe:duration-160 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.97]"
