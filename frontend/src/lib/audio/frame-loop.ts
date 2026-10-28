@@ -102,23 +102,3 @@ export const createFrameTask = (step: FrameTaskStep): FrameTask => {
     wake,
   };
 };
-
-/** The longest step a painter clock takes, so waking never jumps. */
-export const MAX_FRAME_GAP_MS = 100;
-
-/**
- * A clock that follows the frames but never advances more than
- * `MAX_FRAME_GAP_MS` at once. A painter that slept, or ran in a hidden tab,
- * resumes its ballistics where they were instead of jumping to the end.
- */
-export const createPainterClock = (): ((nowMs: number) => number) => {
-  let lastMs: number | null = null;
-  let clockMs = 0;
-  return (nowMs) => {
-    if (lastMs !== null) {
-      clockMs += Math.min(Math.max(0, nowMs - lastMs), MAX_FRAME_GAP_MS);
-    }
-    lastMs = nowMs;
-    return clockMs;
-  };
-};

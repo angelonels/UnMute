@@ -1,7 +1,7 @@
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { m } from 'motion/react';
 import { LocalVideo, type AudioVisualSource } from '../../media';
-import { BarVisualizer } from '../../../components/ui/bar-visualizer';
+import { AvatarVoiceContour } from './avatar-voice-contour';
 import {
   Voice as AudioLines,
   OpenSelectHandGesture as Hand,
@@ -98,23 +98,23 @@ function TileAvatar({
         layout={animate ? 'position' : false}
         layoutDependency={reflowKey}
         transition={{ type: 'spring', stiffness: 420, damping: 42 }}
-        className={`${stream ? 'invisible' : ''} relative grid shrink-0 place-items-center overflow-hidden rounded-full has-[[data-active]]:ring-2 has-[[data-active]]:ring-success/35 font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-[min(3rem,85cqh,70cqw)] text-lg' : 'size-[min(6.5rem,50cqh,70cqw)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
+        className={`${stream ? 'invisible' : ''} relative grid shrink-0 place-items-center font-medium tracking-[-0.04em] ${tones[
+          person.tone
+        ]
+          .split(' ')
+          .filter((tone) => tone.startsWith('text-'))
+          .join(
+            ' ',
+          )} ${compact ? 'size-[min(4.5rem,95cqh,90cqw)] text-lg' : 'size-[min(9.75rem,75cqh,90cqw)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
         aria-hidden="true"
       >
-        {initials(person.name)}
-        {audio && (
-          <BarVisualizer
-            source={audio}
-            barCount={9}
-            minLevel={0}
-            align="end"
-            mirrored
-            aria-hidden="true"
-            aria-label={undefined}
-            className="pointer-events-none absolute bottom-[12%] text-current opacity-75 [--bar-gap:2px]"
-            style={{ height: '18%', width: '62%' }}
-          />
-        )}
+        {!stream && audio && <AvatarVoiceContour source={audio} />}
+        <span
+          data-slot="participant-avatar"
+          className={`relative grid size-2/3 place-items-center rounded-full ${tones[person.tone]}`}
+        >
+          {initials(person.name)}
+        </span>
       </m.div>
       {!compact && !stream && person.role && (
         <span

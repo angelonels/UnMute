@@ -308,7 +308,7 @@ test('AI preserves a partial interrupted answer and recovers without a duplicate
   await page.screenshot({ path: info.outputPath('ai-recovered.png'), fullPage: true });
 });
 
-test('voice visualization lives inside the avatar and follows sound, silence and mute', async ({
+test('voice visualization surrounds the avatar and follows sound, silence and mute', async ({
   page,
 }, info) => {
   await page.setViewportSize({ width: 1280, height: 800 });
@@ -319,22 +319,19 @@ test('voice visualization lives inside the avatar and follows sound, silence and
   await page.getByRole('button', { name: 'Close demo controls', exact: true }).click();
   await page.getByRole('button', { name: 'Microphone off', exact: true }).click();
   const avatar = page.getByRole('article', { name: 'Alex Morgan, you', exact: true });
-  const visual = avatar.locator('[data-slot="bar-visualizer"]');
+  const visual = avatar.locator('[data-slot="avatar-voice-contour"]');
   await expect(visual).toHaveAttribute('data-active', '');
-  await expect(visual.locator('[data-slot="bar-visualizer-bar"]')).toHaveCount(9);
-  const first = await visual
-    .locator('span')
-    .evaluateAll((bars) => bars.map((bar) => bar.style.transform).join(','));
-  await expect
-    .poll(() =>
-      visual
-        .locator('span')
-        .evaluateAll((bars) => bars.map((bar) => bar.style.transform).join(',')),
-    )
-    .not.toBe(first);
+  await expect(visual.locator('path')).toHaveCount(2);
+  const circle = avatar.locator('[data-slot="participant-avatar"]');
+  const bounds = await circle.boundingBox();
+  const contourBounds = await visual.boundingBox();
+  expect(contourBounds!.width).toBeGreaterThan(bounds!.width * 1.4);
+  const first = await visual.locator('path').last().getAttribute('d');
+  await expect.poll(() => visual.locator('path').last().getAttribute('d')).not.toBe(first);
+  expect(await circle.boundingBox()).toEqual(bounds);
   await expect(visual).not.toHaveAttribute('data-active');
   await expect(visual).toHaveAttribute('data-active', '');
-  await page.screenshot({ path: info.outputPath('audio-inside-avatar.png'), fullPage: true });
+  await page.screenshot({ path: info.outputPath('audio-around-avatar.png'), fullPage: true });
   await page.getByRole('button', { name: 'Microphone on', exact: true }).click();
   await expect(visual).toHaveCount(0);
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -342,6 +339,6 @@ test('voice visualization lives inside the avatar and follows sound, silence and
   await expect(visual).toHaveAttribute('data-active', '');
   await page.getByRole('button', { name: 'Leave meeting preview', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'You’ve left the preview.' })).toBeVisible();
-  await expect(page.locator('[data-slot="bar-visualizer"]')).toHaveCount(0);
+  await expect(page.locator('[data-slot="avatar-voice-contour"]')).toHaveCount(0);
   await page.screenshot({ path: info.outputPath('audio-resources-released.png'), fullPage: true });
 });

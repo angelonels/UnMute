@@ -1,4 +1,4 @@
-import { clamp } from './decibels';
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 /** `AnalyserNode.minDecibels` default. */
 export const SPECTRUM_MIN_DB = -100;
@@ -48,39 +48,6 @@ export const bandsFromSpectrum = (
     }
     const meanDb = POWER_DB_FACTOR * Math.log10(power / (last - first));
     out[band] = clamp((meanDb - minDb) / (maxDb - minDb), 0, 1);
-  }
-  return out;
-};
-
-/**
- * Fits `length` values from a ring buffer, starting at `start`, into
- * `out.length` values. Each output takes the loudest value in its span.
- */
-export const resampleLevels = (
-  source: ArrayLike<number>,
-  start: number,
-  length: number,
-  out: Float32Array,
-): Float32Array => {
-  const size = source.length;
-  const count = out.length;
-
-  if (size === 0 || length <= 0 || count === 0) {
-    out.fill(0);
-    return out;
-  }
-
-  for (let index = 0; index < count; index += 1) {
-    const from = Math.floor((index * length) / count);
-    const to = Math.max(from + 1, Math.floor(((index + 1) * length) / count));
-    let loudest = 0;
-    for (let offset = from; offset < to; offset += 1) {
-      const value = source[(start + offset) % size] ?? 0;
-      if (value > loudest) {
-        loudest = value;
-      }
-    }
-    out[index] = loudest;
   }
   return out;
 };
