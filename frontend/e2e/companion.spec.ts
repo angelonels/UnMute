@@ -71,6 +71,9 @@ test('short Mumo panels reveal explicit submissions while preserving passive rea
   await page.setViewportSize({ width: 390, height: 500 });
   await page.goto('/meeting?demo=true&microphone=false&camera=false');
   await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'What’s on your mind?' })).toBeInViewport({
+    ratio: 1,
+  });
   const character = page.locator('[data-companion-activity] canvas');
   await expect.poll(() => character.evaluate((el) => el.getBoundingClientRect().height)).toBe(64);
   await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();

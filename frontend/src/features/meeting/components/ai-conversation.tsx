@@ -1,7 +1,15 @@
 import { m } from 'motion/react';
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import Markdown from 'react-markdown';
-import { memo, useDeferredValue, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import {
+  memo,
+  useDeferredValue,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import { ArrowDown, ArrowUp, Check, Copy, List, Refresh, Square, Text } from 'iconoir-react';
 import type { useAIConversation } from '../use-ai-conversation';
 
@@ -104,15 +112,17 @@ export function AIConversation({
     : lastAnswer?.authorId === 'assistant'
       ? `${lastAnswer.state === 'stopped' ? 'Response stopped.' : lastAnswer.state === 'error' ? lastAnswer.error : 'Mumo.'} ${lastAnswer.text}`
       : '';
-  useEffect(() => {
+  const followLatest = useEffectEvent(() => {
     const node = viewport.current;
+    if (!node) return;
+    if (!ai.messages.length) node.scrollTop = 0;
+    else if (following.current) node.scrollTop = node.scrollHeight;
+  });
+  useEffect(() => {
     const body = content.current;
-    if (!node || !body) return;
-    const follow = () => {
-      if (following.current) node.scrollTop = node.scrollHeight;
-    };
-    follow();
-    const observer = new ResizeObserver(follow);
+    if (!body) return;
+    followLatest();
+    const observer = new ResizeObserver(() => followLatest());
     observer.observe(body);
     return () => observer.disconnect();
   }, []);
@@ -138,8 +148,9 @@ export function AIConversation({
         onScroll={(event) => {
           const node = event.currentTarget;
           following.current = node.scrollHeight - node.scrollTop - node.clientHeight < 48;
-          setAway(!following.current);
-          ai.setReadingHistory(!following.current);
+          const readingHistory = ai.messages.length > 0 && !following.current;
+          setAway(readingHistory);
+          ai.setReadingHistory(readingHistory);
         }}
         className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 [scrollbar-width:thin]"
       >
