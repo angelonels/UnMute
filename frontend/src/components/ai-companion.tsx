@@ -1,7 +1,6 @@
 import { useReducedMotion } from '../hooks/use-reduced-motion';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
-import { useCompanionMotion } from './companion/motion-preference';
 import type { CompanionEmotion, CompanionOptions, CompanionScene } from './companion/scene';
 import { m, type Variants } from 'motion/react';
 
@@ -38,15 +37,16 @@ function CompanionMark({
   active = false,
   label,
   className = '',
+  detailed = size >= 48,
 }: {
   size?: number;
   active?: boolean;
   label?: string;
   className?: string;
+  detailed?: boolean;
 }) {
   const id = useId();
   const reduced = useReducedMotion();
-  const detailed = size >= 48;
   const expression = active && !reduced ? 'greet' : 'rest';
   return (
     <svg
@@ -157,8 +157,6 @@ function Companion3D({
 }: CompanionProps) {
   const { resolvedTheme } = useTheme();
   const reduced = !!useReducedMotion();
-  const [motionEnabled] = useCompanionMotion();
-  const paused = !motionEnabled;
   const [status, setStatus] = useState<'loading' | 'ready' | 'unavailable'>('loading');
   const host = useRef<HTMLSpanElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
@@ -167,16 +165,15 @@ function Companion3D({
   const options = useRef<CompanionOptions>({
     ceramic: finish === 'ceramic',
     reduced: true,
-    paused: false,
     visible: false,
     active: false,
     emotion: 'auto',
   });
   const ceramic = finish === 'ceramic' || (finish === 'auto' && resolvedTheme === 'dark');
   useEffect(() => {
-    options.current = { ceramic, reduced, paused, visible: visible.current, active, emotion };
+    options.current = { ceramic, reduced, visible: visible.current, active, emotion };
     scene.current?.update(options.current);
-  }, [ceramic, reduced, paused, active, emotion]);
+  }, [ceramic, reduced, active, emotion]);
   useEffect(() => {
     const node = host.current;
     const surface = canvas.current;
@@ -186,22 +183,39 @@ function Companion3D({
     visible.current = false;
     let alive = true;
     let requested = false;
+    let prepareFrame = 0;
+    // Begin loading before visibility observation so the compact toolbar is ready sooner.
+    const module = import('./companion/scene');
+    // Attach failure handling immediately, including offscreen instances.
+    void module.catch(() => {
+      if (alive) setStatus('unavailable');
+    });
     const observer = new IntersectionObserver(([entry]) => {
       visible.current = !!entry?.isIntersecting;
       scene.current?.update({ ...options.current, visible: visible.current });
       if (!visible.current || requested) return;
       requested = true;
-      void import('./companion/scene')
+      void module
         .then(({ createCompanionScene }) => {
           if (!alive) return;
-          scene.current = createCompanionScene(
-            surface,
-            { ...options.current, visible: visible.current },
-            () => {
-              if (alive) setStatus('unavailable');
-            },
-          );
-          setStatus('ready');
+          // Let the control and its panel paint before GPU setup begins.
+          prepareFrame = requestAnimationFrame(() => {
+            prepareFrame = requestAnimationFrame(() => {
+              if (!alive) return;
+              try {
+                scene.current = createCompanionScene(
+                  surface,
+                  { ...options.current, visible: visible.current },
+                  () => {
+                    if (alive) setStatus('unavailable');
+                  },
+                );
+                setStatus('ready');
+              } catch {
+                setStatus('unavailable');
+              }
+            });
+          });
         })
         .catch(() => {
           if (alive) setStatus('unavailable');
@@ -210,6 +224,7 @@ function Companion3D({
     observer.observe(node);
     return () => {
       alive = false;
+      cancelAnimationFrame(prepareFrame);
       observer.disconnect();
       scene.current?.dispose();
       scene.current = null;
@@ -231,9 +246,9 @@ function Companion3D({
         <canvas
           ref={canvas}
           aria-hidden="true"
-          className={`absolute inset-0 size-full transition-opacity duration-200 motion-reduce:transition-none ${status === 'ready' ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 size-full ${status === 'ready' ? 'visible' : 'invisible'}`}
         />
-        {status !== 'ready' && <CompanionMark size={size} active={false} />}
+        {status !== 'ready' && <CompanionMark size={size} active={false} detailed />}
       </span>
       {status === 'unavailable' && label && (
         <span className="sr-only">3D rendering is unavailable in this browser.</span>

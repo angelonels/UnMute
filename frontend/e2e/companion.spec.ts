@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-test('the AI companion moves autonomously and respects its settings preference', async ({
+test('the AI companion moves autonomously and respects system reduced motion', async ({
   page,
 }, info) => {
   await page.goto('/meeting?demo=true');
@@ -15,9 +15,10 @@ test('the AI companion moves autonomously and respects its settings preference',
     .toBe(false);
   await expect(page.getByRole('button', { name: 'Pause companion motion' })).toHaveCount(0);
   await page.getByRole('button', { name: 'Device settings', exact: true }).click();
-  await page.getByRole('checkbox', { name: 'Companion animation' }).uncheck();
+  await expect(page.getByRole('checkbox', { name: 'Companion animation' })).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.getByRole('button', { name: 'Close device settings', exact: true }).click();
-  await page.screenshot({ path: info.outputPath('companion-paused.png'), fullPage: true });
+  await page.screenshot({ path: info.outputPath('companion-reduced-motion.png'), fullPage: true });
 });
 
 test('reduced motion keeps a real 3D scene still and conversation replaces the welcome', async ({

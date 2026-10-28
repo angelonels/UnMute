@@ -1,9 +1,8 @@
 import { useState } from 'react';
 import { ModalSurface } from '../../../components/modal-surface';
-import { useCompanionMotion } from '../../../components/companion/motion-preference';
 import * as Dialog from '@radix-ui/react-dialog';
 import { Settings2, X, Mic, Video } from 'lucide-react';
-import { DevicePicker } from '../../../components/device-picker';
+import { SelectPicker } from '../../../components/select-picker';
 import type { MediaSource } from '../../media';
 
 export function DeviceSettings({
@@ -21,7 +20,6 @@ export function DeviceSettings({
   pending: Record<MediaSource, boolean>;
   onSelect: (source: MediaSource, deviceId?: string) => void;
 }) {
-  const [companionMotion, setCompanionMotion] = useCompanionMotion();
   const [open, setOpen] = useState(false);
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -73,8 +71,8 @@ export function DeviceSettings({
                   {pending[source] ? 'Connecting…' : track ? 'On' : 'Off'}
                 </span>
               </div>
-              <DevicePicker
-                label={label}
+              <SelectPicker
+                label={`${label.toLowerCase()} input`}
                 icon={
                   source === 'camera' ? (
                     <Video size={17} strokeWidth={1.65} />
@@ -92,25 +90,6 @@ export function DeviceSettings({
             </div>
           );
         })}
-        <label className="mt-6 flex min-h-14 cursor-pointer items-center justify-between gap-4 border-t border-border pt-4 text-sm">
-          Companion animation
-          <span className="relative inline-flex shrink-0 items-center">
-            <input
-              type="checkbox"
-              checked={companionMotion}
-              onChange={(event) => setCompanionMotion(event.target.checked)}
-              className="peer sr-only"
-            />
-            <span
-              aria-hidden="true"
-              className="h-6 w-10 rounded-full bg-text/15 peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-primary"
-            />
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-0.5 size-5 rounded-full bg-surface shadow-sm peer-checked:translate-x-4"
-            />
-          </span>
-        </label>
         {error && (
           <p role="alert" className="mt-4 rounded-xl bg-error/10 p-3 text-xs leading-6 text-error">
             {error}

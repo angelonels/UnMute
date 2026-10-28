@@ -12,4 +12,4 @@ The original license is included in `LICENSE`. Local adaptations use UnMute's se
 
 The meeting layout uses Arc’s segmented control with instant selection because switching views is a frequent action. Chat attachment resources are cleaned up outside state updaters, and attachment/reaction groups fade without animating layout dimensions.
 
-The shared device picker adapts the free [Select source](https://uiarc.dev/r/select.json), retrieved 2026-10-28, to Tailwind utilities and UnMute semantic surfaces. Radix Select owns keyboard navigation, typeahead, focus return, and collision handling. Pointer entry is 180ms; keyboard entry is immediate and reduced motion uses opacity only.
+The shared SelectPicker used by device settings and all playground menus adapts the free [Select source](https://uiarc.dev/r/select.json), retrieved 2026-10-28, to Tailwind utilities and UnMute semantic surfaces. Radix Select owns keyboard navigation, typeahead, focus return, and collision handling. Pointer entry is 180ms; keyboard entry is immediate and reduced motion uses opacity only.

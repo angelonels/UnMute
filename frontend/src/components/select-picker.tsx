@@ -5,19 +5,19 @@ import { m } from 'motion/react';
 import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 /** Arc Select adapted to Tailwind and device controls: https://uiarc.dev/r/select.json. */
-export function DevicePicker({
+export function SelectPicker({
   label,
   icon,
   value,
   options,
-  disabled,
+  disabled = false,
   onValueChange,
 }: {
   label: string;
   icon: ReactNode;
   value: string;
   options: { value: string; label: string }[];
-  disabled: boolean;
+  disabled?: boolean;
   onValueChange: (value: string) => void;
 }) {
   const id = useId();
@@ -27,7 +27,7 @@ export function DevicePicker({
     <Select.Root value={value} onValueChange={onValueChange} disabled={disabled}>
       <Select.Trigger
         id={id}
-        aria-label={`${label.toLowerCase()} input`}
+        aria-label={label}
         onKeyDown={() => setKeyboard(true)}
         onPointerDown={() => setKeyboard(false)}
         className="group flex min-h-12 w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface px-3 text-left text-sm text-text transition-colors duration-150 hover:bg-surface-muted data-[state=open]:bg-surface-muted disabled:cursor-progress disabled:opacity-50 motion-reduce:transition-none"

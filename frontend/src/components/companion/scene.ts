@@ -5,7 +5,6 @@ export type CompanionEmotion = 'auto' | 'calm' | 'curious' | 'happy';
 export interface CompanionOptions {
   ceramic: boolean;
   reduced: boolean;
-  paused: boolean;
   visible: boolean;
   active: boolean;
   emotion: CompanionEmotion;
@@ -230,7 +229,7 @@ export function createCompanionScene(
     let tilt = 0;
     let gaze = 0;
     function pose(delta: number) {
-      const moving = !options.reduced && !options.paused;
+      const moving = !options.reduced;
       if (moving) {
         elapsed += delta;
         if (elapsed - poseAt > poseDuration) {
@@ -301,14 +300,14 @@ export function createCompanionScene(
         previousTime = 0;
         return;
       }
-      if (time - lastRender >= 1000 / 30 || options.reduced || options.paused) {
+      if (time - lastRender >= 1000 / 30 || options.reduced) {
         const delta = previousTime ? Math.min((time - previousTime) / 1000, 0.08) : 0;
         previousTime = time;
         lastRender = time;
-        if (!options.paused) pose(delta);
+        pose(delta);
         renderer.render(scene, camera);
       }
-      if (!options.reduced && !options.paused) frame = requestAnimationFrame(render);
+      if (!options.reduced) frame = requestAnimationFrame(render);
       else frame = 0;
     }
     function request() {

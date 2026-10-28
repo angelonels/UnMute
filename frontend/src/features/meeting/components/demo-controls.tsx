@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { ModalSurface } from '../../../components/modal-surface';
 import * as Dialog from '@radix-ui/react-dialog';
-import { FlaskConical, RotateCcw, X } from 'lucide-react';
+import { FlaskConical, RotateCcw, X, Monitor, Users, AudioLines, Wifi } from 'lucide-react';
+import { SelectPicker } from '../../../components/select-picker';
 import type { Connection, Participant } from '../meeting-model';
 
 export function DemoControls({
@@ -56,22 +57,22 @@ export function DemoControls({
             <X size={18} aria-hidden="true" />
           </Dialog.Close>
         </div>
-        <Dialog.Description className="mt-2 text-xs leading-6 text-muted">
-          Development only. Change the room to stress-test the interface.
-        </Dialog.Description>
+        <Dialog.Description className="sr-only">Development controls</Dialog.Description>
         <div className="mt-6 space-y-5">
-          <label className="block text-xs font-medium">
-            Capture source
-            <select
+          <div>
+            <p className="mb-2 text-xs font-medium">Capture source</p>
+            <SelectPicker
+              label="Capture source"
+              icon={<Monitor size={17} />}
               value={captureMode}
-              onChange={(event) => onCaptureMode(event.target.value)}
-              className="mt-2 min-h-11 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-            >
-              <option value="native">Real browser devices</option>
-              <option value="synthetic">Synthetic test devices</option>
-              <option value="denied">Simulate permission denial</option>
-            </select>
-          </label>
+              options={[
+                { value: 'native', label: 'Real browser devices' },
+                { value: 'synthetic', label: 'Synthetic test devices' },
+                { value: 'denied', label: 'Simulate permission denial' },
+              ]}
+              onValueChange={onCaptureMode}
+            />
+          </div>
           {captureMode === 'synthetic' && (
             <button
               type="button"
@@ -82,46 +83,46 @@ export function DemoControls({
             </button>
           )}
 
-          <label className="block text-xs font-medium">
-            Participants in demo
-            <select
-              value={count}
-              onChange={(event) => onCount(Number(event.target.value))}
-              className="mt-2 min-h-11 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-            >
-              {[1, 2, 6, 12, 24, 48].map((value) => (
-                <option key={value} value={value}>
-                  {value} {value === 1 ? 'person' : 'people'}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium">
-            Active demo speaker
-            <select
+          <div>
+            <p className="mb-2 text-xs font-medium">Participants</p>
+            <SelectPicker
+              label="Participants in demo"
+              icon={<Users size={17} />}
+              value={String(count)}
+              options={[1, 2, 6, 12, 24, 48].map((value) => ({
+                value: String(value),
+                label: `${value} ${value === 1 ? 'person' : 'people'}`,
+              }))}
+              onValueChange={(value) => onCount(Number(value))}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium">Active speaker</p>
+            <SelectPicker
+              label="Active demo speaker"
+              icon={<AudioLines size={17} />}
               value={speakerId}
-              onChange={(event) => onSpeaker(event.target.value)}
-              className="mt-2 min-h-11 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-            >
-              {people.map((person) => (
-                <option key={person.id} value={person.id}>
-                  {person.name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="block text-xs font-medium">
-            Demo connection
-            <select
+              options={people.map((person) => ({ value: person.id, label: person.name }))}
+              onValueChange={onSpeaker}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium">Connection</p>
+            <SelectPicker
+              label="Demo connection"
+              icon={<Wifi size={17} />}
               value={connection}
-              onChange={(event) => onConnection(event.target.value as Connection)}
-              className="mt-2 min-h-11 w-full rounded-xl border border-input bg-surface px-3 text-sm"
-            >
-              <option value="ready">Ready</option>
-              <option value="reconnecting">Reconnecting</option>
-              <option value="offline">Disconnected</option>
-            </select>
-          </label>
+              options={[
+                { value: 'ready', label: 'Ready' },
+                { value: 'reconnecting', label: 'Reconnecting' },
+                { value: 'offline', label: 'Disconnected' },
+              ]}
+              onValueChange={(value) => {
+                if (value === 'ready' || value === 'reconnecting' || value === 'offline')
+                  onConnection(value);
+              }}
+            />
+          </div>
         </div>
         <button
           type="button"

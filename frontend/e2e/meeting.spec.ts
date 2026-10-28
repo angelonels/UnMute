@@ -9,7 +9,8 @@ test('development room supports local controls, pinning, sharing, and chats', as
   const microphone = page.getByRole('button', { name: 'Microphone off', exact: true });
   await expect(microphone).toHaveClass(/text-error/);
   await page.getByRole('button', { name: 'Demo controls', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Capture source' }).selectOption('synthetic');
+  await page.getByRole('combobox', { name: 'Capture source' }).click();
+  await page.getByRole('option', { name: 'Synthetic test devices', exact: true }).click();
   await page.getByRole('button', { name: 'Close demo controls', exact: true }).click();
   await microphone.click();
   await expect(page.getByRole('button', { name: 'Microphone on', exact: true })).toHaveAttribute(
@@ -39,15 +40,18 @@ test('development room supports local controls, pinning, sharing, and chats', as
 test('large rooms paginate and a shrinking room never leaves an empty page', async ({ page }) => {
   await page.goto('/meeting?demo=true');
   await page.getByRole('button', { name: 'Demo controls', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Participants in demo' }).selectOption('48');
+  await page.getByRole('combobox', { name: 'Participants in demo' }).click();
+  await page.getByRole('option', { name: '48 people', exact: true }).click();
   await page.getByRole('button', { name: 'Close demo controls', exact: true }).click();
   await page.getByRole('button', { name: 'Next participants', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Previous participants', exact: true }),
   ).toBeEnabled();
   await page.getByRole('button', { name: 'Demo controls', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Participants in demo' }).selectOption('1');
-  await page.getByRole('combobox', { name: 'Demo connection' }).selectOption('offline');
+  await page.getByRole('combobox', { name: 'Participants in demo' }).click();
+  await page.getByRole('option', { name: '1 person', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Demo connection' }).click();
+  await page.getByRole('option', { name: 'Disconnected', exact: true }).click();
   await page.getByRole('button', { name: 'Close demo controls', exact: true }).click();
   await expect(page.getByRole('status', { name: 'Connection status' })).toContainText(
     'Disconnected',
