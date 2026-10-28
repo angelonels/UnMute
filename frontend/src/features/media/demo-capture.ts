@@ -5,11 +5,30 @@ export function syntheticCapture(source: MediaSource): Promise<MediaStream> {
   if (source === 'microphone') {
     const context = new AudioContext();
     const destination = context.createMediaStreamDestination();
+    // A repeating speech-like envelope, including silence, exercises the real analyser path.
+    const buffer = context.createBuffer(1, context.sampleRate * 3, context.sampleRate);
+    const samples = buffer.getChannelData(0);
+    for (let index = 0; index < samples.length; index++) {
+      const t = index / context.sampleRate;
+      const envelope = Math.max(0, Math.sin(t * Math.PI * 3)) ** 2;
+      samples[index] =
+        envelope *
+        0.12 *
+        (Math.sin(t * Math.PI * 360) +
+          0.5 * Math.sin(t * Math.PI * 720) +
+          0.25 * Math.sin(t * Math.PI * 1440));
+    }
+    const signal = context.createBufferSource();
+    signal.buffer = buffer;
+    signal.loop = true;
+    signal.connect(destination);
+    signal.start();
     const track = destination.stream.getAudioTracks()[0];
     const originalStop = track?.stop.bind(track);
     if (track && originalStop)
       track.stop = () => {
         originalStop();
+        signal.stop();
         void context
           .close()
           .catch((error: unknown) =>
@@ -19,7 +38,13 @@ export function syntheticCapture(source: MediaSource): Promise<MediaStream> {
             ),
           );
       };
-    return Promise.resolve(destination.stream);
+    return context.resume().then(
+      () => destination.stream,
+      (error: unknown) => {
+        track?.stop();
+        throw error;
+      },
+    );
   }
   const canvas = document.createElement('canvas');
   canvas.width = 1280;

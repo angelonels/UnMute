@@ -1,4 +1,4 @@
-import { LocalVideo } from '../../media';
+import { LocalVideo, type AudioVisualSource } from '../../media';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
@@ -13,6 +13,8 @@ export function MeetingStage({
   reflowKey,
   animateReflow,
   selfSpeaking,
+  selfAudio,
+  audioSources,
   cameraStream,
   screenStream,
   people,
@@ -28,6 +30,8 @@ export function MeetingStage({
   reflowKey: string;
   animateReflow: boolean;
   selfSpeaking: boolean;
+  selfAudio?: AudioVisualSource;
+  audioSources?: ReadonlyMap<string, AudioVisualSource>;
   cameraStream: MediaStream | null;
   screenStream: MediaStream | null;
   people: Participant[];
@@ -71,6 +75,9 @@ export function MeetingStage({
       key={person.id}
       person={person}
       stream={person.self ? cameraStream : null}
+      audio={
+        person.microphone ? (person.self ? selfAudio : audioSources?.get(person.id)) : undefined
+      }
       compact={compact}
       speaking={person.id === speaker?.id}
       pinned={person.id === pinnedId}

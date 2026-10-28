@@ -303,7 +303,7 @@ function MeetingRoomView({ room }: { room: MeetingRoom }) {
   } = room;
   return (
     <div
-      className="flex h-svh flex-col overflow-hidden bg-canvas p-3 sm:p-4"
+      className="flex h-svh flex-col overflow-hidden bg-canvas p-2 sm:p-3"
       onKeyDownCapture={() => setKeyboard(true)}
       onPointerDownCapture={() => setKeyboard(false)}
     >
@@ -333,7 +333,7 @@ function MeetingRoomView({ room }: { room: MeetingRoom }) {
           <span className="ms-auto text-[10px]">Demo state</span>
         </p>
       )}
-      <div className="flex min-h-0 flex-1 gap-3">
+      <div className="flex min-h-0 flex-1 gap-2 sm:gap-3">
         <MeetingPanel
           open={showLeft}
           onOpenChange={(open) => openPanel('left', open)}
@@ -364,6 +364,7 @@ function MeetingRoomView({ room }: { room: MeetingRoom }) {
             reflowKey={`${showLeft}:${panels.right}`}
             animateReflow={!keyboard}
             selfSpeaking={microphoneLevel.speaking}
+            selfAudio={microphoneLevel.visual}
             cameraStream={localMedia.streams.camera}
             screenStream={localMedia.streams.screen}
             people={people}
@@ -429,7 +430,7 @@ function MeetingFooter({ room }: { room: MeetingRoom }) {
     pinnedId,
   } = room;
   return (
-    <footer className="grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-x-1 gap-y-2 pt-3 sm:gap-x-3">
+    <footer className="grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-x-1 gap-y-2 pt-2 sm:gap-x-3">
       <div className="col-start-1 row-start-1">
         <MeetingControl
           ref={aiTrigger}
@@ -517,7 +518,7 @@ function MeetingHeader({ room }: { room: MeetingRoom }) {
     setLayout,
   } = room;
   return (
-    <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 pb-3 min-[1100px]:grid-cols-[minmax(0,1fr)_auto_auto] min-[1100px]:gap-x-5">
+    <header className="grid shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 pb-2 min-[1100px]:grid-cols-[minmax(0,1fr)_auto_auto] min-[1100px]:gap-x-5">
       <div className="flex min-w-0 items-center gap-3 sm:gap-5">
         <div className="hidden sm:block">
           <Brand compact />

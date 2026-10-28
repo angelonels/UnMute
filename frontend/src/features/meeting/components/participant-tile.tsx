@@ -1,6 +1,7 @@
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { m } from 'motion/react';
-import { LocalVideo } from '../../media';
+import { LocalVideo, type AudioVisualSource } from '../../media';
+import { BarVisualizer } from '../../../components/ui/bar-visualizer';
 import {
   Voice as AudioLines,
   OpenSelectHandGesture as Hand,
@@ -29,6 +30,7 @@ export function ParticipantTile({
   onPin,
   compact = false,
   stream,
+  audio,
 }: {
   reflowKey: string;
   animateReflow: boolean;
@@ -38,6 +40,7 @@ export function ParticipantTile({
   onPin: () => void;
   compact?: boolean;
   stream?: MediaStream | null;
+  audio?: AudioVisualSource;
 }) {
   const reduced = useReducedMotion();
   return (
@@ -59,6 +62,7 @@ export function ParticipantTile({
         person={person}
         compact={compact}
         stream={stream}
+        audio={audio}
         reflowKey={reflowKey}
         animate={animateReflow && !reduced}
       />
@@ -77,12 +81,14 @@ function TileAvatar({
   person,
   compact,
   stream,
+  audio,
   reflowKey,
   animate,
 }: {
   person: Participant;
   compact: boolean;
   stream?: MediaStream | null;
+  audio?: AudioVisualSource;
   reflowKey: string;
   animate: boolean;
 }) {
@@ -92,10 +98,23 @@ function TileAvatar({
         layout={animate ? 'position' : false}
         layoutDependency={reflowKey}
         transition={{ type: 'spring', stiffness: 420, damping: 42 }}
-        className={`${stream ? 'invisible' : ''} grid shrink-0 place-items-center rounded-full font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-[min(3rem,85cqh,70cqw)] text-lg' : 'size-[min(6.5rem,50cqh,70cqw)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
+        className={`${stream ? 'invisible' : ''} relative grid shrink-0 place-items-center overflow-hidden rounded-full has-[[data-active]]:ring-2 has-[[data-active]]:ring-success/35 font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-[min(3rem,85cqh,70cqw)] text-lg' : 'size-[min(6.5rem,50cqh,70cqw)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
         aria-hidden="true"
       >
         {initials(person.name)}
+        {audio && (
+          <BarVisualizer
+            source={audio}
+            barCount={9}
+            minLevel={0}
+            align="end"
+            mirrored
+            aria-hidden="true"
+            aria-label={undefined}
+            className="pointer-events-none absolute bottom-[12%] text-current opacity-75 [--bar-gap:2px]"
+            style={{ height: '18%', width: '62%' }}
+          />
+        )}
       </m.div>
       {!compact && !stream && person.role && (
         <span
