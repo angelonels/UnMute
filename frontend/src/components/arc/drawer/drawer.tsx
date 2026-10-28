@@ -1,7 +1,15 @@
 'use client';
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react';
 import {
   AnimatePresence,
@@ -44,6 +52,7 @@ export function useDrawerItem<T>(item: T | null | undefined): T | null | undefin
 const DrawerContext = createContext<{
   open: boolean;
   flung: boolean;
+  keyboard: boolean;
   setOpen: (open: boolean) => void;
   fling: () => void;
   openedAt: RefObject<number>;
@@ -56,6 +65,18 @@ export function Drawer({
   ...props
 }: ComponentPropsWithoutRef<typeof DialogPrimitive.Root>) {
   const [uncontrolled, setUncontrolled] = useState(defaultOpen);
+  const [keyboard, setKeyboard] = useState(false);
+  // Portals do not share a DOM ancestor with their trigger, so capture modality at the document.
+  useEffect(() => {
+    const key = () => setKeyboard(true);
+    const pointer = () => setKeyboard(false);
+    document.addEventListener('keydown', key, true);
+    document.addEventListener('pointerdown', pointer, true);
+    return () => {
+      document.removeEventListener('keydown', key, true);
+      document.removeEventListener('pointerdown', pointer, true);
+    };
+  }, []);
   // A drag that dismisses the panel hands its velocity to the exit spring; every other close uses the shorter tween.
   const [flung, setFlung] = useState(false);
   // When the drawer last opened, so a click that reopens it mid-close is not also read as a click outside the leaving panel.
@@ -75,8 +96,8 @@ export function Drawer({
     setFlung(true);
   }, [setOpen]);
   const value = useMemo(
-    () => ({ open, flung, setOpen, fling, openedAt }),
-    [open, flung, setOpen, fling],
+    () => ({ open, flung, keyboard, setOpen, fling, openedAt }),
+    [open, flung, keyboard, setOpen, fling],
   );
   return (
     <DrawerContext.Provider value={value}>
@@ -118,17 +139,20 @@ const flingOut: Transition = {
 /** When the title or description changes while open, the new copy rises in and the old copy leaves upward. */
 function SwapText({ text }: { text: string }) {
   const reduced = useReducedMotion();
+  const keyboard = useContext(DrawerContext)?.keyboard ?? false;
   return (
     <AnimatePresence mode="popLayout" initial={false}>
       <motion.span
         key={text}
         className={styles.swap}
         initial={
-          reduced ? false : { opacity: 0, y: '0.3em', filter: `blur(${motionTokens.blur.soft}px)` }
+          reduced || keyboard
+            ? false
+            : { opacity: 0, y: '0.3em', filter: `blur(${motionTokens.blur.soft}px)` }
         }
         animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
         exit={
-          reduced
+          reduced || keyboard
             ? { opacity: 0, transition: { duration: 0 } }
             : {
                 opacity: 0,
@@ -141,7 +165,7 @@ function SwapText({ text }: { text: string }) {
               }
         }
         transition={{
-          duration: motionTokens.duration.standard,
+          duration: keyboard ? 0 : motionTokens.duration.standard,
           ease: [...motionTokens.ease.enter],
         }}
       >
@@ -163,6 +187,7 @@ export function DrawerContent({
 }: DrawerContentProps) {
   const drawer = useContext(DrawerContext);
   const reduced = useReducedMotion();
+  const keyboard = drawer?.keyboard ?? false;
   const panelRef = useRef<HTMLDivElement>(null);
   const offset = useMotionValue<number | string>(0);
   const pan = useRef<number | null>(null);
@@ -249,7 +274,7 @@ export function DrawerContent({
 
   // The panel springs fully opaque from its own edge and returns to it faster than it arrived, from wherever it is.
   return (
-    <AnimatePresence custom={drawer.flung}>
+    <AnimatePresence custom={{ flung: drawer.flung, keyboard }}>
       {drawer.open && (
         <DialogPrimitive.Portal key="drawer" forceMount container={container}>
           <DialogPrimitive.Overlay asChild forceMount>
@@ -258,16 +283,29 @@ export function DrawerContent({
               data-contained={container ? '' : undefined}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              exit={{
-                opacity: 0,
-                transition: reduced
-                  ? fade
-                  : { duration: motionTokens.duration.fast, ease: [...motionTokens.ease.standard] },
+              variants={{
+                exit: ({ keyboard: instant }: { keyboard: boolean }) => ({
+                  opacity: 0,
+                  transition: instant
+                    ? { duration: 0 }
+                    : reduced
+                      ? fade
+                      : {
+                          duration: motionTokens.duration.fast,
+                          ease: [...motionTokens.ease.standard],
+                        },
+                }),
               }}
+              exit="exit"
               transition={
-                reduced
-                  ? fade
-                  : { duration: motionTokens.duration.standard, ease: [...motionTokens.ease.enter] }
+                keyboard
+                  ? { duration: 0 }
+                  : reduced
+                    ? fade
+                    : {
+                        duration: motionTokens.duration.standard,
+                        ease: [...motionTokens.ease.enter],
+                      }
               }
             />
           </DialogPrimitive.Overlay>
@@ -289,15 +327,17 @@ export function DrawerContent({
               data-contained={container ? '' : undefined}
               style={{ [axis]: offset }}
               variants={{
-                exit: (flung: boolean) =>
-                  reduced
-                    ? { opacity: 0, transition: fade }
-                    : { ...offscreen, opacity: [1, 1, 0], transition: flung ? flingOut : leave },
+                exit: ({ flung, keyboard: instant }: { flung: boolean; keyboard: boolean }) =>
+                  instant
+                    ? { opacity: 0, transition: { duration: 0 } }
+                    : reduced
+                      ? { opacity: 0, transition: fade }
+                      : { ...offscreen, opacity: [1, 1, 0], transition: flung ? flingOut : leave },
               }}
-              initial={reduced ? { opacity: 0 } : { ...offscreen, opacity: 1 }}
-              animate={reduced ? { opacity: 1 } : { [axis]: 0, opacity: 1 }}
+              initial={keyboard ? false : reduced ? { opacity: 0 } : { ...offscreen, opacity: 1 }}
+              animate={{ [axis]: 0, opacity: 1 }}
               exit="exit"
-              transition={reduced ? fade : motionTokens.spring.smooth}
+              transition={keyboard ? { duration: 0 } : reduced ? fade : motionTokens.spring.smooth}
             >
               {inner}
             </motion.div>

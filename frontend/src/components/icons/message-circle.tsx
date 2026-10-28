@@ -3,7 +3,7 @@
 import type { Variants } from 'motion/react';
 import { m as motion, useAnimation, useReducedMotion } from 'motion/react';
 import type { HTMLAttributes } from 'react';
-import { forwardRef, useCallback, useImperativeHandle, useRef } from 'react';
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 export interface MessageCircleIconHandle {
   startAnimation: () => void;
@@ -32,13 +32,19 @@ const MessageCircleIcon = forwardRef<MessageCircleIconHandle, MessageCircleIconP
     const controls = useAnimation();
     const reduced = useReducedMotion();
     const isControlledRef = useRef(false);
+    useEffect(() => {
+      if (reduced) {
+        controls.stop();
+        controls.set('normal');
+      }
+    }, [controls, reduced]);
 
     useImperativeHandle(ref, () => {
       isControlledRef.current = true;
 
       return {
         startAnimation: () => (reduced ? controls.set('normal') : controls.start('animate')),
-        stopAnimation: () => controls.start('normal'),
+        stopAnimation: () => (reduced ? controls.set('normal') : controls.start('normal')),
       };
     });
 
@@ -46,22 +52,24 @@ const MessageCircleIcon = forwardRef<MessageCircleIconHandle, MessageCircleIconP
       (e: React.MouseEvent<HTMLSpanElement>) => {
         if (isControlledRef.current) {
           onMouseEnter?.(e);
-        } else {
+        } else if (!reduced && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
           controls.start('animate');
         }
       },
-      [controls, onMouseEnter],
+      [controls, onMouseEnter, reduced],
     );
 
     const handleMouseLeave = useCallback(
       (e: React.MouseEvent<HTMLSpanElement>) => {
         if (isControlledRef.current) {
           onMouseLeave?.(e);
+        } else if (reduced) {
+          controls.set('normal');
         } else {
           controls.start('normal');
         }
       },
-      [controls, onMouseLeave],
+      [controls, onMouseLeave, reduced],
     );
 
     return (

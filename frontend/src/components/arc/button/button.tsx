@@ -1,6 +1,14 @@
 'use client';
 
-import { forwardRef, isValidElement, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import {
+  forwardRef,
+  isValidElement,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import type { ButtonHTMLAttributes, ReactNode, Ref, RefObject } from 'react';
 import {
   AnimatePresence,
@@ -10,12 +18,12 @@ import {
   useMotionValue,
   useReducedMotion,
 } from 'motion/react';
-import type { TargetAndTransition, Variants } from 'motion/react';
+import type { TargetAndTransition } from 'motion/react';
 import { motionTokens } from '../lib/motion-tokens';
 
 const styles = {
   button:
-    'relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-sm font-medium leading-normal whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress transition-[background-color,border-color,box-shadow] duration-150 ease-out-expo motion-reduce:transition-none',
+    'relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-sm font-medium leading-normal whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress transition-[transform,background-color,border-color,box-shadow] duration-160 ease-out-expo motion-reduce:transition-none',
   primary: 'border-text bg-text text-surface',
   secondary: 'border-border bg-surface text-text hover:enabled:bg-surface-muted',
   ghost: 'bg-transparent text-muted hover:enabled:bg-surface-muted hover:enabled:text-text',
@@ -45,14 +53,6 @@ export interface ButtonProps extends Omit<
   loading?: boolean;
 }
 
-/** UnMute uses one fixed press depth across button sizes. */
-const pressVariants: Variants = {
-  pressed: {
-    transform: 'scale(0.96)',
-    transition: { duration: 0.15, ease: [...motionTokens.ease.standard] },
-  },
-};
-
 const rest: TargetAndTransition = { opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' };
 /** Text rises about .3em out of a soft blur; the outgoing label lifts away a little faster. */
 const textIn: TargetAndTransition = {
@@ -68,12 +68,12 @@ const textOut: TargetAndTransition = {
 };
 const iconIn: TargetAndTransition = {
   opacity: 0,
-  scale: 0.6,
+  scale: 0.95,
   filter: `blur(${motionTokens.blur.subtle}px)`,
 };
 const iconOut: TargetAndTransition = {
   opacity: 0,
-  scale: 0.6,
+  scale: 0.95,
   filter: `blur(${motionTokens.blur.subtle}px)`,
   transition: { duration: motionTokens.duration.fast, ease: [...motionTokens.ease.standard] },
 };
@@ -125,6 +125,7 @@ function useMorphWidth(content: RefObject<HTMLElement | null>, key: string, redu
         delete slot.dataset.morphing;
         return;
       }
+      width.stop();
       slot.dataset.morphing = '';
       animate(width, next, {
         ...motionTokens.spring.morph,
@@ -134,7 +135,11 @@ function useMorphWidth(content: RefObject<HTMLElement | null>, key: string, redu
       });
     });
     observer.observe(node);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      width.stop();
+      delete slot.dataset.morphing;
+    };
   }, [content, reduced, width]);
   return width;
 }
@@ -181,15 +186,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     disabled,
     children,
     onClick,
+    onKeyDownCapture,
+    onPointerDownCapture,
     ...props
   },
   ref,
 ) {
   const reduceMotion = useReducedMotion() ?? false;
+  const [keyboard, setKeyboard] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const contentRef = useRef<HTMLSpanElement>(null);
   const key = labelKey(children);
-  const width = useMorphWidth(contentRef, key, reduceMotion);
+  const width = useMorphWidth(contentRef, key, reduceMotion || keyboard);
   const setRefs = useCallback(
     (node: HTMLButtonElement | null) => {
       buttonRef.current = node;
@@ -207,7 +215,16 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
     (props as Record<string, unknown>)['data-state'] !== undefined;
   const inert =
     disabled || loading || props['aria-disabled'] === true || props['aria-disabled'] === 'true';
-  const classes = [styles.button, styles[variant], styles[size], className]
+  const classes = [
+    styles.button,
+    styles[variant],
+    styles[size],
+    !anchorsLayer && !inert && !keyboard
+      ? 'motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]'
+      : '',
+    keyboard ? 'transition-none!' : '',
+    className,
+  ]
     .filter(Boolean)
     .join(' ');
 
@@ -218,44 +235,60 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={classes}
       disabled={disabled}
       aria-busy={loading || undefined}
-      custom={buttonRef}
-      variants={pressVariants}
-      whileTap={reduceMotion || anchorsLayer || inert ? undefined : 'pressed'}
-      transition={motionTokens.spring.snappy}
       {...props}
+      onKeyDownCapture={(event) => {
+        setKeyboard(true);
+        onKeyDownCapture?.(event);
+      }}
+      onPointerDownCapture={(event) => {
+        setKeyboard(false);
+        onPointerDownCapture?.(event);
+      }}
       // Loading keeps the button focusable (a disabled button would drop keyboard focus mid-action) and swallows presses instead.
       aria-disabled={loading || props['aria-disabled'] || undefined}
       onClick={loading ? (event) => event.preventDefault() : onClick}
     >
-      <AnimatePresence initial={false}>
-        {loading ? (
-          <motion.span
-            key="loader"
-            className={styles.loader}
-            aria-hidden="true"
-            initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.6 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={reduceMotion ? fadeOut : { ...iconOut, scale: 0.8 }}
-            transition={reduceMotion ? { duration: motionTokens.duration.instant } : iconEnter}
-          >
+      {keyboard ? (
+        loading ? (
+          <span className={styles.loader} aria-hidden="true">
             <span className={styles.spinner} />
-          </motion.span>
-        ) : null}
-      </AnimatePresence>
+          </span>
+        ) : null
+      ) : (
+        <AnimatePresence initial={false}>
+          {loading ? (
+            <motion.span
+              key="loader"
+              className={styles.loader}
+              aria-hidden="true"
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={reduceMotion ? fadeOut : { ...iconOut, scale: 0.95 }}
+              transition={reduceMotion ? { duration: motionTokens.duration.instant } : iconEnter}
+            >
+              <span className={styles.spinner} />
+            </motion.span>
+          ) : null}
+        </AnimatePresence>
+      )}
       <motion.span
         className={[styles.labelSlot, loading ? styles.loadingLabel : ''].filter(Boolean).join(' ')}
-        style={{ width }}
+        style={{ width: keyboard ? 'auto' : width }}
       >
         <span ref={contentRef} className={styles.labelContent}>
-          <AnimatePresence mode="popLayout" initial={false}>
-            <LabelPhase
-              key={key}
-              icon={!/\S/.test(key.replace(/<[^>]*>/g, ''))}
-              reduced={reduceMotion}
-            >
-              {children}
-            </LabelPhase>
-          </AnimatePresence>
+          {keyboard ? (
+            <span className={styles.labelPhase}>{children}</span>
+          ) : (
+            <AnimatePresence mode="popLayout" initial={false}>
+              <LabelPhase
+                key={key}
+                icon={!/\S/.test(key.replace(/<[^>]*>/g, ''))}
+                reduced={reduceMotion}
+              >
+                {children}
+              </LabelPhase>
+            </AnimatePresence>
+          )}
         </span>
       </motion.span>
     </motion.button>

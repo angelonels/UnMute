@@ -280,7 +280,6 @@ type Row =
     };
 
 const { spring, duration, ease, blur } = motionTokens;
-const enter = [...ease.enter] as [number, number, number, number];
 const standard = [...ease.standard] as [number, number, number, number];
 const physical = (visualDuration: number, bounce: number): Transition => {
   const root = (2 * Math.PI) / (visualDuration * 1.2);
@@ -288,8 +287,7 @@ const physical = (visualDuration: number, bounce: number): Transition => {
 };
 const SETTLE = physical(0.44, 0),
   GROW = physical(spring.smooth.duration, 0),
-  POP = physical(0.3, 0),
-  ARRIVE = physical(0.46, 0);
+  POP = physical(0.3, 0);
 const DEFAULT_REACTIONS = ['👍', '❤️', '😂', '🎉', '👀', '🙏'];
 const STICK_DISTANCE = 48,
   FAR_DISTANCE = 180;
@@ -919,11 +917,6 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
     .filter((entry): entry is ChatParticipant => !!entry && entry.id !== currentUserId);
   const typingLabel = typers.length ? t.typing(typers.map((entry) => entry.name)) : '';
 
-  const arrive = (mine: boolean) =>
-    reduced
-      ? { opacity: 0 }
-      : { opacity: 0, scale: 0.92, y: 14, x: mine ? 8 : -8, filter: `blur(${blur.subtle}px)` };
-
   return (
     <div className={[styles.root, className].filter(Boolean).join(' ')}>
       <div className={styles.viewport}>
@@ -972,18 +965,11 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
                         data-first={first || undefined}
                         data-last={last || undefined}
                         data-failed={message.status === 'failed' || undefined}
-                        initial={arrive(mine)}
-                        animate={{ opacity: 1, scale: 1, y: 0, x: 0, filter: 'blur(0px)' }}
+                        data-message-motion={mine ? 'instant' : 'fade'}
+                        initial={mine ? false : { opacity: 0 }}
+                        animate={{ opacity: 1 }}
                         exit={{ opacity: 0, transition: { duration: duration.exit } }}
-                        transition={
-                          reduced
-                            ? { duration: duration.fast }
-                            : {
-                                ...ARRIVE,
-                                opacity: { duration: duration.standard, ease: enter },
-                                filter: { duration: duration.standard, ease: enter },
-                              }
-                        }
+                        transition={{ duration: mine ? 0 : duration.fast }}
                         style={{ transformOrigin: mine ? '100% 100%' : '0 100%' }}
                       >
                         {!mine && <div className={styles.gutter} />}
