@@ -1,5 +1,12 @@
 import * as THREE from 'three';
-import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import {
+  createEngine,
+  type EngineHandle,
+  type FrameInput,
+  type StateName,
+  type ShapeName,
+  type ExpressionName,
+} from './dotty-engine';
 
 export type CompanionEmotion = 'auto' | 'calm' | 'curious' | 'happy';
 export interface CompanionOptions {
@@ -8,13 +15,19 @@ export interface CompanionOptions {
   visible: boolean;
   active: boolean;
   emotion: CompanionEmotion;
+  state: StateName;
+  shape: ShapeName;
+  expression: ExpressionName | null;
+  attention?: 'composer' | 'answer' | null;
 }
 export interface CompanionScene {
   update: (options: CompanionOptions) => void;
+  poke: () => void;
+  blink: () => void;
   dispose: () => void;
 }
 
-/** A complete, sculpted object. No image planes, external models, textures or HDR downloads. */
+/** Dotty's actual numeric frame drives a closed, lit volume and reusable face/effect buffers. */
 export function createCompanionScene(
   canvas: HTMLCanvasElement,
   initial: CompanionOptions,
@@ -28,339 +41,381 @@ export function createCompanionScene(
   });
   const geometries: THREE.BufferGeometry[] = [];
   const materials: THREE.Material[] = [];
-  let environment: THREE.WebGLRenderTarget | undefined;
-  const geometry = <T extends THREE.BufferGeometry>(value: T): T => {
+  const textures: THREE.Texture[] = [];
+  let engine: EngineHandle | undefined;
+  let resize: ResizeObserver | undefined;
+  let disposed = false;
+  let options = initial;
+  let lastFrame: FrameInput | undefined;
+  let pokeAt = -10;
+  const geo = <T extends THREE.BufferGeometry>(value: T): T => {
     geometries.push(value);
     return value;
   };
-  const material = <T extends THREE.Material>(value: T): T => {
+  const mat = <T extends THREE.Material>(value: T): T => {
     materials.push(value);
     return value;
   };
-  let frame = 0;
-  let disposed = false;
-  let options = initial;
-  let elapsed = 0;
-  let previousTime = 0;
-  let lastRender = 0;
-  let greeting = -10;
-  let nextBlink = 1.4;
-  let blinkAt = -10;
-  let seed = 17;
-  const random = () => {
-    seed = (seed * 16807) % 2147483647;
-    return (seed - 1) / 2147483646;
+  const lost = (event: Event) => {
+    event.preventDefault();
+    engine?.destroy();
+    engine = undefined;
+    onLost();
   };
   const release = () => {
-    cancelAnimationFrame(frame);
+    if (disposed) return;
+    disposed = true;
+    engine?.destroy();
+    resize?.disconnect();
+    canvas.removeEventListener('webglcontextlost', lost);
     geometries.forEach((value) => value.dispose());
     materials.forEach((value) => value.dispose());
-    environment?.dispose();
+    textures.forEach((value) => value.dispose());
     renderer.dispose();
     renderer.forceContextLoss();
   };
   try {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.05;
     renderer.setClearColor(0x000000, 0);
     const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1.32, 1.32, 1.32, -1.32, 0.1, 20);
-    camera.position.set(0, 0.05, 5);
-    camera.lookAt(0, 0, 0);
-    const room = new RoomEnvironment();
-    const generator = new THREE.PMREMGenerator(renderer);
-    try {
-      environment = generator.fromScene(room, 0.04);
-      scene.environment = environment.texture;
-    } finally {
-      generator.dispose();
-      room.dispose();
+    const camera = new THREE.OrthographicCamera(-1.65, 1.65, 1.65, -1.65, 0.1, 20);
+    camera.position.set(0, 0, 5);
+    scene.add(new THREE.HemisphereLight(0xeaf1ff, 0x706257, 2.5));
+    for (const [color, intensity, x, y, z] of [
+      [0xfff4df, 4, -3, 5, 5],
+      [0xb3d2ff, 2.5, 4, 1, 3],
+      [0xffffff, 3, 1, 3, -3],
+    ] as const) {
+      const light = new THREE.DirectionalLight(color, intensity);
+      light.position.set(x, y, z);
+      scene.add(light);
     }
-    scene.environmentIntensity = 0.7;
-    const key = new THREE.DirectionalLight(0xfff9ef, 3.3);
-    key.position.set(-3, 5, 5);
-    const fill = new THREE.DirectionalLight(0xe5edff, 1.2);
-    fill.position.set(4, 1, 3);
-    const rim = new THREE.DirectionalLight(0xd6e1ff, 1.8);
-    rim.position.set(1, 3, -3);
-    scene.add(key, fill, rim);
-
     const actor = new THREE.Group();
-    const expression = new THREE.Group();
-    actor.add(expression);
     scene.add(actor);
-    const bodyGeometry = geometry(new THREE.SphereGeometry(1, 64, 48));
-    const position = bodyGeometry.getAttribute('position');
-    function sculpt(x: number, y: number, z: number): THREE.Vector3 {
-      const groove = Math.exp(-((x + 0.33) ** 2) / 0.022 - (y - 0.84) ** 2 / 0.11);
-      const radius = 1 - groove * 0.16;
-      const lowerWeight = 0.88 + 0.09 * Math.exp(-((y + 0.24) ** 2) / 0.35);
-      return new THREE.Vector3(
-        x * lowerWeight * radius + y * 0.065,
-        y * 0.91 * radius,
-        z * 0.65 * radius,
-      );
-    }
-    for (let i = 0; i < position.count; i++) {
-      const point = sculpt(position.getX(i), position.getY(i), position.getZ(i));
-      position.setXYZ(i, point.x, point.y, point.z);
-    }
-    position.needsUpdate = true;
-    bodyGeometry.computeVertexNormals();
-    const shell = material(
+    const segments = 96,
+      rings = 24,
+      depth = 0.61;
+    const vertices = new Float32Array((rings + 1) * segments * 3);
+    const bodyGeometry = geo(new THREE.BufferGeometry());
+    bodyGeometry.setAttribute(
+      'position',
+      new THREE.BufferAttribute(vertices, 3).setUsage(THREE.DynamicDrawUsage),
+    );
+    const indices: number[] = [];
+    for (let ring = 0; ring < rings; ring++)
+      for (let i = 0; i < segments; i++) {
+        const a = ring * segments + i,
+          next = ring * segments + ((i + 1) % segments),
+          b = a + segments,
+          bn = next + segments;
+        indices.push(a, bn, b, a, next, bn);
+      }
+    bodyGeometry.setIndex(indices);
+    const shell = mat(
       new THREE.MeshPhysicalMaterial({
-        roughness: 0.57,
-        metalness: 0,
-        clearcoat: 0.12,
-        clearcoatRoughness: 0.35,
-        envMapIntensity: 0.85,
+        roughness: 0.3,
+        metalness: 0.05,
+        clearcoat: 0.7,
+        clearcoatRoughness: 0.24,
       }),
     );
-    const body = new THREE.Mesh(bodyGeometry, shell);
-    expression.add(body);
-
-    const foldPoints: THREE.Vector3[] = [];
-    for (let i = 0; i <= 14; i++) {
-      const z = -0.36 + (i * 0.72) / 14;
-      const x = -0.33;
-      const point = sculpt(x, Math.sqrt(1 - x * x - z * z), z);
-      point.y += 0.006;
-      foldPoints.push(point);
-    }
-    const foldMaterial = material(
-      new THREE.MeshStandardMaterial({ color: 0x7d91ad, roughness: 0.65 }),
-    );
-    expression.add(
-      new THREE.Mesh(
-        geometry(
-          new THREE.TubeGeometry(new THREE.CatmullRomCurve3(foldPoints), 28, 0.009, 6, false),
-        ),
-        foldMaterial,
-      ),
-    );
-
-    const eyeMaterial = material(new THREE.MeshBasicMaterial({ transparent: true }));
-    const happyMaterial = material(new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }));
-    const mouthMaterial = material(
-      new THREE.MeshBasicMaterial({ transparent: true, opacity: 0.9 }),
-    );
-    const face = new THREE.Group();
-    expression.add(face);
-    const eyeGeometry = geometry(new THREE.CapsuleGeometry(0.044, 0.082, 8, 16));
-    const leftEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    const rightEye = new THREE.Mesh(eyeGeometry, eyeMaterial);
-    leftEye.position.set(-0.14, 0.035, 0.643);
-    rightEye.position.set(0.14, 0.047, 0.643);
-    leftEye.scale.z = rightEye.scale.z = 0.42;
-    leftEye.rotation.y = -0.12;
-    rightEye.rotation.y = 0.12;
-    face.add(leftEye, rightEye);
-    const smileEyes: THREE.Mesh[] = [];
-    for (const x of [-0.14, 0.14]) {
-      const points = [
-        new THREE.Vector3(x - 0.065, 0.02, 0.644),
-        new THREE.Vector3(x, 0.07, 0.654),
-        new THREE.Vector3(x + 0.065, 0.02, 0.644),
-      ];
-      const eye = new THREE.Mesh(
-        geometry(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(points), 16, 0.014, 8, false)),
-        happyMaterial,
+    actor.add(new THREE.Mesh(bodyGeometry, shell));
+    const ink = mat(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
+    const eyeBuffers = [-1, 1].map((side) => {
+      const geometry = geo(new THREE.BufferGeometry());
+      geometry.setAttribute(
+        'position',
+        new THREE.BufferAttribute(new Float32Array(37 * 3), 3).setUsage(THREE.DynamicDrawUsage),
       );
-      smileEyes.push(eye);
-      face.add(eye);
+      const indices = Array.from({ length: 36 }, (_, i) => [0, i + 1, ((i + 1) % 36) + 1]).flat();
+      geometry.setIndex(indices);
+      const mesh = new THREE.Mesh(geometry, ink);
+      mesh.frustumCulled = false;
+      actor.add(mesh);
+      return { side, geometry };
+    });
+    const effectGroup = new THREE.Group();
+    scene.add(effectGroup);
+    effectGroup.scale.setScalar(0.84);
+    const circle = geo(new THREE.CircleGeometry(1, 24));
+    const ringGeometry = geo(new THREE.RingGeometry(0.96, 1, 64));
+    const arc = geo(new THREE.RingGeometry(0.95, 1, 48, 1, 0, Math.PI * 0.44));
+    const star = new THREE.Shape();
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * Math.PI) / 4;
+      const r = i % 2 ? 0.25 : 1;
+      if (!i) star.moveTo(Math.cos(angle) * r, Math.sin(angle) * r);
+      else star.lineTo(Math.cos(angle) * r, Math.sin(angle) * r);
     }
-    const mouthPoints = [
-      new THREE.Vector3(-0.105, -0.18, 0.63),
-      new THREE.Vector3(0, -0.245, 0.636),
-      new THREE.Vector3(0.105, -0.18, 0.63),
-    ];
-    const mouth = new THREE.Mesh(
-      geometry(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(mouthPoints), 16, 0.01, 8, false)),
-      mouthMaterial,
-    );
-    face.add(mouth);
-    const shadowMaterial = material(
+    star.closePath();
+    const sparkle = geo(new THREE.ShapeGeometry(star));
+    const glyph = (text: string) => {
+      const surface = document.createElement('canvas');
+      surface.width = surface.height = 64;
+      const context = surface.getContext('2d');
+      if (!context) throw new Error('Companion glyph canvas is unavailable');
+      context.fillStyle = '#fff';
+      context.font = '500 52px system-ui';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText(text, 32, 32);
+      const texture = new THREE.CanvasTexture(surface);
+      textures.push(texture);
+      return texture;
+    };
+    const pool = (count: number, geometry: THREE.BufferGeometry, texture?: THREE.Texture) =>
+      Array.from({ length: count }, () => {
+        const material = mat(
+          new THREE.MeshBasicMaterial({
+            color: 0x83aaff,
+            map: texture,
+            transparent: true,
+            depthWrite: false,
+            side: THREE.DoubleSide,
+          }),
+        );
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.visible = false;
+        effectGroup.add(mesh);
+        return mesh;
+      });
+    const quad = geo(new THREE.PlaneGeometry(1, 1));
+    const dots = pool(3, circle),
+      ripples = pool(2, ringGeometry),
+      orbit = pool(1, arc),
+      sparks = pool(6, sparkle),
+      zs = pool(3, quad, glyph('z')),
+      bang = pool(1, quad, glyph('!'));
+    const allEffects = [...dots, ...ripples, ...orbit, ...sparks, ...zs, ...bang];
+    const shadowMaterial = mat(
       new THREE.MeshBasicMaterial({
-        color: 0x101722,
+        color: 0x24304a,
         transparent: true,
-        opacity: 0.11,
+        opacity: 0.12,
         depthWrite: false,
       }),
     );
-    const shadow = new THREE.Mesh(geometry(new THREE.CircleGeometry(1, 48)), shadowMaterial);
-    shadow.rotation.x = -Math.PI / 2;
-    shadow.scale.set(0.64, 0.16, 1);
-    shadow.position.set(0, -0.98, 0);
+    const shadow = new THREE.Mesh(circle, shadowMaterial);
+    shadow.scale.set(0.65, 0.055, 1);
+    shadow.position.set(0, -1.05, -0.8);
     scene.add(shadow);
-
-    function palette() {
-      shell.color.setHex(options.ceramic ? 0xdedbd1 : 0x283344);
-      const ink = options.ceramic ? 0x202c39 : 0xf0ede3;
-      eyeMaterial.color.setHex(ink);
-      happyMaterial.color.setHex(ink);
-      mouthMaterial.color.setHex(ink);
-      foldMaterial.color.setHex(options.ceramic ? 0x8190a1 : 0x647fa4);
-    }
-    palette();
-    const smooth = (value: number) => {
-      const t = THREE.MathUtils.clamp(value, 0, 1);
-      return t * t * (3 - 2 * t);
+    const recolor = () => {
+      shell.color.setHex(options.ceramic ? 0xe6e5dc : 0x4569ad);
+      ink.color.setHex(options.ceramic ? 0x24334b : 0xf8f3e6);
+      allEffects.forEach((mesh) =>
+        mesh.material.color.setHex(options.ceramic ? 0x91b8ff : 0x436fbc),
+      );
+      sparks.forEach((mesh, i) =>
+        mesh.material.color.setHex(i % 2 ? 0xf4c87e : options.ceramic ? 0xa9c5ff : 0x4f7fca),
+      );
     };
-    const poses = [
-      { yaw: 0.12, tilt: -0.07, gaze: 0.018, curious: 0.3, happy: 0.72 },
-      { yaw: -0.45, tilt: 0.075, gaze: -0.035, curious: 1, happy: 0.25 },
-      { yaw: 0.48, tilt: -0.065, gaze: 0.035, curious: 0.8, happy: 0.4 },
-      { yaw: 0.05, tilt: 0.025, gaze: 0, curious: 0, happy: 1 },
-      { yaw: 0.15, tilt: -0.025, gaze: 0.01, curious: 0.3, happy: 0.85 },
-    ];
-    let poseIndex = 0;
-    let poseAt = 0;
-    let poseDuration = 1.4;
-    let from = poses[0]!;
-    let target = poses[0]!;
-    let turns = 0;
-    let turnAt = -10;
-    let nextTurn = 3.8;
-    let happy = 0.72;
-    let curiosity = 0;
-    let yaw = 0;
-    let tilt = 0;
-    let gaze = 0;
-    function pose(delta: number) {
-      const moving = !options.reduced;
-      if (moving) {
-        elapsed += delta;
-        if (elapsed - poseAt > poseDuration) {
-          from = { yaw, tilt, gaze, curious: curiosity, happy };
-          poseIndex = (poseIndex + 1) % poses.length;
-          target = poses[poseIndex]!;
-          poseAt = elapsed;
-          poseDuration = 1.2 + random() * 1.6;
-          if (elapsed >= nextTurn) {
-            turnAt = elapsed;
-            nextTurn = elapsed + 9 + random() * 7;
-          }
-        }
-        const progress = smooth((elapsed - poseAt) / 0.36);
-        yaw = THREE.MathUtils.lerp(from.yaw, target.yaw, progress);
-        tilt = THREE.MathUtils.lerp(from.tilt, target.tilt, progress);
-        gaze = THREE.MathUtils.lerp(from.gaze, target.gaze, progress);
-        happy = THREE.MathUtils.lerp(from.happy, target.happy, progress);
-        curiosity = THREE.MathUtils.lerp(from.curious, target.curious, progress);
-        if (elapsed >= nextBlink) {
-          blinkAt = elapsed;
-          nextBlink = elapsed + 2.8 + random() * 3;
+    recolor();
+    const effect = (
+      mesh: THREE.Mesh<THREE.BufferGeometry, THREE.MeshBasicMaterial> | undefined,
+      x: number,
+      y: number,
+      size: number,
+      opacity = 1,
+      rotation = 0,
+    ) => {
+      if (!mesh) return;
+      mesh.visible = opacity > 0.005;
+      mesh.position.set(x, y, 0.15);
+      mesh.scale.setScalar(size);
+      mesh.rotation.z = rotation;
+      mesh.material.opacity = opacity;
+    };
+    const renderFrame = (frame: FrameInput) => {
+      const elapsed = lastFrame ? Math.max(0, Math.min(0.1, frame.time - lastFrame.time)) : 1;
+      lastFrame = frame;
+      if (disposed || !options.visible || document.hidden) return;
+      const time = options.reduced ? 0 : frame.time;
+      const pose = frame.pose;
+      const sx = pose.sx * (1 + 0.7 * frame.squash),
+        sy = pose.sy * (1 - frame.squash);
+      const bodyPosition = bodyGeometry.getAttribute('position');
+      for (let ring = 0; ring <= rings; ring++) {
+        const latitude = (ring / rings) * Math.PI;
+        const ringSize = Math.sin(latitude);
+        for (let i = 0; i < segments; i++) {
+          const a = (i / segments) * Math.PI * 2 - Math.PI / 2;
+          const wobble =
+            1 +
+            pose.wob *
+              (0.6 * Math.sin(3 * a + time * pose.ws) +
+                0.4 * Math.sin(5 * a - time * pose.ws * 1.3));
+          const radius = frame.radii[i]! * ringSize * wobble;
+          bodyPosition.setXYZ(
+            ring * segments + i,
+            Math.cos(a) * radius,
+            -Math.sin(a) * radius,
+            Math.cos(latitude) * depth,
+          );
         }
       }
-      const emotionHappy = options.emotion === 'auto' ? happy : options.emotion === 'happy' ? 1 : 0;
-      const emotionCurious =
-        options.emotion === 'auto' ? curiosity : options.emotion === 'curious' ? 1 : 0;
-      const blinkProgress = (elapsed - blinkAt) / 0.16;
-      const blink =
-        moving && blinkProgress >= 0 && blinkProgress < 1
-          ? Math.max(0.09, 1 - Math.sin(blinkProgress * Math.PI))
-          : 1;
-      const turnProgress = smooth((elapsed - turnAt) / 0.95);
-      if (turnProgress === 1 && turnAt > 0) {
-        turns++;
-        turnAt = -10;
-      }
-      const turn = turns * Math.PI * 2 + (turnAt > 0 ? turnProgress * Math.PI * 2 : 0);
-      const hello = moving ? Math.max(0, 1 - (elapsed - greeting) / 0.8) : 0;
+      bodyPosition.needsUpdate = true;
+      bodyGeometry.computeVertexNormals();
+      // Normalize intrinsic outlines, not time-varying poses, so long ears fit without zoom pumping.
+      const fit = Math.min(1, 1.1 / Math.max(...frame.radii));
+      actor.scale.set(sx * fit, sy * fit, fit);
+      actor.position.set((pose.ox / 54) * fit, ((-pose.oy / 54) * 0.5 + (sy - 1)) * fit, 0);
+      const turnPhase = time % 12;
+      const turn = turnPhase > 10.6 ? (turnPhase - 10.6) / 1.4 : 0;
+      const spin = turn * turn * (3 - 2 * turn) * Math.PI * 2;
+      const pitch =
+        options.attention === 'composer'
+          ? 0.24
+          : options.attention === 'answer'
+            ? 0.08
+            : Math.sin(time * 1.5) * 0.08;
+      const yaw = options.attention
+        ? frame.gaze.x * 0.2
+        : Math.sin(time * 1.3) * 0.3 +
+          Math.sin(time * 0.55) * 0.18 +
+          (options.state === 'celebrating' ? (pose.rot * Math.PI) / 180 : spin);
+      const turnTo = (from: number, to: number) => THREE.MathUtils.damp(from, to, 14, elapsed);
       actor.rotation.set(
-        moving ? Math.sin(elapsed * 2.2) * 0.065 : 0,
-        moving ? yaw + turn : yaw + turns * Math.PI * 2,
-        0,
+        options.reduced ? 0 : turnTo(actor.rotation.x, pitch),
+        options.reduced ? 0 : turnTo(actor.rotation.y, yaw),
+        options.state === 'celebrating' ? 0 : (-pose.rot * Math.PI) / 180,
       );
-      actor.position.set(
-        moving ? Math.sin(elapsed * 1.8) * 0.065 : 0,
-        moving ? Math.abs(Math.sin(elapsed * 2.8)) * 0.085 + Math.sin(hello * Math.PI) * 0.1 : 0,
-        0,
-      );
-      expression.rotation.z = moving ? tilt - emotionCurious * 0.07 : -emotionCurious * 0.07;
-      expression.scale.set(1, moving ? 1 + Math.sin(elapsed * 5.6) * 0.018 : 1, 1);
-      face.position.x = moving ? gaze : 0;
-      face.rotation.y = moving ? gaze * 0.6 : 0;
-      leftEye.scale.y = blink * (1 - emotionHappy * 0.45 + emotionCurious * 0.08);
-      rightEye.scale.y = blink * (1 - emotionHappy * 0.45 + emotionCurious * 0.3);
-      eyeMaterial.opacity = 1 - emotionHappy;
-      happyMaterial.opacity = emotionHappy;
-      smileEyes.forEach((eye) => {
-        eye.scale.y = blink;
+      for (let sideIndex = 0; sideIndex < eyeBuffers.length; sideIndex++) {
+        const { side, geometry } = eyeBuffers[sideIndex]!;
+        const e = frame.eyes[sideIndex]!;
+        const positions = geometry.getAttribute('position');
+        const w = e.w * (1 - 0.16 * Math.abs(frame.gaze.x)),
+          h = e.h;
+        const lt = e.lt + (1 - e.lt) * frame.blink * 0.5,
+          lb = e.lb + (1 - e.lb) * frame.blink * 0.5;
+        let cx = 0,
+          cy = 0,
+          cz = 0;
+        for (let i = 0; i < 36; i++) {
+          const a = (i / 36) * Math.PI * 2;
+          const x = w * Math.sign(Math.cos(a)) * Math.abs(Math.cos(a)) ** (2 / e.n);
+          const y0 = h * Math.sign(Math.sin(a)) * Math.abs(Math.sin(a)) ** (2 / e.n);
+          let top = -h + 2 * h * lt + e.tilt * x * side,
+            bottom = h - 2 * h * lb;
+          if (top > bottom - 0.025) {
+            const middle = (top + bottom) / 2;
+            top = middle - 0.0125;
+            bottom = middle + 0.0125;
+          }
+          const px = side * 0.27 + frame.gaze.x * 0.13 + x;
+          const py = -(
+            -0.04 +
+            frame.gaze.y * 0.11 +
+            e.dy +
+            THREE.MathUtils.clamp(y0, top, bottom) -
+            e.bend * (1 - (x / w) ** 2)
+          );
+          const angle = (Math.atan2(-py, px) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
+          const outlineRadius =
+            frame.radii[Math.floor((angle / (Math.PI * 2)) * segments) % segments]!;
+          const radial = Math.hypot(px, py) / outlineRadius;
+          const pz = depth * Math.sqrt(Math.max(0.1, 1 - radial * radial)) + 0.025;
+          positions.setXYZ(i + 1, px, py, pz);
+          cx += px;
+          cy += py;
+          cz += pz;
+        }
+        positions.setXYZ(0, cx / 36, cy / 36, cz / 36);
+        positions.needsUpdate = true;
+      }
+      allEffects.forEach((mesh) => {
+        mesh.visible = false;
       });
-      mouth.scale.x = 1 + emotionHappy * 0.3;
-      mouth.position.y = -emotionHappy * 0.015;
-      shadowMaterial.opacity = options.ceramic ? 0.1 : 0.07;
-    }
-    function render(time: number) {
-      if (disposed || !options.visible || document.hidden) {
-        frame = 0;
-        previousTime = 0;
-        return;
-      }
-      if (time - lastRender >= 1000 / 30 || options.reduced) {
-        const delta = previousTime ? Math.min((time - previousTime) / 1000, 0.08) : 0;
-        previousTime = time;
-        lastRender = time;
-        pose(delta);
-        renderer.render(scene, camera);
-      }
-      if (!options.reduced) frame = requestAnimationFrame(render);
-      else frame = 0;
-    }
-    function request() {
-      if (!frame && options.visible && !document.hidden && !disposed)
-        frame = requestAnimationFrame(render);
-    }
-    const resize = new ResizeObserver(() => {
-      const rect = canvas.getBoundingClientRect();
-      if (rect.width > 0 && rect.height > 0) {
-        renderer.setSize(rect.width, rect.height, false);
-        request();
-      }
+      let dotIndex = 0,
+        ringIndex = 0,
+        sparkIndex = 0,
+        zIndex = 0;
+      if (!options.reduced)
+        for (const part of frame.parts) {
+          if (part.k === 'dot')
+            effect(dots[dotIndex++], (part.x - 100) / 54, (100 - part.y) / 54, part.r / 54, part.o);
+          else if (part.k === 'ring')
+            effect(ripples[ringIndex++], actor.position.x, actor.position.y, part.r / 54, part.o);
+          else if (part.k === 'arc')
+            effect(
+              orbit[0],
+              actor.position.x,
+              actor.position.y,
+              part.r / 54,
+              0.75,
+              (-part.rot * Math.PI) / 180,
+            );
+          else if (part.k === 'spark')
+            effect(
+              sparks[sparkIndex++],
+              (part.x - 100) / 54,
+              (100 - part.y) / 54,
+              part.s / 54,
+              part.o,
+              (part.rot * Math.PI) / 180,
+            );
+          else if (part.k === 'z')
+            effect(zs[zIndex++], (part.x - 100) / 54, (100 - part.y) / 54, part.s / 54, part.o);
+          else if (part.k === 'bang')
+            effect(bang[0], (part.x - 100) / 54, (100 - part.y) / 54, part.s / 54, part.o);
+        }
+      const pokeProgress = (time - pokeAt) / 0.75;
+      if (!options.reduced && pokeProgress >= 0 && pokeProgress < 1)
+        for (let i = 0; i < 6; i++) {
+          const a = (i / 6) * Math.PI * 2 + 0.2;
+          effect(
+            sparks[i],
+            Math.cos(a) * (0.8 + pokeProgress * 0.7),
+            Math.sin(a) * (0.8 + pokeProgress * 0.7),
+            0.09 * (1 - pokeProgress),
+            Math.sin(pokeProgress * Math.PI),
+            time + i,
+          );
+        }
+      shadow.scale.x = 0.65 - Math.max(0, actor.position.y) * 0.15;
+      renderer.render(scene, camera);
+    };
+    const engineOptions = () => ({
+      state: options.state,
+      shape: options.shape,
+      expression: options.expression,
+      attention: options.attention ?? null,
+      followPointer: false,
+      maxFrameRate: canvas.clientWidth >= 96 ? 60 : 30,
+      reducedMotion: options.reduced || !options.visible,
+      onFrame: renderFrame,
     });
+    const size = () => {
+      const rect = canvas.getBoundingClientRect();
+      renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false);
+      if (lastFrame) renderFrame(lastFrame);
+    };
+    size();
+    engine = createEngine(canvas, engineOptions());
+    resize = new ResizeObserver(size);
     resize.observe(canvas);
-    const visibility = () => {
-      if (document.hidden) {
-        cancelAnimationFrame(frame);
-        frame = 0;
-        previousTime = 0;
-      } else request();
-    };
-    const lost = (event: Event) => {
-      event.preventDefault();
-      cancelAnimationFrame(frame);
-      frame = 0;
-      onLost();
-    };
-    document.addEventListener('visibilitychange', visibility);
     canvas.addEventListener('webglcontextlost', lost);
     canvas.dataset.renderer = 'webgl';
-    const rect = canvas.getBoundingClientRect();
-    renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false);
-    pose(0);
-    renderer.render(scene, camera);
-    request();
+    canvas.dataset.engine = 'dotty';
     return {
       update(next) {
-        if (next.active && !options.active) greeting = elapsed;
-        const recolor = next.ceramic !== options.ceramic;
+        const greet = next.active && !options.active;
+        const recolorNeeded = next.ceramic !== options.ceramic;
         options = next;
-        if (recolor) palette();
-        cancelAnimationFrame(frame);
-        frame = 0;
-        previousTime = 0;
-        request();
+        if (recolorNeeded) recolor();
+        engine?.update(engineOptions());
+        if (greet) engine?.blink();
       },
-      dispose() {
-        disposed = true;
-        resize.disconnect();
-        document.removeEventListener('visibilitychange', visibility);
-        canvas.removeEventListener('webglcontextlost', lost);
-        release();
+      poke() {
+        if (options.reduced) return;
+        pokeAt = lastFrame?.time ?? 0;
+        engine?.poke();
       },
+      blink() {
+        engine?.blink();
+      },
+      dispose: release,
     };
   } catch (error) {
     release();
