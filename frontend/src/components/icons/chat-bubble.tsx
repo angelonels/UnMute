@@ -2,21 +2,22 @@
 
 import { useReducedMotion } from '../../hooks/use-reduced-motion';
 
+import { ChatBubbleEmpty } from 'iconoir-react';
 import type { Variants } from 'motion/react';
 import { m as motion, useAnimation } from 'motion/react';
 import type { HTMLAttributes } from 'react';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
-export interface MessageCircleIconHandle {
+export interface ChatBubbleIconHandle {
   startAnimation: () => void;
   stopAnimation: () => void;
 }
 
-interface MessageCircleIconProps extends HTMLAttributes<HTMLSpanElement> {
+interface ChatBubbleIconProps extends HTMLAttributes<HTMLSpanElement> {
   size?: number;
 }
 
-// Adapted from lucide-animated: one restrained confirmation when the chat opens.
+// A brief pointer acknowledgment around Iconoir’s chat silhouette.
 const ICON_VARIANTS: Variants = {
   normal: { transform: 'translateY(0px) scale(1)' },
   animate: {
@@ -29,7 +30,7 @@ const ICON_VARIANTS: Variants = {
   },
 };
 
-const MessageCircleIcon = forwardRef<MessageCircleIconHandle, MessageCircleIconProps>(
+const ChatBubbleIcon = forwardRef<ChatBubbleIconHandle, ChatBubbleIconProps>(
   ({ onMouseEnter, onMouseLeave, className, size = 18, ...props }, ref) => {
     const controls = useAnimation();
     const reduced = useReducedMotion();
@@ -81,26 +82,18 @@ const MessageCircleIcon = forwardRef<MessageCircleIconHandle, MessageCircleIconP
         onMouseLeave={handleMouseLeave}
         {...props}
       >
-        <motion.svg
+        <motion.span
           animate={controls}
-          fill="none"
-          height={size}
-          stroke="currentColor"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth="1.65"
           variants={ICON_VARIANTS}
-          viewBox="0 0 24 24"
-          width={size}
-          xmlns="http://www.w3.org/2000/svg"
+          className="inline-flex align-middle"
         >
-          <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
-        </motion.svg>
+          <ChatBubbleEmpty width={size} height={size} strokeWidth={1.5} aria-hidden="true" />
+        </motion.span>
       </span>
     );
   },
 );
 
-MessageCircleIcon.displayName = 'MessageCircleIcon';
+ChatBubbleIcon.displayName = 'ChatBubbleIcon';
 
-export { MessageCircleIcon };
+export { ChatBubbleIcon };

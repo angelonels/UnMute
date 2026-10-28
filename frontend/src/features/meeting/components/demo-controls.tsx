@@ -1,7 +1,15 @@
 import { useState } from 'react';
 import { ModalSurface } from '../../../components/modal-surface';
 import * as Dialog from '@radix-ui/react-dialog';
-import { FlaskConical, RotateCcw, X, Monitor, Users, AudioLines, Wifi } from 'lucide-react';
+import {
+  Flask as FlaskConical,
+  Undo as RotateCcw,
+  Xmark as X,
+  Computer as Monitor,
+  Group as Users,
+  Voice as AudioLines,
+  Wifi,
+} from 'iconoir-react';
 import { SelectPicker } from '../../../components/select-picker';
 import type { Connection, Participant } from '../meeting-model';
 
@@ -41,7 +49,7 @@ export function DemoControls({
           aria-label="Demo controls"
           className="flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-warning/25 bg-warning/8 px-3 text-[11px] text-warning"
         >
-          <FlaskConical size={13} aria-hidden="true" />
+          <FlaskConical width={13} height={13} aria-hidden="true" />
           <span className="hidden min-[420px]:inline">Playground</span>
         </button>
       </Dialog.Trigger>
@@ -54,7 +62,7 @@ export function DemoControls({
             aria-label="Close demo controls"
             className="grid size-11 cursor-pointer place-items-center rounded-xl hover:bg-surface-muted"
           >
-            <X size={18} aria-hidden="true" />
+            <X width={18} height={18} aria-hidden="true" />
           </Dialog.Close>
         </div>
         <Dialog.Description className="sr-only">Development controls</Dialog.Description>
@@ -63,7 +71,7 @@ export function DemoControls({
             <p className="mb-2 text-xs font-medium">Capture source</p>
             <SelectPicker
               label="Capture source"
-              icon={<Monitor size={17} />}
+              icon={<Monitor width={17} height={17} />}
               value={captureMode}
               options={[
                 { value: 'native', label: 'Real browser devices' },
@@ -87,7 +95,7 @@ export function DemoControls({
             <p className="mb-2 text-xs font-medium">Participants</p>
             <SelectPicker
               label="Participants in demo"
-              icon={<Users size={17} />}
+              icon={<Users width={17} height={17} />}
               value={String(count)}
               options={[1, 2, 6, 12, 24, 48].map((value) => ({
                 value: String(value),
@@ -100,7 +108,7 @@ export function DemoControls({
             <p className="mb-2 text-xs font-medium">Active speaker</p>
             <SelectPicker
               label="Active demo speaker"
-              icon={<AudioLines size={17} />}
+              icon={<AudioLines width={17} height={17} />}
               value={speakerId}
               options={people.map((person) => ({ value: person.id, label: person.name }))}
               onValueChange={onSpeaker}
@@ -110,7 +118,7 @@ export function DemoControls({
             <p className="mb-2 text-xs font-medium">Connection</p>
             <SelectPicker
               label="Demo connection"
-              icon={<Wifi size={17} />}
+              icon={<Wifi width={17} height={17} />}
               value={connection}
               options={[
                 { value: 'ready', label: 'Ready' },
@@ -129,7 +137,7 @@ export function DemoControls({
           onClick={onReset}
           className="mt-6 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-xl bg-surface-muted text-sm"
         >
-          <RotateCcw size={15} aria-hidden="true" />
+          <RotateCcw width={15} height={15} aria-hidden="true" />
           Reset playground
         </button>
       </ModalSurface>

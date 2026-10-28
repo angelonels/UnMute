@@ -1,7 +1,7 @@
 import { AICompanion } from '../../../components/ai-companion';
 import { useState } from 'react';
 import { Effect } from 'effect';
-import { ArrowUpRight } from 'lucide-react';
+import { ArrowUpRight } from 'iconoir-react';
 import { authClient } from '../../../api/auth-client';
 import { Brand } from '../../../components/brand';
 import { ThemeToggle } from '../../../components/theme-toggle';
@@ -180,7 +180,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
                     ? 'Checking your session…'
                     : 'Continue with Google'}
               </span>
-              <ArrowUpRight size={18} aria-hidden="true" />
+              <ArrowUpRight width={18} height={18} aria-hidden="true" />
             </Button>
             {failed && (
               <p className="mt-4 text-sm leading-6 text-error" role="alert">

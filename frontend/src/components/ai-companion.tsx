@@ -245,6 +245,7 @@ function Companion3D({
       <span role={label ? 'img' : undefined} aria-label={label} className="absolute inset-0">
         <canvas
           ref={canvas}
+          data-motion={reduced ? 'still' : 'autonomous'}
           aria-hidden="true"
           className={`absolute inset-0 size-full ${status === 'ready' ? 'visible' : 'invisible'}`}
         />

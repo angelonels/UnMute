@@ -1,6 +1,11 @@
 import { LocalVideo } from '../../media';
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, ArrowRight, AudioLines, MonitorUp } from 'lucide-react';
+import {
+  ArrowLeft,
+  ArrowRight,
+  Voice as AudioLines,
+  Presentation as MonitorUp,
+} from 'iconoir-react';
 import { focusOrder, galleryGeometry, type Participant } from '../meeting-model';
 import { ParticipantTile } from './participant-tile';
 
@@ -104,7 +109,7 @@ export function MeetingStage({
               {sharing && screenStream ? (
                 <div className="relative min-h-0 flex-1 overflow-hidden rounded-2xl bg-black">
                   <span className="absolute top-3 left-3 z-10 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1.5 text-xs text-white">
-                    <MonitorUp size={13} className="text-success" aria-hidden="true" />
+                    <MonitorUp width={13} height={13} className="text-success" aria-hidden="true" />
                     Your screen · local capture
                   </span>
                   <LocalVideo stream={screenStream} label="Your shared screen" contain />
@@ -161,7 +166,7 @@ export function MeetingStage({
               onClick={onFocus}
               className="me-auto inline-flex min-h-9 items-center gap-1.5 px-2 text-xs text-muted hover:text-text"
             >
-              <AudioLines size={13} aria-hidden="true" />
+              <AudioLines width={13} height={13} aria-hidden="true" />
               Show speaker
             </button>
           )}
@@ -172,7 +177,7 @@ export function MeetingStage({
             onClick={() => setPage(currentPage - 1)}
             className="grid size-9 cursor-pointer place-items-center rounded-full bg-surface text-text disabled:cursor-default disabled:opacity-35"
           >
-            <ArrowLeft size={15} aria-hidden="true" />
+            <ArrowLeft width={15} height={15} aria-hidden="true" />
           </button>
           <span className="text-xs tabular-nums text-muted">
             {currentPage + 1} / {pageCount}
@@ -184,7 +189,7 @@ export function MeetingStage({
             onClick={() => setPage(currentPage + 1)}
             className="grid size-9 cursor-pointer place-items-center rounded-full bg-surface text-text disabled:cursor-default disabled:opacity-35"
           >
-            <ArrowRight size={15} aria-hidden="true" />
+            <ArrowRight width={15} height={15} aria-hidden="true" />
           </button>
         </nav>
       )}

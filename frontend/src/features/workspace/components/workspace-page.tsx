@@ -9,18 +9,18 @@ import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ArrowRight,
-  CircleHelp,
-  LayoutGrid,
+  HelpCircle as CircleHelp,
+  ViewGrid as LayoutGrid,
   LogOut,
-  Mic,
-  MicOff,
-  PanelLeftClose,
-  PanelLeftOpen,
-  PanelRightOpen,
-  Video,
-  VideoOff,
-  X,
-} from 'lucide-react';
+  Microphone as Mic,
+  MicrophoneMute as MicOff,
+  SidebarCollapse as PanelLeftClose,
+  SidebarExpand as PanelLeftOpen,
+  SidebarExpand as PanelRightOpen,
+  VideoCamera as Video,
+  VideoCameraOff as VideoOff,
+  Xmark as X,
+} from 'iconoir-react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { type authClient } from '../../../api/auth-client';
 import { useAuthActions } from '../../auth';
@@ -63,9 +63,9 @@ export function WorkspacePage({ user }: { user: User }) {
               className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none hover:text-text"
             >
               {navigationOpen ? (
-                <PanelLeftClose size={19} aria-hidden="true" />
+                <PanelLeftClose width={19} height={19} aria-hidden="true" />
               ) : (
-                <PanelLeftOpen size={19} aria-hidden="true" />
+                <PanelLeftOpen width={19} height={19} aria-hidden="true" />
               )}
             </button>
           </div>
@@ -76,7 +76,7 @@ export function WorkspacePage({ user }: { user: User }) {
               aria-label="Overview"
               className={`flex h-11 items-center gap-3 rounded-xl bg-primary/9 text-sm font-medium text-primary ${navigationOpen ? 'px-3' : 'justify-center'}`}
             >
-              <LayoutGrid size={18} aria-hidden="true" />
+              <LayoutGrid width={18} height={18} aria-hidden="true" />
               {navigationOpen && 'Overview'}
             </a>
           </nav>
@@ -89,7 +89,7 @@ export function WorkspacePage({ user }: { user: User }) {
               aria-label="Sign out"
               className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text disabled:cursor-wait ${navigationOpen ? 'px-3' : 'justify-center'}`}
             >
-              <LogOut size={18} aria-hidden="true" />
+              <LogOut width={18} height={18} aria-hidden="true" />
               {navigationOpen && (busy ? 'Signing out…' : 'Sign out')}
             </button>
             {failed && (
@@ -115,7 +115,7 @@ export function WorkspacePage({ user }: { user: User }) {
                       aria-label="Open navigation"
                       className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none"
                     >
-                      <PanelLeftOpen size={19} aria-hidden="true" />
+                      <PanelLeftOpen width={19} height={19} aria-hidden="true" />
                     </button>
                   </DrawerTrigger>
                   <DrawerContent
@@ -128,7 +128,7 @@ export function WorkspacePage({ user }: { user: User }) {
                       aria-current="page"
                       className="flex min-h-12 items-center gap-3 rounded-xl bg-primary/10 px-4 text-primary"
                     >
-                      <LayoutGrid size={18} aria-hidden="true" />
+                      <LayoutGrid width={18} height={18} aria-hidden="true" />
                       Overview
                     </a>
                     <div className="mt-8">
@@ -138,7 +138,7 @@ export function WorkspacePage({ user }: { user: User }) {
                         onClick={() => void signOut()}
                         className="flex min-h-12 w-full cursor-pointer items-center gap-3 px-3 text-muted"
                       >
-                        <LogOut size={18} aria-hidden="true" />
+                        <LogOut width={18} height={18} aria-hidden="true" />
                         Sign out
                       </button>
                       {failed && (
@@ -170,7 +170,12 @@ export function WorkspacePage({ user }: { user: User }) {
                     className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm text-muted hover:bg-surface-muted hover:text-text"
                   >
                     <span className="hidden sm:inline">Side panel</span>
-                    <PanelRightOpen size={19} aria-hidden="true" />
+                    <PanelRightOpen
+                      width={19}
+                      height={19}
+                      className="-scale-x-100"
+                      aria-hidden="true"
+                    />
                     <span className="sr-only sm:hidden">Open side panel</span>
                   </button>
                 </DrawerTrigger>
@@ -181,9 +186,10 @@ export function WorkspacePage({ user }: { user: User }) {
                 >
                   <div className="flex min-h-80 flex-col items-center justify-center text-center">
                     <PanelRightOpen
-                      size={28}
-                      strokeWidth={1.35}
-                      className="text-muted/60"
+                      width={28}
+                      height={28}
+                      strokeWidth={1.5}
+                      className="-scale-x-100 text-muted/60"
                       aria-hidden="true"
                     />
                     <p className="mt-5 text-base font-medium">Room for more.</p>
@@ -219,9 +225,9 @@ export function WorkspacePage({ user }: { user: User }) {
                   size="lg"
                   className="mt-8 !min-h-14 !rounded-2xl !bg-primary !px-7 !text-on-primary hover:!bg-primary-hover"
                 >
-                  <Video size={20} strokeWidth={1.75} aria-hidden="true" />
+                  <Video width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
                   Start meeting
-                  <ArrowRight size={18} aria-hidden="true" />
+                  <ArrowRight width={18} height={18} aria-hidden="true" />
                 </Button>
               </Dialog.Trigger>
               <MeetingPreview user={user} open={previewOpen} keyboard={keyboard} />
@@ -258,7 +264,7 @@ function Help({ compact = false }: { compact?: boolean }) {
           aria-label="About this workspace"
           className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text ${compact ? 'justify-center' : 'px-3'}`}
         >
-          <CircleHelp size={18} aria-hidden="true" />
+          <CircleHelp width={18} height={18} aria-hidden="true" />
           {!compact && 'About this workspace'}
         </button>
       </DrawerTrigger>
@@ -334,7 +340,7 @@ function MeetingPreview({
           aria-label="Close meeting preview"
           className="grid size-11 cursor-pointer place-items-center rounded-full text-muted hover:bg-surface-muted"
         >
-          <X size={20} aria-hidden="true" />
+          <X width={20} height={20} aria-hidden="true" />
         </Dialog.Close>
       </div>
       <Dialog.Description id="preview-description" className="sr-only">
@@ -360,9 +366,9 @@ function MeetingPreview({
           onClick={() => localMedia.toggle('microphone')}
         >
           {microphone ? (
-            <Mic size={18} aria-hidden="true" />
+            <Mic width={18} height={18} aria-hidden="true" />
           ) : (
-            <MicOff size={18} aria-hidden="true" />
+            <MicOff width={18} height={18} aria-hidden="true" />
           )}
           Mic {microphone ? 'on' : 'off'}
         </PreviewToggle>
@@ -373,9 +379,9 @@ function MeetingPreview({
           onClick={() => localMedia.toggle('camera')}
         >
           {camera ? (
-            <Video size={18} aria-hidden="true" />
+            <Video width={18} height={18} aria-hidden="true" />
           ) : (
-            <VideoOff size={18} aria-hidden="true" />
+            <VideoOff width={18} height={18} aria-hidden="true" />
           )}
           Camera {camera ? 'on' : 'off'}
         </PreviewToggle>
@@ -399,11 +405,11 @@ function MeetingPreview({
         className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary"
       >
         Enter meeting preview
-        <ArrowRight size={17} aria-hidden="true" />
+        <ArrowRight width={17} height={17} aria-hidden="true" />
       </Link>
       <Dialog.Close asChild>
         <Button variant="secondary" size="lg" className="mt-6 w-full">
-          <ArrowLeft size={17} aria-hidden="true" />
+          <ArrowLeft width={17} height={17} aria-hidden="true" />
           Back to workspace
         </Button>
       </Dialog.Close>

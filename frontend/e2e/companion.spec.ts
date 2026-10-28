@@ -31,6 +31,7 @@ test('reduced motion keeps a real 3D scene still and conversation replaces the w
     .getByRole('img', { name: 'UnMute AI companion', exact: true })
     .locator('canvas');
   await expect(canvas).toHaveAttribute('data-renderer', 'webgl');
+  await expect(canvas).toHaveAttribute('data-motion', 'still');
   await page.getByRole('button', { name: 'List action items', exact: true }).click();
   await expect(page.getByRole('log', { name: 'Private AI conversation' })).toContainText(
     'Example answer',

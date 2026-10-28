@@ -1,7 +1,15 @@
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { m } from 'motion/react';
 import { LocalVideo } from '../../media';
-import { AudioLines, Hand, MicOff, Pin, PinOff, Video, VideoOff } from 'lucide-react';
+import {
+  Voice as AudioLines,
+  OpenSelectHandGesture as Hand,
+  MicrophoneMute as MicOff,
+  Pin,
+  PinSlash as PinOff,
+  VideoCamera as Video,
+  VideoCameraOff as VideoOff,
+} from 'iconoir-react';
 import { initials, type Participant } from '../meeting-model';
 
 const tones = {
@@ -53,9 +61,9 @@ export function ParticipantTile({
             className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2 py-1 text-[10px] font-medium ${person.camera ? 'bg-black/5 dark:bg-black/15' : 'bg-surface/90 text-error'} ${compact ? 'hidden sm:inline-flex' : ''}`}
           >
             {person.camera ? (
-              <Video size={12} aria-hidden="true" />
+              <Video width={12} height={12} aria-hidden="true" />
             ) : (
-              <VideoOff size={12} aria-hidden="true" />
+              <VideoOff width={12} height={12} aria-hidden="true" />
             )}
             <span className="truncate">
               {person.camera ? (stream ? 'Camera on' : 'Video preview') : 'Camera off'}
@@ -70,7 +78,11 @@ export function ParticipantTile({
           onClick={onPin}
           className={`ms-auto grid size-9 shrink-0 cursor-pointer place-items-center rounded-full ${pinned ? 'bg-surface text-text shadow-sm' : 'bg-transparent opacity-65 hover:bg-surface-muted hover:opacity-100'}`}
         >
-          {pinned ? <PinOff size={15} aria-hidden="true" /> : <Pin size={15} aria-hidden="true" />}
+          {pinned ? (
+            <PinOff width={15} height={15} aria-hidden="true" />
+          ) : (
+            <Pin width={15} height={15} aria-hidden="true" />
+          )}
         </button>
       </div>
       <m.div
@@ -93,13 +105,13 @@ export function ParticipantTile({
             className="grid size-6 shrink-0 place-items-center rounded-full bg-surface text-warning"
             aria-label="Hand raised"
           >
-            <Hand size={13} aria-hidden="true" />
+            <Hand width={13} height={13} aria-hidden="true" />
           </span>
         )}
         <span className="ms-auto flex shrink-0 items-center gap-1.5">
           {speaking && (
             <span className="inline-flex items-center gap-1 rounded-full bg-surface/90 px-2 py-1 text-[10px] font-medium text-success">
-              <AudioLines size={12} aria-hidden="true" />
+              <AudioLines width={12} height={12} aria-hidden="true" />
               <span className={compact ? 'sr-only' : 'hidden min-[800px]:inline'}>Speaking</span>
             </span>
           )}
@@ -108,7 +120,7 @@ export function ParticipantTile({
               className="grid size-6 place-items-center rounded-full bg-surface/90 text-error"
               aria-label="Microphone off"
             >
-              <MicOff size={13} aria-hidden="true" />
+              <MicOff width={13} height={13} aria-hidden="true" />
             </span>
           )}
         </span>

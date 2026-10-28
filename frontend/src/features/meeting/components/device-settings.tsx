@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { ModalSurface } from '../../../components/modal-surface';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Settings2, X, Mic, Video } from 'lucide-react';
+import {
+  Settings as Settings2,
+  Xmark as X,
+  Microphone as Mic,
+  VideoCamera as Video,
+} from 'iconoir-react';
 import { SelectPicker } from '../../../components/select-picker';
 import type { MediaSource } from '../../media';
 
@@ -28,7 +33,7 @@ export function DeviceSettings({
         title="Device settings"
         className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-muted hover:bg-surface-muted"
       >
-        <Settings2 size={18} aria-hidden="true" />
+        <Settings2 width={18} height={18} aria-hidden="true" />
       </Dialog.Trigger>
       <ModalSurface open={open} instant={keyboard} className="max-w-md">
         <div className="flex items-center justify-between gap-3">
@@ -37,7 +42,7 @@ export function DeviceSettings({
             aria-label="Close device settings"
             className="grid size-11 cursor-pointer place-items-center rounded-full hover:bg-surface-muted"
           >
-            <X size={18} />
+            <X width={18} height={18} />
           </Dialog.Close>
         </div>
         <Dialog.Description className="sr-only">Audio and video preferences</Dialog.Description>
@@ -75,9 +80,9 @@ export function DeviceSettings({
                 label={`${label.toLowerCase()} input`}
                 icon={
                   source === 'camera' ? (
-                    <Video size={17} strokeWidth={1.65} />
+                    <Video width={17} height={17} strokeWidth={1.5} />
                   ) : (
-                    <Mic size={17} strokeWidth={1.65} />
+                    <Mic width={17} height={17} strokeWidth={1.5} />
                   )
                 }
                 disabled={pending[source]}

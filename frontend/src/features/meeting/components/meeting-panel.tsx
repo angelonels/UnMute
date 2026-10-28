@@ -2,7 +2,7 @@ import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { AICompanion } from '../../../components/ai-companion';
 import * as Dialog from '@radix-ui/react-dialog';
 import { AnimatePresence, m } from 'motion/react';
-import { X } from 'lucide-react';
+import { Xmark as X } from 'iconoir-react';
 import type { ReactNode, RefObject } from 'react';
 
 export function MeetingPanel({
@@ -92,7 +92,7 @@ export function MeetingPanel({
               aria-label={`Close ${title === 'UnMute AI' ? 'UnMute AI' : 'meeting chat'}`}
               className="-me-2 -mt-2 grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-muted transition-colors duration-150 hover:bg-surface-muted motion-reduce:transition-none"
             >
-              <X size={18} aria-hidden="true" />
+              <X width={18} height={18} aria-hidden="true" />
             </Dialog.Close>
           </header>
           {children}

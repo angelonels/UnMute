@@ -15,7 +15,7 @@ import {
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react';
 import { AnimatePresence, animate, m as motion, useMotionValue } from 'motion/react';
 import type { PanInfo, Transition } from 'motion/react';
-import { X } from 'lucide-react';
+import { Xmark as X } from 'iconoir-react';
 import { motionTokens } from '../lib/motion-tokens';
 
 /**
@@ -240,7 +240,7 @@ export function DrawerContent({
           ) : null}
         </div>
         <DialogPrimitive.Close className={styles.close} aria-label="Close drawer">
-          <X size={16} strokeWidth={1.75} aria-hidden="true" />
+          <X width={16} height={16} strokeWidth={1.5} aria-hidden="true" />
         </DialogPrimitive.Close>
       </motion.div>
       <div className={styles.body}>{children}</div>

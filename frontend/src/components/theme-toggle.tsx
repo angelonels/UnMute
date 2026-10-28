@@ -1,5 +1,5 @@
 import { useReducedMotion } from '../hooks/use-reduced-motion';
-import { Moon, Sun } from 'lucide-react';
+import { HalfMoon as Moon, SunLight as Sun } from 'iconoir-react';
 import { m } from 'motion/react';
 import { useTheme } from 'next-themes';
 import { useState } from 'react';
@@ -41,7 +41,7 @@ export function ThemeToggle() {
           transition={transition}
           className={`relative grid place-items-center ${dark ? 'text-muted' : 'text-text'}`}
         >
-          <Sun size={14} strokeWidth={1.65} aria-hidden="true" />
+          <Sun width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
         </m.span>
         <m.span
           aria-hidden="true"
@@ -50,7 +50,7 @@ export function ThemeToggle() {
           transition={transition}
           className={`relative grid place-items-center ${dark ? 'text-text' : 'text-muted'}`}
         >
-          <Moon size={14} strokeWidth={1.65} aria-hidden="true" />
+          <Moon width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
         </m.span>
       </span>
     </button>

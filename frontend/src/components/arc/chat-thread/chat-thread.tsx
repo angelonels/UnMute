@@ -21,7 +21,15 @@ import type {
 } from 'react';
 import { AnimatePresence, animate, m as motion, useMotionValue } from 'motion/react';
 import type { Transition } from 'motion/react';
-import { ArrowDown, ArrowUp, FileText, Paperclip, RotateCw, SmilePlus, X } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowUp,
+  Page as FileText,
+  Attachment as Paperclip,
+  Refresh as RotateCw,
+  Emoji as SmilePlus,
+  Xmark as X,
+} from 'iconoir-react';
 import { motionTokens } from '../lib/motion-tokens';
 
 const styles = {
@@ -567,7 +575,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
                       <img className={styles.pendingImage} src={entry.url} alt="" />
                     ) : (
                       <span className={styles.pendingFile}>
-                        <FileText size={16} strokeWidth={1.75} aria-hidden="true" />
+                        <FileText width={16} height={16} strokeWidth={1.5} aria-hidden="true" />
                         <span className={styles.pendingName}>{entry.file.name}</span>
                         <span className={styles.pendingSize}>{formatBytes(entry.file.size)}</span>
                       </span>
@@ -578,7 +586,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
                       aria-label={t.removeFile(entry.file.name)}
                       onClick={() => remove(entry.id)}
                     >
-                      <X size={12} strokeWidth={2.25} />
+                      <X width={12} height={12} strokeWidth={1.5} />
                     </button>
                   </motion.li>
                 ))}
@@ -597,7 +605,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
               disabled={disabled}
               onClick={() => pickerRef.current?.click()}
             >
-              <Paperclip size={18} strokeWidth={1.75} />
+              <Paperclip width={18} height={18} strokeWidth={1.5} />
             </button>
             <input
               ref={pickerRef}
@@ -656,7 +664,7 @@ export const ChatComposer = forwardRef<ChatComposerHandle, ChatComposerProps>(fu
                 }
                 transition={reduced ? { duration: duration.fast } : spring.snappy}
               >
-                <ArrowUp size={16} strokeWidth={2.25} />
+                <ArrowUp width={16} height={16} strokeWidth={1.5} />
               </motion.span>
             </AnimatePresence>
           </button>
@@ -1028,7 +1036,12 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
                                   target="_blank"
                                   rel="noreferrer"
                                 >
-                                  <FileText size={18} strokeWidth={1.75} aria-hidden="true" />
+                                  <FileText
+                                    width={18}
+                                    height={18}
+                                    strokeWidth={1.5}
+                                    aria-hidden="true"
+                                  />
                                   <span className={styles.fileText}>
                                     <span className={styles.fileName}>{file.name}</span>
                                     {file.size !== undefined && (
@@ -1130,7 +1143,12 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
                                           className={styles.retry}
                                           onClick={() => onRetry(message.id)}
                                         >
-                                          <RotateCw size={12} strokeWidth={2} aria-hidden="true" />
+                                          <RotateCw
+                                            width={12}
+                                            height={12}
+                                            strokeWidth={1.5}
+                                            aria-hidden="true"
+                                          />
                                           {t.retry}
                                         </button>
                                       )}
@@ -1238,7 +1256,7 @@ export const ChatThread = forwardRef<ChatThreadHandle, ChatThreadProps>(function
                 layout={reduced ? false : 'position'}
                 transition={spring.morph}
               >
-                <ArrowDown size={14} strokeWidth={2} aria-hidden="true" />
+                <ArrowDown width={14} height={14} strokeWidth={1.5} aria-hidden="true" />
               </motion.span>
               <AnimatePresence initial={false} mode="popLayout">
                 <motion.span
@@ -1363,7 +1381,7 @@ function ReactionPicker({
         aria-controls={open ? id : undefined}
         onClick={toggle}
       >
-        <SmilePlus size={16} strokeWidth={1.75} />
+        <SmilePlus width={16} height={16} strokeWidth={1.5} />
       </button>
       <AnimatePresence>
         {open && (

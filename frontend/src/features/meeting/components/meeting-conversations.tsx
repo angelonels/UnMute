@@ -1,7 +1,7 @@
 import { AnimatePresence, m } from 'motion/react';
 import { AICompanion } from '../../../components/ai-companion';
 import { useEffect, useRef, useState, type KeyboardEvent, type Ref } from 'react';
-import { ArrowDown, ArrowUp, Users } from 'lucide-react';
+import { ArrowDown, ArrowUp, Group as Users } from 'iconoir-react';
 import { ChatThread } from '../../../components/arc/chat-thread/chat-thread';
 import { initials, type MeetingMessage, type Participant } from '../meeting-model';
 
@@ -53,7 +53,7 @@ export function MessageComposer({
             onClick={onSend}
             className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30 motion-safe:transition-transform motion-safe:duration-160 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.97]"
           >
-            <ArrowUp size={17} aria-hidden="true" />
+            <ArrowUp width={17} height={17} aria-hidden="true" />
           </button>
         </div>
       </div>
@@ -79,7 +79,7 @@ export function MeetingChat({
   return (
     <>
       <div className="mx-5 mb-1 flex items-center gap-2 py-1 text-[11px] text-muted">
-        <Users size={13} aria-hidden="true" />
+        <Users width={13} height={13} aria-hidden="true" />
         Everyone
       </div>
       <div className="min-h-0 flex-1 [--accent:var(--primary)] [--accent-foreground:var(--on-primary)]">
@@ -198,7 +198,8 @@ export function AIConversation({
                     >
                       {prompt}
                       <ArrowUp
-                        size={14}
+                        width={14}
+                        height={14}
                         strokeWidth={1.5}
                         className="shrink-0 rotate-45 opacity-50 group-hover:opacity-100"
                         aria-hidden="true"
@@ -256,7 +257,7 @@ export function AIConversation({
             bottomRef.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
           }}
         >
-          <ArrowDown size={12} aria-hidden="true" />
+          <ArrowDown width={12} height={12} aria-hidden="true" />
           Latest answer
         </button>
       )}

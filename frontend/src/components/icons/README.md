@@ -1,5 +1,7 @@
-# Meeting icons
+# Interface icons
 
-Message Circle is adapted from the MIT-licensed [Lucide Animated source](https://lucide-animated.com/r/message-circle.json). The original SVG and controlled animation API are retained. UnMute uses a 220ms transform confirmation when opening chat with a pointer, a 1.65px stroke, a semantic span, and a reduced-motion branch. Keyboard activation is immediate. The existing Motion dependency supplies the animation runtime.
+Interface icons use the MIT-licensed [Iconoir React library](https://iconoir.com/docs/packages/iconoir-react) with its 24px grid and a consistent 1.5px stroke. Explicit dimensions preserve optical alignment in each control. Off/disabled media icons keep their semantic error colors.
 
-The remaining controls use Lucide React with a shared optical size and stroke. Frequent device actions stay immediate. Off, sharing, and raised-hand states combine semantic colour with a distinct icon and accessible label.
+The chat control wraps Iconoir’s ChatBubbleEmpty in a 220ms pointer acknowledgment using Motion. Keyboard activation and system reduced motion are immediate. Custom gallery/focus diagrams, the brand mark, and the autonomous 3D companion remain original UnMute artwork.
+
+Use Iconoir for new interface icons. Do not reintroduce Lucide. Keep icons decorative when the parent already supplies an accessible name.

@@ -2,26 +2,23 @@ import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { AICompanion } from '../../../components/ai-companion';
 import { MeetingLayoutIcon } from '../../../components/icons/meeting-layout';
 import { m } from 'motion/react';
-import {
-  MessageCircleIcon,
-  type MessageCircleIconHandle,
-} from '../../../components/icons/message-circle';
+import { ChatBubbleIcon, type ChatBubbleIconHandle } from '../../../components/icons/chat-bubble';
 import SegmentedControl from '../../../components/arc/segmented-control/segmented-control';
 import { useRef, useState, useSyncExternalStore } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
-  Captions,
-  Hand,
-  Mic,
-  MicOff,
-  MonitorUp,
-  PhoneOff,
-  Users,
-  Video,
-  VideoOff,
+  ClosedCaptionsTag as Captions,
+  OpenSelectHandGesture as Hand,
+  Microphone as Mic,
+  MicrophoneMute as MicOff,
+  Presentation as MonitorUp,
+  PhoneDisabled as PhoneOff,
+  Group as Users,
+  VideoCamera as Video,
+  VideoCameraOff as VideoOff,
   Wifi,
   WifiOff,
-} from 'lucide-react';
+} from 'iconoir-react';
 import { useLocalMedia, useMicrophoneLevel } from '../../media';
 import { Brand } from '../../../components/brand';
 import { ThemeToggle } from '../../../components/theme-toggle';
@@ -94,7 +91,7 @@ export function MeetingPage({
   const [peopleSearch, setPeopleSearch] = useState('');
   const [ended, setEnded] = useState(false);
   const aiTrigger = useRef<HTMLButtonElement>(null);
-  const chatIcon = useRef<MessageCircleIconHandle>(null);
+  const chatIcon = useRef<ChatBubbleIconHandle>(null);
   const chatTrigger = useRef<HTMLButtonElement>(null);
   const peopleTrigger = useRef<HTMLButtonElement>(null);
   const [rightOpener, setRightOpener] = useState<'chat' | 'people'>('chat');
@@ -165,7 +162,7 @@ export function MeetingPage({
       <div className="grid min-h-svh place-items-center p-6">
         <main className="w-full max-w-md rounded-3xl bg-surface p-8 text-center shadow-shell">
           <span className="mx-auto grid size-16 place-items-center rounded-2xl bg-surface-muted text-muted">
-            <PhoneOff size={26} strokeWidth={1.5} aria-hidden="true" />
+            <PhoneOff width={26} height={26} strokeWidth={1.5} aria-hidden="true" />
           </span>
           <h1 className="mt-6 text-3xl font-medium tracking-[-0.04em]">You’ve left the preview.</h1>
           <p className="mt-3 text-sm leading-7 text-muted">A little space between conversations.</p>
@@ -281,7 +278,7 @@ export function MeetingPage({
                 setRightTab('people');
                 openPanel('right', true);
               }}
-              icon={<Users size={18} strokeWidth={1.65} aria-hidden="true" />}
+              icon={<Users width={18} height={18} strokeWidth={1.5} aria-hidden="true" />}
             >
               <span className="tabular-nums">{people.length}</span>
             </MeetingControl>
@@ -298,7 +295,7 @@ export function MeetingPage({
                 setRightTab('chat');
                 openPanel('right', !panels.right);
               }}
-              icon={<MessageCircleIcon ref={chatIcon} size={18} aria-hidden="true" />}
+              icon={<ChatBubbleIcon ref={chatIcon} size={18} aria-hidden="true" />}
             >
               <span className="hidden min-[420px]:inline">Chat</span>
             </MeetingControl>
@@ -311,9 +308,9 @@ export function MeetingPage({
           role="alert"
         >
           {connection === 'offline' ? (
-            <WifiOff size={14} aria-hidden="true" />
+            <WifiOff width={14} height={14} aria-hidden="true" />
           ) : (
-            <Wifi size={14} aria-hidden="true" />
+            <Wifi width={14} height={14} aria-hidden="true" />
           )}
           {connection === 'offline'
             ? 'Disconnected. Chat is paused.'
@@ -491,9 +488,9 @@ export function MeetingPage({
             onClick={() => toggle('microphone')}
             icon={
               media.microphone ? (
-                <Mic size={20} strokeWidth={1.65} aria-hidden="true" />
+                <Mic width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
               ) : (
-                <MicOff size={20} strokeWidth={1.65} aria-hidden="true" />
+                <MicOff width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
               )
             }
           >
@@ -522,9 +519,9 @@ export function MeetingPage({
             onClick={() => toggle('camera')}
             icon={
               media.camera ? (
-                <Video size={20} strokeWidth={1.65} aria-hidden="true" />
+                <Video width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
               ) : (
-                <VideoOff size={20} strokeWidth={1.65} aria-hidden="true" />
+                <VideoOff width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
               )
             }
           >
@@ -539,7 +536,7 @@ export function MeetingPage({
             disabled={localMedia.pending.screen}
             aria-busy={localMedia.pending.screen}
             onClick={() => toggle('sharing')}
-            icon={<MonitorUp size={20} strokeWidth={1.65} aria-hidden="true" />}
+            icon={<MonitorUp width={20} height={20} strokeWidth={1.5} aria-hidden="true" />}
           >
             <span className="hidden lg:inline">{media.sharing ? 'Sharing' : 'Share'}</span>
           </MeetingControl>
@@ -549,7 +546,7 @@ export function MeetingPage({
             title={media.hand ? 'Lower hand' : 'Raise hand'}
             tone={media.hand ? 'warning' : 'neutral'}
             onClick={() => toggle('hand')}
-            icon={<Hand size={20} strokeWidth={1.65} aria-hidden="true" />}
+            icon={<Hand width={20} height={20} strokeWidth={1.5} aria-hidden="true" />}
           />
           <MeetingControl
             aria-label={media.captions ? 'Hide captions' : 'Show captions'}
@@ -557,7 +554,7 @@ export function MeetingPage({
             title="Captions"
             tone={media.captions ? 'primary' : 'neutral'}
             onClick={() => toggle('captions')}
-            icon={<Captions size={20} strokeWidth={1.65} aria-hidden="true" />}
+            icon={<Captions width={20} height={20} strokeWidth={1.5} aria-hidden="true" />}
           />
           <button
             type="button"
@@ -569,7 +566,7 @@ export function MeetingPage({
             }}
             className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-2.5 text-xs font-medium text-white dark:text-canvas"
           >
-            <PhoneOff size={20} strokeWidth={1.65} aria-hidden="true" />
+            <PhoneOff width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
             <span className="hidden sm:inline">Leave</span>
           </button>
         </div>
