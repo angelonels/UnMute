@@ -11,10 +11,13 @@ import {
   Wifi,
 } from 'iconoir-react';
 import { SelectPicker } from '../../../components/select-picker';
+import type { DemoAIScenario } from '../demo-data';
 import type { Connection, Participant } from '../meeting-model';
 
 export function DemoControls({
   keyboard,
+  aiScenario,
+  onAIScenario,
   captureMode,
   onCaptureMode,
   onEndShare,
@@ -28,6 +31,8 @@ export function DemoControls({
   onReset,
 }: {
   keyboard: boolean;
+  aiScenario: DemoAIScenario;
+  onAIScenario: (value: DemoAIScenario) => void;
   captureMode: string;
   onCaptureMode: (value: string) => void;
   onEndShare: () => void;
@@ -128,6 +133,23 @@ export function DemoControls({
               onValueChange={(value) => {
                 if (value === 'ready' || value === 'reconnecting' || value === 'offline')
                   onConnection(value);
+              }}
+            />
+          </div>
+          <div>
+            <p className="mb-2 text-xs font-medium">AI response</p>
+            <SelectPicker
+              label="Demo AI response"
+              icon={<AudioLines width={17} height={17} />}
+              value={aiScenario}
+              options={[
+                { value: 'normal', label: 'Stream normally' },
+                { value: 'interrupted', label: 'Interrupt response' },
+                { value: 'empty', label: 'Empty response' },
+              ]}
+              onValueChange={(value) => {
+                if (value === 'normal' || value === 'interrupted' || value === 'empty')
+                  onAIScenario(value);
               }}
             />
           </div>

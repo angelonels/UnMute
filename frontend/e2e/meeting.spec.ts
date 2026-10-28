@@ -24,7 +24,7 @@ test('development room supports local controls, pinning, sharing, and chats', as
   await page.getByRole('button', { name: 'Open UnMute AI', exact: true }).click();
   await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();
   await expect(page.getByRole('log', { name: 'Private AI conversation' })).toContainText(
-    'Example answer',
+    'A clearer meeting space',
   );
   await page.getByRole('button', { name: 'Open meeting chat', exact: true }).click();
   await page
@@ -142,4 +142,92 @@ test('local capture renders, stops tracks, handles denial and browser-ended shar
     'false',
   );
   await page.screenshot({ path: info.outputPath('media-permission-error.png') });
+});
+
+test('AI streams, stops without losing partial text, retries and retains drafts', async ({
+  page,
+}, info) => {
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await page.getByRole('button', { name: 'Open UnMute AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Summarize the discussion', exact: true }).click();
+  const log = page.getByRole('log', { name: 'Private AI conversation' });
+  await expect(log).toHaveAttribute('aria-busy', 'true');
+  await expect(log.getByRole('article')).toContainText('A clearer meeting space');
+  await page.getByRole('button', { name: 'Stop response', exact: true }).click();
+  await expect(log).toHaveAttribute('aria-busy', 'false');
+  await expect(log).toContainText('Stopped');
+  await page.getByRole('button', { name: 'Try again', exact: true }).click();
+  await expect(log).toHaveAttribute('aria-busy', 'false', { timeout: 15000 });
+  await expect(log.getByRole('article')).toHaveCount(1);
+  await expect(log).toContainText('sample discussion');
+  await page.getByRole('textbox', { name: 'Ask UnMute AI', exact: true }).fill('A follow-up draft');
+  await page.getByRole('button', { name: 'Close UnMute AI', exact: true }).click();
+  await page.getByRole('button', { name: 'Open UnMute AI', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Ask UnMute AI', exact: true })).toHaveValue(
+    'A follow-up draft',
+  );
+  await page.screenshot({ path: info.outputPath('ai-stream-complete.png'), fullPage: true });
+});
+
+test('device choice survives off/on and a late capture is stopped after leaving', async ({
+  page,
+}, info) => {
+  await page.addInitScript(() => {
+    const tracks: MediaStreamTrack[] = [];
+    const requested: (MediaTrackConstraints | boolean | undefined)[] = [];
+    let resolvePending: ((stream: MediaStream) => void) | undefined;
+    Object.defineProperty(window, '__mediaFixture', {
+      value: {
+        tracks,
+        requested,
+        resolve: () => {
+          const stream = document.createElement('canvas').captureStream();
+          tracks.push(...stream.getTracks());
+          resolvePending?.(stream);
+        },
+      },
+    });
+    Object.defineProperty(navigator.mediaDevices, 'enumerateDevices', {
+      value: async () => [
+        { kind: 'videoinput', deviceId: 'external-camera', label: 'External camera', groupId: '' },
+      ],
+    });
+    Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+      value: (constraints: MediaStreamConstraints) => {
+        requested.push(constraints.video);
+        if (requested.length === 3)
+          return new Promise<MediaStream>((resolve) => {
+            resolvePending = resolve;
+          });
+        const stream = document.createElement('canvas').captureStream();
+        tracks.push(...stream.getTracks());
+        return Promise.resolve(stream);
+      },
+    });
+  });
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await page.getByRole('button', { name: 'Device settings', exact: true }).click();
+  await page.getByRole('combobox', { name: 'camera input' }).click();
+  await page.getByRole('option', { name: 'External camera', exact: true }).click();
+  await page.getByRole('button', { name: 'Close device settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Camera on', exact: true }).click();
+  await page.getByRole('button', { name: 'Camera off', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Camera on', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => Reflect.get(window, '__mediaFixture').requested[1])).toEqual({
+    deviceId: { exact: 'external-camera' },
+  });
+  await page.getByRole('button', { name: 'Camera on', exact: true }).click();
+  await page.getByRole('button', { name: 'Camera off', exact: true }).click();
+  await page.getByRole('button', { name: 'Leave meeting preview', exact: true }).click();
+  await page.evaluate(() => Reflect.get(window, '__mediaFixture').resolve());
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Reflect.get(window, '__mediaFixture').tracks.every(
+          (track: MediaStreamTrack) => track.readyState === 'ended',
+        ),
+      ),
+    )
+    .toBe(true);
+  await page.screenshot({ path: info.outputPath('late-capture-stopped.png') });
 });

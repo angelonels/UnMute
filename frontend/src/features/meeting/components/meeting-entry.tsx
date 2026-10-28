@@ -1,3 +1,4 @@
+import type { AIStreamSource } from '../ai-stream';
 import { useState } from 'react';
 import { authClient } from '../../../api/auth-client';
 import { AuthPage } from '../../auth';
@@ -7,7 +8,9 @@ export function MeetingEntry({
   demo,
   microphone,
   camera,
+  aiSource,
 }: {
+  aiSource?: AIStreamSource;
   demo: boolean;
   microphone: boolean;
   camera: boolean;
@@ -19,6 +22,7 @@ export function MeetingEntry({
   return (
     <MeetingPage
       key={revision}
+      aiSource={aiSource}
       userName={developmentDemo ? 'Alex Morgan' : (session?.user.name ?? 'You')}
       demo={developmentDemo}
       initialMicrophone={microphone}

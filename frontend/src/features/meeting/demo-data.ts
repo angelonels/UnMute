@@ -1,3 +1,4 @@
+import type { AIStreamSource } from './ai-stream';
 import type { MeetingMessage, Participant } from './meeting-model';
 
 const names = [
@@ -59,6 +60,57 @@ export const demoMessages: MeetingMessage[] = [
 ];
 export function demoAnswer(prompt: string) {
   if (/action|next|task/i.test(prompt))
-    return 'Example answer • demo notes\n\nMaya: refine the meeting layout.\nTheo: review the frontend interaction states.\nAmara: bring accessibility notes to the next review.\n\nThese are sample action items, not a live transcript.';
-  return 'Example answer • demo notes\n\nThe team is exploring a quieter meeting experience. The current direction keeps people at the centre, puts supporting tools in side panels, and makes control states clear.\n\nThe next step is to review the layout and accessibility together. This response uses the sample discussion only.';
+    return '### Next steps\n\n- **Maya** · Refine the meeting layout.\n- **Theo** · Review the frontend interaction states.\n- **Amara** · Bring accessibility notes to the next review.\n\nFrom the sample discussion.';
+  return '### A clearer meeting space\n\nThe team wants a quieter experience that keeps the conversation at the centre.\n\n- **People first.** Keep faces visible and supporting tools within reach.\n- **Clear controls.** Make microphone, camera and sharing states easy to read.\n- **A shared next step.** Review the layout and accessibility together.\n\nFrom the sample discussion.';
 }
+
+/** A development transport exercises the same reader, cancellation and partial-response path. */
+export type DemoAIScenario = 'normal' | 'interrupted' | 'empty';
+export const createDemoAIStream =
+  (scenario: DemoAIScenario): AIStreamSource =>
+  async ({ messages, signal }) => {
+    const answer = demoAnswer(messages.at(-1)?.content ?? '');
+    const chunks = answer.match(/.{1,18}(?:\s|$)|.{1,18}/gs) ?? [answer];
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let index = 0;
+    const clear = () => {
+      clearTimeout(timer);
+      signal.removeEventListener('abort', abort);
+    };
+    let abort = () => {};
+    return new ReadableStream<string>({
+      start(controller) {
+        abort = () => {
+          clear();
+          controller.error(new DOMException('Stopped', 'AbortError'));
+        };
+        signal.addEventListener('abort', abort, { once: true });
+        const next = () => {
+          if (signal.aborted) {
+            abort();
+            return;
+          }
+          if (scenario === 'interrupted' && index === 4) {
+            clear();
+            controller.error(new Error('Simulated interruption'));
+            return;
+          }
+          if (scenario === 'empty') {
+            clear();
+            controller.close();
+            return;
+          }
+          const chunk = chunks[index++];
+          if (chunk === undefined) {
+            clear();
+            controller.close();
+            return;
+          }
+          controller.enqueue(chunk);
+          timer = setTimeout(next, 65);
+        };
+        timer = setTimeout(next, 400);
+      },
+      cancel: clear,
+    });
+  };

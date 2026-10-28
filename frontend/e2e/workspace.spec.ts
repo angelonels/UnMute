@@ -66,7 +66,8 @@ test('workspace panels and meeting preview preserve keyboard access', async ({
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   }
-  await expect(preview.getByRole('status')).toContainText('stays on this device');
+  await expect(preview.getByRole('status')).toContainText('Local preview');
+  await expect(preview.getByLabel('Your camera video')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('meeting-preview.png'), fullPage: true });
   await preview.getByRole('button', { name: 'Back to workspace' }).click();
   await expect(start).toBeFocused();

@@ -70,7 +70,7 @@ export function MeetingPanel({
             transition: { duration: keyboard ? 0 : 0.15, ease: [0.23, 1, 0.32, 1] },
           }}
           transition={{ duration: keyboard ? 0 : reduced ? 0.15 : 0.24, ease: [0.23, 1, 0.32, 1] }}
-          className={`flex min-h-0 shrink-0 flex-col overflow-hidden rounded-[1.5rem] border border-transparent bg-surface-raised shadow-shell ${modal ? `fixed inset-y-3 z-50 w-[min(23rem,calc(100%-1.5rem))] ${side === 'left' ? 'left-3' : 'right-3'}` : 'relative z-20 w-76'}`}
+          className={`flex min-h-0 shrink-0 flex-col overflow-hidden rounded-[1.5rem] border border-transparent bg-surface-raised shadow-shell ${modal ? `fixed inset-y-3 z-50 w-[min(23rem,calc(100%-1.5rem))] ${side === 'left' ? 'left-3' : 'right-3'}` : side === 'left' ? 'relative z-20 w-88' : 'relative z-20 w-76'}`}
         >
           <header className="flex shrink-0 items-start justify-between gap-2 px-5 pt-5 pb-4">
             <div>

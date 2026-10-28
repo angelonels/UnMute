@@ -4,7 +4,7 @@ import { MeetingLayoutIcon } from '../../../components/icons/meeting-layout';
 import { m } from 'motion/react';
 import { ChatBubbleIcon, type ChatBubbleIconHandle } from '../../../components/icons/chat-bubble';
 import SegmentedControl from '../../../components/arc/segmented-control/segmented-control';
-import { useRef, useState, useSyncExternalStore } from 'react';
+import { useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   ClosedCaptionsTag as Captions,
@@ -29,11 +29,19 @@ import {
   type MeetingMessage,
   type Participant,
 } from '../meeting-model';
-import { demoAnswer, demoMessages, demoParticipants } from '../demo-data';
+import {
+  createDemoAIStream,
+  type DemoAIScenario,
+  demoMessages,
+  demoParticipants,
+} from '../demo-data';
 import { MeetingControl } from './meeting-control';
 import { MeetingStage } from './meeting-stage';
 import { MeetingPanel } from './meeting-panel';
-import { AIConversation, MeetingChat, PeopleList } from './meeting-conversations';
+import { MeetingChat, PeopleList } from './meeting-conversations';
+import { AIConversation } from './ai-conversation';
+import { useAIConversation } from '../use-ai-conversation';
+import type { AIStreamSource } from '../ai-stream';
 import { DeviceSettings } from './device-settings';
 import { DemoControls } from './demo-controls';
 
@@ -50,7 +58,9 @@ export function MeetingPage({
   onRestart,
   initialMicrophone,
   initialCamera,
+  aiSource,
 }: {
+  aiSource?: AIStreamSource;
   userName: string;
   demo: boolean;
   onRestart: () => void;
@@ -85,11 +95,17 @@ export function MeetingPage({
   const [messages, setMessages] = useState<MeetingMessage[]>(() =>
     import.meta.env.DEV && demo ? demoMessages : [],
   );
-  const [aiMessages, setAiMessages] = useState<MeetingMessage[]>([]);
+
   const [chatDraft, setChatDraft] = useState('');
-  const [aiDraft, setAiDraft] = useState('');
+
   const [peopleSearch, setPeopleSearch] = useState('');
   const [ended, setEnded] = useState(false);
+  const [aiScenario, setAiScenario] = useState<DemoAIScenario>('normal');
+  const developmentAISource = useMemo(
+    () => (import.meta.env.DEV && demo ? createDemoAIStream(aiScenario) : undefined),
+    [demo, aiScenario],
+  );
+  const ai = useAIConversation(aiSource ?? developmentAISource, connection === 'ready' && !ended);
   const aiTrigger = useRef<HTMLButtonElement>(null);
   const chatIcon = useRef<ChatBubbleIconHandle>(null);
   const chatTrigger = useRef<HTMLButtonElement>(null);
@@ -139,23 +155,6 @@ export function MeetingPage({
       ].slice(-200),
     );
     setChatDraft('');
-  }
-  function sendAI(prompt = aiDraft) {
-    const text = prompt.trim();
-    if (!text || connection !== 'ready') return;
-    const now = new Date().toISOString();
-    const answer =
-      import.meta.env.DEV && demo
-        ? demoAnswer(text)
-        : 'AI is not connected in this preview. Your prompt stays in this browser.';
-    setAiMessages((previous) =>
-      [
-        ...previous,
-        { id: crypto.randomUUID(), authorId: 'self', text, createdAt: now },
-        { id: crypto.randomUUID(), authorId: 'assistant', text: answer, createdAt: now },
-      ].slice(-100),
-    );
-    setAiDraft('');
   }
   if (ended)
     return (
@@ -217,6 +216,8 @@ export function MeetingPage({
           {import.meta.env.DEV && demo && (
             <DemoControls
               keyboard={keyboard}
+              aiScenario={aiScenario}
+              onAIScenario={setAiScenario}
               captureMode={captureMode}
               onCaptureMode={(value) => {
                 localMedia.stopAll();
@@ -241,24 +242,14 @@ export function MeetingPage({
             keyboard={keyboard}
             error={localMedia.error}
             devices={localMedia.devices}
+            selectedDevices={localMedia.selectedDevices}
             streams={localMedia.streams}
             pending={localMedia.pending}
             onSelect={localMedia.start}
           />
           <ThemeToggle />
         </div>
-        <div className="order-3 col-span-2 flex min-h-11 items-center justify-between gap-2 lg:order-2 lg:col-span-1 lg:gap-4">
-          <MeetingControl
-            ref={aiTrigger}
-            aria-label="Open UnMute AI"
-            aria-expanded={showLeft}
-            aria-controls="meeting-ai"
-            tone={showLeft ? 'primary' : 'neutral'}
-            onClick={() => openPanel('left', !showLeft)}
-            icon={<AICompanion size={36} dimensional active={showLeft && !keyboard} />}
-          >
-            <span className="hidden min-[420px]:inline">UnMute AI</span>
-          </MeetingControl>
+        <div className="order-3 col-span-2 flex min-h-11 items-center justify-end gap-2 lg:order-2 lg:col-span-1">
           <SegmentedControl
             label="Meeting layout"
             options={[
@@ -268,38 +259,6 @@ export function MeetingPage({
             value={layout}
             onValueChange={(value) => setLayout(value === 'focus' ? 'focus' : 'gallery')}
           />
-          <div className="flex gap-2">
-            <MeetingControl
-              ref={peopleTrigger}
-              aria-label="Open participants"
-              aria-expanded={panels.right && rightTab === 'people'}
-              onClick={() => {
-                setRightOpener('people');
-                setRightTab('people');
-                openPanel('right', true);
-              }}
-              icon={<Users width={18} height={18} strokeWidth={1.5} aria-hidden="true" />}
-            >
-              <span className="tabular-nums">{people.length}</span>
-            </MeetingControl>
-            <MeetingControl
-              ref={chatTrigger}
-              aria-label="Open meeting chat"
-              aria-expanded={panels.right}
-              aria-controls="meeting-chat"
-              tone={panels.right ? 'primary' : 'neutral'}
-              onClick={() => {
-                if (!panels.right && !keyboard) chatIcon.current?.startAnimation();
-                else chatIcon.current?.stopAnimation();
-                setRightOpener('chat');
-                setRightTab('chat');
-                openPanel('right', !panels.right);
-              }}
-              icon={<ChatBubbleIcon ref={chatIcon} size={18} aria-hidden="true" />}
-            >
-              <span className="hidden min-[420px]:inline">Chat</span>
-            </MeetingControl>
-          </div>
         </div>
       </header>
       {connection !== 'ready' && (
@@ -324,7 +283,7 @@ export function MeetingPage({
           onOpenChange={(open) => openPanel('left', open)}
           side="left"
           title="UnMute AI"
-          companionExpanded={aiMessages.length > 0}
+          companionExpanded={ai.messages.length > 0}
           description="Only visible to you"
           modal={width < 1024}
           trigger={aiTrigger}
@@ -334,11 +293,7 @@ export function MeetingPage({
           <div id="meeting-ai" className="flex min-h-0 flex-1 flex-col">
             <AIConversation
               keyboard={keyboard}
-              messages={aiMessages}
-              draft={aiDraft}
-              onDraft={setAiDraft}
-              onSend={() => sendAI()}
-              onSuggestion={sendAI}
+              conversation={ai}
               demo={demo}
               disabled={connection !== 'ready'}
             />
@@ -473,11 +428,58 @@ export function MeetingPage({
           </button>
         </div>
       )}
-      <footer className="flex shrink-0 flex-col pt-3">
+      <footer className="grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-x-1 gap-y-2 pt-3 sm:gap-x-3">
+        <div className="col-start-1 row-start-1">
+          <MeetingControl
+            ref={aiTrigger}
+            aria-label="Open UnMute AI"
+            aria-expanded={showLeft}
+            aria-controls="meeting-ai"
+            tone={showLeft ? 'primary' : 'neutral'}
+            onClick={() => openPanel('left', !showLeft)}
+            icon={<AICompanion size={36} dimensional active={showLeft && !keyboard} />}
+          >
+            <span className="hidden min-[420px]:inline">UnMute AI</span>
+          </MeetingControl>
+        </div>
+        <div className="col-start-3 row-start-1">
+          <div className="flex gap-2">
+            <MeetingControl
+              ref={peopleTrigger}
+              aria-label="Open participants"
+              aria-expanded={panels.right && rightTab === 'people'}
+              onClick={() => {
+                setRightOpener('people');
+                setRightTab('people');
+                openPanel('right', true);
+              }}
+              icon={<Users width={18} height={18} strokeWidth={1.5} aria-hidden="true" />}
+            >
+              <span className="tabular-nums">{people.length}</span>
+            </MeetingControl>
+            <MeetingControl
+              ref={chatTrigger}
+              aria-label="Open meeting chat"
+              aria-expanded={panels.right && rightTab === 'chat'}
+              aria-controls="meeting-chat"
+              tone={panels.right && rightTab === 'chat' ? 'primary' : 'neutral'}
+              onClick={() => {
+                if (!panels.right && !keyboard) chatIcon.current?.startAnimation();
+                else chatIcon.current?.stopAnimation();
+                setRightOpener('chat');
+                setRightTab('chat');
+                openPanel('right', !(panels.right && rightTab === 'chat'));
+              }}
+              icon={<ChatBubbleIcon ref={chatIcon} size={18} aria-hidden="true" />}
+            >
+              <span className="hidden min-[420px]:inline">Chat</span>
+            </MeetingControl>
+          </div>
+        </div>
         <span role="status" className="sr-only">
           {pinnedId ? 'Your pin changes only your view.' : ''}
         </span>
-        <div className="mx-auto flex max-w-full flex-wrap items-center justify-center gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
+        <div className="col-span-3 row-start-2 mx-auto flex max-w-full flex-wrap items-center justify-center min-[1100px]:col-span-1 min-[1100px]:col-start-2 min-[1100px]:row-start-1 gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
           <MeetingControl
             aria-label={`Microphone ${media.microphone ? 'on' : 'off'}`}
             aria-pressed={media.microphone}
@@ -561,6 +563,7 @@ export function MeetingPage({
             aria-label="Leave meeting preview"
             title="Leave meeting preview"
             onClick={() => {
+              ai.stop();
               localMedia.stopAll();
               setEnded(true);
             }}

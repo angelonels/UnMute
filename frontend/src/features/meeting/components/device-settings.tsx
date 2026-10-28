@@ -14,6 +14,7 @@ export function DeviceSettings({
   keyboard,
   error,
   devices,
+  selectedDevices,
   streams,
   pending,
   onSelect,
@@ -21,6 +22,7 @@ export function DeviceSettings({
   keyboard: boolean;
   error: string;
   devices: MediaDeviceInfo[];
+  selectedDevices: Partial<Record<MediaSource, string>>;
   streams: Record<MediaSource, MediaStream | null>;
   pending: Record<MediaSource, boolean>;
   onSelect: (source: MediaSource, deviceId?: string) => void;
@@ -61,7 +63,7 @@ export function DeviceSettings({
                   device.label || `${source === 'camera' ? 'Camera' : 'Microphone'} ${index + 1}`,
               })),
           ];
-          const deviceId = track?.getSettings().deviceId;
+          const deviceId = selectedDevices[source];
           const selected =
             options.find((option) => option.value === deviceId)?.value ?? 'system-default';
           const label = source === 'camera' ? 'Camera' : 'Microphone';

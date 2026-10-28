@@ -1,5 +1,5 @@
 import { syntheticCapture } from './demo-capture';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Effect } from 'effect';
 
 export type MediaSource = 'camera' | 'microphone' | 'screen';
@@ -42,6 +42,8 @@ function capture(source: MediaSource, deviceId?: string, mode = 'native') {
 /** Owns local capture resources. Late permission responses never outlive their owner. */
 export function useLocalMedia(initialMicrophone = false, initialCamera = false, mode = 'native') {
   const resources = useRef<Streams>(emptyStreams());
+  const selected = useRef<Partial<Record<MediaSource, string>>>({});
+  const [selectedDevices, setSelectedDevices] = useState<Partial<Record<MediaSource, string>>>({});
   const generations = useRef({ camera: 0, microphone: 0, screen: 0 });
   const [streams, setStreams] = useState<Streams>(emptyStreams);
   const [pending, setPending] = useState({ camera: false, microphone: false, screen: false });
@@ -53,7 +55,19 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
       Effect.match(
         Effect.tryPromise(() => navigator.mediaDevices.enumerateDevices()),
         {
-          onSuccess: setDevices,
+          onSuccess: (available) => {
+            setDevices(available);
+            for (const source of ['camera', 'microphone'] as const) {
+              const id = selected.current[source];
+              if (id && !available.some((device) => device.deviceId === id)) {
+                delete selected.current[source];
+                setSelectedDevices((previous) => ({ ...previous, [source]: undefined }));
+                setError(
+                  `${source === 'camera' ? 'Camera' : 'Microphone'} disconnected. System default will be used next.`,
+                );
+              }
+            }
+          },
           onFailure: () =>
             setError('Device list could not be refreshed. Default inputs are still available.'),
         },
@@ -84,6 +98,8 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
               stop(stream);
               return;
             }
+            selected.current[source] = deviceId;
+            setSelectedDevices((previous) => ({ ...previous, [source]: deviceId }));
             stop(resources.current[source]);
             resources.current[source] = stream;
             setStreams((previous) => ({ ...previous, [source]: stream }));
@@ -107,6 +123,10 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
   const stopAll = useCallback(() => {
     for (const source of ['camera', 'microphone', 'screen'] as const) end(source);
   }, [end]);
+  const captureInitial = useEffectEvent(() => {
+    if (initialCamera) start('camera');
+    if (initialMicrophone) start('microphone');
+  });
   useEffect(() => {
     refreshDevices();
     const mediaDevices = navigator.mediaDevices;
@@ -117,8 +137,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
     // Capture is asynchronous; do not start a request for a discarded Strict Mode mount.
     queueMicrotask(() => {
       if (!active) return;
-      if (initialCamera) start('camera');
-      if (initialMicrophone) start('microphone');
+      captureInitial();
     });
     return () => {
       active = false;
@@ -129,9 +148,10 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
         ownedResources[source] = null;
       }
     };
-  }, [initialCamera, initialMicrophone, refreshDevices, start]);
+  }, [refreshDevices]);
   return {
     streams,
+    selectedDevices,
     pending,
     error,
     devices,
@@ -139,7 +159,8 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
     end,
     stopAll,
     clearError: () => setError(''),
-    toggle: (source: MediaSource) => (resources.current[source] ? end(source) : start(source)),
+    toggle: (source: MediaSource) =>
+      resources.current[source] ? end(source) : start(source, selected.current[source]),
   };
 }
 
