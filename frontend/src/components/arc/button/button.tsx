@@ -236,12 +236,19 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
         onKeyDownCapture?.(event);
       }}
       onPointerDownCapture={(event) => {
-        setKeyboard(false);
         onPointerDownCapture?.(event);
       }}
       // Loading keeps the button focusable (a disabled button would drop keyboard focus mid-action) and swallows presses instead.
       aria-disabled={loading || props['aria-disabled'] || undefined}
-      onClick={loading ? (event) => event.preventDefault() : onClick}
+      onClick={(event) => {
+        if (loading) {
+          event.preventDefault();
+          return;
+        }
+        // Keep the pointer-down target mounted until its click has been dispatched.
+        if (event.detail > 0) setKeyboard(false);
+        onClick?.(event);
+      }}
     >
       {keyboard ? (
         loading ? (
