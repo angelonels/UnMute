@@ -75,10 +75,7 @@ export function MeetingPanel({
             <div>
               <Dialog.Title className="flex items-center gap-2 text-sm font-medium tracking-tight">
                 {title === 'UnMute AI' && (
-                  <AICompanion
-                    size={companionExpanded ? 48 : 28}
-                    label={companionExpanded ? 'UnMute AI companion' : undefined}
-                  />
+                  <AICompanion size={companionExpanded ? 48 : 28} className="pointer-events-none" />
                 )}
                 <span>{title}</span>
               </Dialog.Title>

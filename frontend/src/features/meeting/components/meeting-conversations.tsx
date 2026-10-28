@@ -136,7 +136,7 @@ export function AIConversation({
   const following = useRef(true);
   const [away, setAway] = useState(false);
   useEffect(() => {
-    if (following.current)
+    if (messages.length > 0 && following.current)
       bottomRef.current?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }, [messages]);
   return (
@@ -151,7 +151,7 @@ export function AIConversation({
         className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-4 [scrollbar-width:thin]"
       >
         {messages.length === 0 ? (
-          <div className="my-auto py-6">
+          <div className="my-auto shrink-0 py-6">
             <AICompanion
               size={104}
               active={false}
