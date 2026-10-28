@@ -1,0 +1,5 @@
+[
+  { "activity": "attentive", "attention": "composer", "at": 152976.69999998808 },
+  { "activity": "composing", "attention": "composer", "at": 153077.30000001192 },
+  { "activity": "wandering", "attention": "wandering", "at": 158072.30000001192 }
+]

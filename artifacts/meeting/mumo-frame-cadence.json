@@ -1,0 +1,19 @@
+{
+  "canvases": [
+    {
+      "height": 144,
+      "motion": "autonomous",
+      "width": 144
+    },
+    {
+      "height": 44,
+      "motion": "autonomous",
+      "width": 44
+    }
+  ],
+  "maxMs": 41.29999999998836,
+  "medianMs": 8.299999999988358,
+  "note": "Browser rAF cadence with visible Mumo canvases; desktop CPU throttled 4x, not GPU render timing or physical mobile performance",
+  "p95Ms": 9.39999999999418,
+  "samples": 60
+}
