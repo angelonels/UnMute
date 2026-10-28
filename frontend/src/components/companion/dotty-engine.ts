@@ -313,7 +313,10 @@ const STATES = {
     return {
       sy: 1 + 0.018 * b + stretch * 0.07,
       sx: 1 - 0.012 * b - stretch * 0.04,
-      oy: -stretch * 4,
+      oy: -stretch * 4 - Math.abs(Math.sin(t * 1.4)) * 1.5,
+      // Small excursions, a pause at each destination, then a buoyant return.
+      ox: 14 * Math.sin(t * 0.8) ** 3 + 3 * Math.sin(t * 2.1),
+      rot: 3 * Math.sin(t * 0.8),
     };
   },
   thinking(t: number): Partial<Pose> {
@@ -327,6 +330,7 @@ const STATES = {
     return {
       expr: 'thinking',
       gaze: { x: 0.55, y: -0.7 },
+      ox: 3 * Math.sin(t * 1.6),
       wob: 0.025,
       ws: 1.6,
       rot: -4,
@@ -351,6 +355,7 @@ const STATES = {
       return { k: 'ring', r: R * (1.08 + 0.5 * p), w: 3, o: 0.45 * (1 - p) };
     });
     return {
+      ox: 3 * Math.sin(t * 1.4),
       rot: 6 + 2 * Math.sin(t * 1.4),
       gaze: { x: 0.1, y: -0.1 },
       sy: 1 + 0.01 * Math.sin(t * 3),
@@ -363,7 +368,14 @@ const STATES = {
     const edge = Math.min(ph, 1 - ph);
     const impact = edge < 0.09 ? 1 - edge / 0.09 : 0;
     const sy = impact > 0 ? 1 - 0.2 * impact : 1 + 0.08 * Math.abs(1 - 2 * ph);
-    return { expr: 'happy', oy: -40 * h, sy, sx: 1 / sy, parts: [shadow(h)] };
+    return {
+      expr: 'happy',
+      ox: 8 * Math.sin(t * 1.8),
+      oy: -40 * h,
+      sy,
+      sx: 1 / sy,
+      parts: [shadow(h)],
+    };
   },
   celebrating(t: number): Partial<Pose> {
     const ph = (t % 2.4) / 2.4;
@@ -852,6 +864,8 @@ class Engine implements EngineHandle {
       this.pose.sx = 1;
       this.pose.sy = 1;
       this.pose.oy = 0;
+      this.pose.ox = 0;
+      this.pose.rot = 0;
     }
     let target: { x: number; y: number };
     if (this.opts.attention) target = { x: 0, y: this.opts.attention === 'composer' ? 1 : 0.35 };

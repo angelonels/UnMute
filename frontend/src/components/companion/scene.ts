@@ -274,7 +274,14 @@ export function createCompanionScene(
       // Normalize intrinsic outlines, not time-varying poses, so long ears fit without zoom pumping.
       const fit = Math.min(1, 1.1 / Math.max(...frame.radii));
       actor.scale.set(sx * fit, sy * fit, fit);
-      actor.position.set((pose.ox / 54) * fit, ((-pose.oy / 54) * 0.5 + (sy - 1)) * fit, 0);
+      // Attention retargets translation without snapping when typing interrupts an excursion.
+      actor.position.set(
+        options.reduced
+          ? 0
+          : THREE.MathUtils.damp(actor.position.x, (pose.ox / 54) * fit, 10, elapsed),
+        ((-pose.oy / 54) * 0.5 + (sy - 1)) * fit,
+        0,
+      );
       const turnPhase = time % 12;
       const turn = turnPhase > 10.6 ? (turnPhase - 10.6) / 1.4 : 0;
       const spin = turn * turn * (3 - 2 * turn) * Math.PI * 2;

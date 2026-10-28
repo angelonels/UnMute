@@ -15,7 +15,7 @@ export function CompanionHeader({
   return (
     <header
       data-companion-activity={behavior.activity}
-      className="relative shrink-0 border-b border-border/50 bg-primary/3 px-5 pt-2 pb-4"
+      className="relative shrink-0 border-b border-border/50 bg-primary/3 px-4 pt-1 pb-3"
     >
       <Dialog.Title className="sr-only">Mumo</Dialog.Title>
       <Dialog.Description className="sr-only">Your private meeting companion</Dialog.Description>
@@ -25,9 +25,9 @@ export function CompanionHeader({
       >
         <Xmark width={17} height={17} aria-hidden="true" />
       </Dialog.Close>
-      <div className="flex h-36 items-center justify-center [@media(max-height:700px)]:h-16">
+      <div className="flex h-24 items-center justify-center [@media(max-height:700px)]:h-16">
         <AICompanion
-          size={144}
+          size={112}
           className="[@media(max-height:700px)]:h-16! [@media(max-height:700px)]:w-16!"
           dimensional
           pokeable
