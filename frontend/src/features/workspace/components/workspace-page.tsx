@@ -1,3 +1,4 @@
+import { personInitials } from '../../../lib/person-initials';
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { ModalSurface } from '../../../components/modal-surface';
 import { useEffect } from 'react';
@@ -115,7 +116,7 @@ export function WorkspacePage({ user }: { user: User }) {
                 className="me-2 grid size-8 place-items-center rounded-full bg-surface-muted text-xs font-medium"
                 aria-label={`Signed in as ${user.name}`}
               >
-                {user.name.slice(0, 1).toUpperCase()}
+                {personInitials(user.name)}
               </span>
               <Drawer modal={false} open={sidePanelOpen} onOpenChange={setSidePanelOpen}>
                 <DrawerTrigger asChild>
@@ -302,7 +303,7 @@ function MeetingPreview({
       </Dialog.Description>
       <div className="relative mt-6 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-panel text-white">
         <span className="grid size-20 place-items-center rounded-full bg-white/15 text-3xl font-medium">
-          {user.name.slice(0, 1).toUpperCase()}
+          {personInitials(user.name)}
         </span>
         {localMedia.streams.camera && (
           <LocalVideo stream={localMedia.streams.camera} label="Your camera video" mirror />

@@ -158,7 +158,11 @@ export function PeopleList({
                 {initials(person.name)}
               </span>
               <div className="min-w-0 flex-1">
-                <p title={person.name} dir="auto" className="truncate text-xs font-medium">
+                <p
+                  title={person.name}
+                  dir="auto"
+                  className="text-xs font-medium [overflow-wrap:anywhere]"
+                >
                   {person.name}
                   {person.self ? ' (you)' : ''}
                 </p>

@@ -46,7 +46,7 @@ export function ParticipantTile({
       layoutDependency={reflowKey}
       transition={{ type: 'spring', stiffness: 420, damping: 42 }}
       aria-label={`${person.name}${person.self ? ', you' : ''}${speaking ? ', speaking' : ''}`}
-      className={`group relative flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-hidden [container-type:size] rounded-2xl border ${speaking ? 'border-success' : 'border-border/60'} ${stream ? 'text-white bg-black' : 'bg-surface text-text'}`}
+      className={`group relative flex h-full min-h-0 min-w-0 flex-1 flex-col items-center overflow-hidden [container-type:size] [container-name:tile] rounded-2xl border ${speaking ? 'border-success' : 'border-border/60'} ${stream ? 'text-white bg-black' : 'bg-surface text-text'}`}
     >
       {stream && (
         <>
@@ -87,12 +87,12 @@ function TileAvatar({
   animate: boolean;
 }) {
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden px-4">
+    <div className="flex min-h-0 w-full flex-1 flex-col items-center justify-center overflow-hidden px-4 [container-type:size]">
       <m.div
         layout={animate ? 'position' : false}
         layoutDependency={reflowKey}
         transition={{ type: 'spring', stiffness: 420, damping: 42 }}
-        className={`${stream ? 'invisible' : ''} grid max-h-full shrink-0 place-items-center rounded-full font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-[clamp(1.5rem,25cqh,3rem)] text-lg' : 'size-[clamp(2rem,35cqh,6.5rem)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
+        className={`${stream ? 'invisible' : ''} grid shrink-0 place-items-center rounded-full font-medium tracking-[-0.04em] ${tones[person.tone]} ${compact ? 'size-[min(3rem,85cqh,70cqw)] text-lg' : 'size-[min(6.5rem,50cqh,70cqw)] text-[clamp(1.5rem,3vw,2.5rem)]'}`}
         aria-hidden="true"
       >
         {initials(person.name)}
@@ -101,7 +101,7 @@ function TileAvatar({
         <span
           title={person.role}
           dir="auto"
-          className="mt-3 line-clamp-2 max-w-full shrink-0 text-center text-xs opacity-75 [overflow-wrap:anywhere] [@container(height<15rem)]:hidden"
+          className="mt-3 line-clamp-2 max-w-full shrink-0 text-center text-xs opacity-75 [overflow-wrap:anywhere] [@container_tile_(height<15rem)]:hidden"
         >
           {person.role}
         </span>

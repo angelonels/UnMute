@@ -214,16 +214,17 @@ function StagePages({
       {pageCount > 1 && (!focused || height >= 280) && (
         <nav
           aria-label="Participant pages"
-          className="flex h-9 shrink-0 items-center justify-center gap-4"
+          className="relative flex h-9 shrink-0 items-center justify-center gap-4"
         >
           {!focused && speaker && !visible.some((person) => person.id === speakerId) && (
             <button
               type="button"
               onClick={onFocus}
-              className="me-auto inline-flex min-h-9 items-center gap-1.5 px-2 text-xs text-muted hover:text-text"
+              aria-label="Show speaker"
+              className="absolute start-0 inline-flex min-h-9 max-w-[calc((100%-10rem)/2)] items-center gap-1.5 overflow-hidden px-2 text-xs text-muted hover:text-text"
             >
-              <AudioLines width={13} height={13} aria-hidden="true" />
-              Show speaker
+              <AudioLines width={13} height={13} className="shrink-0" aria-hidden="true" />
+              <span className="hidden truncate sm:inline">Show speaker</span>
             </button>
           )}
           <button
