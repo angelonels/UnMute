@@ -15,6 +15,8 @@
  *   --dotty-spot  eyes (defaults to #fff)
  */
 
+import { createReactionRepertoire, REACTION_PERFORMANCES } from './reaction-repertoire';
+
 /* ---------- maths ---------- */
 
 const TAU = Math.PI * 2;
@@ -704,6 +706,11 @@ class Engine implements EngineHandle {
   private squash = { v: 0, vel: 0 };
   private tempExpr: ExpressionName | null = null;
   private tempUntil = 0;
+  private repertoire = createReactionRepertoire();
+  private performanceIndex = this.repertoire.next('arrival');
+  private reactionStarted = 0;
+  private pokeStarted = -10;
+  private pokeIndex = 0;
   private visible = true;
   private last = performance.now();
   private lastHtml = '';
@@ -751,6 +758,16 @@ class Engine implements EngineHandle {
       this.stateTime = 0;
       this.mem = {};
     }
+    if (
+      next.state !== this.opts.state ||
+      next.attention !== this.opts.attention ||
+      next.expression !== this.opts.expression
+    ) {
+      this.performanceIndex = this.repertoire.next(
+        `${next.state}:${next.attention ?? 'free'}:${next.expression ?? 'auto'}`,
+      );
+      this.reactionStarted = this.t;
+    }
     if (!next.followPointer) this.pointer = null;
     this.opts = next;
     this.refresh();
@@ -758,10 +775,13 @@ class Engine implements EngineHandle {
 
   poke() {
     if (this.reduced) return;
-    this.kick(3);
-    this.startBlink();
-    this.tempExpr = 'surprised';
-    this.tempUntil = this.t + 0.9;
+    this.pokeIndex = this.repertoire.next('hello');
+    this.pokeStarted = this.t;
+    const performance = REACTION_PERFORMANCES[this.pokeIndex]!;
+    this.kick(2.2 + performance.lift * 0.5);
+    if (this.pokeIndex === 2) this.startBlink();
+    this.tempExpr = (['happy', 'surprised', 'squinted', 'happy'] as const)[this.pokeIndex]!;
+    this.tempUntil = this.t + performance.duration;
   }
 
   blink() {
@@ -830,7 +850,8 @@ class Engine implements EngineHandle {
   private step(dt: number) {
     this.t += dt;
     this.stateTime += dt;
-    const pose = this.sample(this.opts.state, this.stateTime, this.mem, true);
+    const performance = REACTION_PERFORMANCES[this.performanceIndex]!;
+    const pose = this.sample(this.opts.state, this.stateTime * performance.pace, this.mem, true);
 
     // Cross-fade the numeric pose from the previous state so switching never jumps.
     if (this.prev && this.blend < 1) {
@@ -853,6 +874,11 @@ class Engine implements EngineHandle {
     const ke = approach(18, dt);
     this.eyes.forEach((e, i) => {
       const target = eyeFor(exprName, i ? 1 : -1);
+      const expressionPerformance =
+        this.t < this.tempUntil ? REACTION_PERFORMANCES[this.pokeIndex]! : performance;
+      target.w *= expressionPerformance.width;
+      target.h *= expressionPerformance.height;
+      target.tilt += expressionPerformance.tilt * (i ? 0.22 : 0.12);
       for (const k of EYE_KEYS) e[k] += (target[k] - e[k]) * ke;
     });
 
@@ -867,8 +893,29 @@ class Engine implements EngineHandle {
       this.pose.ox = 0;
       this.pose.rot = 0;
     }
+    // A one-shot greeting/nod rides on the semantic state; sustained attention stays readable.
+    const reactionAge = this.t - this.reactionStarted;
+    const greeting =
+      reactionAge < performance.duration
+        ? Math.sin((Math.PI * reactionAge) / performance.duration)
+        : 0;
+    const concern = this.opts.state === 'alert' ? 0.3 : 1;
+    this.pose.rot += performance.tilt * greeting * concern;
+    if (!this.opts.attention) {
+      this.pose.ox += performance.side * performance.travel * greeting * concern;
+      this.pose.oy -= performance.lift * greeting * concern;
+    }
+    const pokePerformance = REACTION_PERFORMANCES[this.pokeIndex]!;
+    const pokeAge = this.t - this.pokeStarted;
+    if (pokeAge < pokePerformance.duration) {
+      const envelope = Math.sin((Math.PI * pokeAge) / pokePerformance.duration);
+      this.pose.ox += pokePerformance.side * pokePerformance.travel * envelope;
+      this.pose.rot += pokePerformance.tilt * envelope;
+      this.pose.oy -= pokePerformance.lift * envelope;
+    }
     let target: { x: number; y: number };
-    if (this.opts.attention) target = { x: 0, y: this.opts.attention === 'composer' ? 1 : 0.35 };
+    if (this.opts.attention)
+      target = { x: performance.side * 0.12, y: this.opts.attention === 'composer' ? 1 : 0.35 };
     else if (this.opts.followPointer && this.pointer) target = this.pointer;
     else if (pose.gaze) target = pose.gaze;
     else {
