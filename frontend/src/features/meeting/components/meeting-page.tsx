@@ -218,6 +218,7 @@ export function MeetingPage({
         <div className="order-2 flex shrink-0 items-center gap-1 lg:order-3">
           {import.meta.env.DEV && demo && (
             <DemoControls
+              keyboard={keyboard}
               captureMode={captureMode}
               onCaptureMode={(value) => {
                 localMedia.stopAll();
@@ -239,6 +240,7 @@ export function MeetingPage({
             />
           )}
           <DeviceSettings
+            keyboard={keyboard}
             error={localMedia.error}
             devices={localMedia.devices}
             streams={localMedia.streams}
@@ -333,6 +335,7 @@ export function MeetingPage({
         >
           <div id="meeting-ai" className="flex min-h-0 flex-1 flex-col">
             <AIConversation
+              keyboard={keyboard}
               messages={aiMessages}
               draft={aiDraft}
               onDraft={setAiDraft}

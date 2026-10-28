@@ -1,3 +1,4 @@
+import { AnimatePresence, m } from 'motion/react';
 import { AICompanion } from '../../../components/ai-companion';
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
 import { ArrowDown, ArrowUp, Users } from 'lucide-react';
@@ -47,7 +48,7 @@ export function MessageComposer({
             aria-label={label === 'Ask UnMute AI' ? 'Send AI prompt' : 'Send message'}
             disabled={!value.trim() || disabled}
             onClick={onSend}
-            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30"
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30 motion-safe:transition-transform motion-safe:duration-160 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.97]"
           >
             <ArrowUp size={17} aria-hidden="true" />
           </button>
@@ -115,6 +116,7 @@ export function MeetingChat({
 }
 
 export function AIConversation({
+  keyboard,
   messages,
   draft,
   onDraft,
@@ -123,6 +125,7 @@ export function AIConversation({
   demo,
   disabled,
 }: {
+  keyboard: boolean;
   messages: MeetingMessage[];
   draft: string;
   onDraft: (text: string) => void;
@@ -150,48 +153,65 @@ export function AIConversation({
         }}
         className="flex min-h-0 flex-1 flex-col overflow-y-auto overscroll-contain px-5 py-4 [scrollbar-width:thin]"
       >
-        {messages.length === 0 ? (
-          <div className="my-auto shrink-0 py-6">
-            <AICompanion
-              size={104}
-              active={false}
-              label="UnMute AI companion"
-              className="mb-4 -ms-2"
-            />
-            <h2 className="text-2xl leading-tight font-medium tracking-[-0.04em]">
-              A little room
-              <br />
-              to think.
-            </h2>
-            <p className="mt-3 max-w-60 text-xs leading-6 text-muted">
-              {demo
-                ? 'Explore the sample discussion, or ask a question of your own.'
-                : 'Your private space for meeting questions. AI is not connected yet.'}
-            </p>
-            <div className="mt-7 flex flex-col">
-              {['Summarize the discussion', 'List action items', 'What did I miss?'].map(
-                (prompt) => (
-                  <button
-                    type="button"
-                    key={prompt}
-                    disabled={disabled}
-                    onClick={() => onSuggestion(prompt)}
-                    className="group flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-lg py-2 text-left text-xs text-muted transition-colors duration-150 hover:text-text disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
-                  >
-                    {prompt}
-                    <ArrowUp
-                      size={14}
-                      strokeWidth={1.5}
-                      className="shrink-0 rotate-45 opacity-50 group-hover:opacity-100"
-                      aria-hidden="true"
-                    />
-                  </button>
-                ),
-              )}
-            </div>
-          </div>
-        ) : null}
-        <div
+        <AnimatePresence mode="popLayout" custom={keyboard}>
+          {messages.length === 0 ? (
+            <m.div
+              key="welcome"
+              className="my-auto shrink-0 py-6"
+              initial={false}
+              custom={keyboard}
+              variants={{
+                out: (instant: boolean) => ({
+                  opacity: 0,
+                  transition: { duration: instant ? 0 : 0.12 },
+                }),
+              }}
+              exit="out"
+            >
+              <AICompanion
+                size={104}
+                active={false}
+                label="UnMute AI companion"
+                className="mb-4 -ms-2"
+              />
+              <h2 className="text-2xl leading-tight font-medium tracking-[-0.04em]">
+                A little room
+                <br />
+                to think.
+              </h2>
+              <p className="mt-3 max-w-60 text-xs leading-6 text-muted">
+                {demo
+                  ? 'Explore the sample discussion, or ask a question of your own.'
+                  : 'Your private space for meeting questions. AI is not connected yet.'}
+              </p>
+              <div className="mt-7 flex flex-col">
+                {['Summarize the discussion', 'List action items', 'What did I miss?'].map(
+                  (prompt) => (
+                    <button
+                      type="button"
+                      key={prompt}
+                      disabled={disabled}
+                      onClick={() => onSuggestion(prompt)}
+                      className="group flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-lg py-2 text-left text-xs text-muted transition-colors duration-150 hover:text-text disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
+                    >
+                      {prompt}
+                      <ArrowUp
+                        size={14}
+                        strokeWidth={1.5}
+                        className="shrink-0 rotate-45 opacity-50 group-hover:opacity-100"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  ),
+                )}
+              </div>
+            </m.div>
+          ) : null}
+        </AnimatePresence>
+        <m.div
+          initial={false}
+          animate={{ opacity: messages.length ? 1 : 0 }}
+          transition={{ duration: keyboard ? 0 : 0.16 }}
           role="log"
           aria-label="Private AI conversation"
           aria-live="polite"
@@ -221,7 +241,7 @@ export function AIConversation({
               </p>
             </div>
           ))}
-        </div>
+        </m.div>
         <div ref={bottomRef} />
       </div>
       {messages.length > 0 && away && (

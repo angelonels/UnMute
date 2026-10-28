@@ -1,3 +1,5 @@
+import { ModalSurface } from '../../../components/modal-surface';
+import { useEffect } from 'react';
 import { m, useReducedMotion } from 'motion/react';
 import { AICompanion } from '../../../components/ai-companion';
 import { useLocalMedia, LocalVideo } from '../../media';
@@ -30,13 +32,18 @@ type User = typeof authClient.$Infer.Session.user;
 
 export function WorkspacePage({ user }: { user: User }) {
   const reduced = useReducedMotion();
+  const [keyboard, setKeyboard] = useState(false);
   const [greeting, setGreeting] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [sidePanelOpen, setSidePanelOpen] = useState(false);
   const { busy, failed, signOut } = useAuthActions(false);
   return (
-    <div className="flex min-h-svh flex-col p-3 sm:p-4">
+    <div
+      className="flex min-h-svh flex-col p-3 sm:p-4"
+      onKeyDownCapture={() => setKeyboard(true)}
+      onPointerDownCapture={() => setKeyboard(false)}
+    >
       <div className="relative flex flex-1 gap-3">
         <aside
           className={`hidden shrink-0 flex-col rounded-3xl bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
@@ -92,7 +99,7 @@ export function WorkspacePage({ user }: { user: User }) {
           </div>
         </aside>
         <m.main
-          layout={reduced ? false : 'position'}
+          layout={reduced || keyboard ? false : 'position'}
           layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
           transition={{ type: 'spring', stiffness: 420, damping: 42 }}
           className={`relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell ${sidePanelOpen ? 'xl:mr-84' : ''}`}
@@ -188,7 +195,7 @@ export function WorkspacePage({ user }: { user: User }) {
             </div>
           </div>
           <m.div
-            layout={reduced ? false : 'position'}
+            layout={reduced || keyboard ? false : 'position'}
             layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
             transition={{ type: 'spring', stiffness: 420, damping: 42 }}
             className="flex flex-1 flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-14"
@@ -216,7 +223,7 @@ export function WorkspacePage({ user }: { user: User }) {
                   <ArrowRight size={18} aria-hidden="true" />
                 </Button>
               </Dialog.Trigger>
-              {previewOpen && <MeetingPreview user={user} />}
+              <MeetingPreview user={user} open={previewOpen} keyboard={keyboard} />
             </Dialog.Root>
             {import.meta.env.DEV && (
               <Link
@@ -290,106 +297,115 @@ function PreviewToggle({
       aria-busy={pending}
       disabled={pending}
       onClick={onClick}
-      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm disabled:cursor-progress disabled:opacity-50 ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
+      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm disabled:cursor-progress disabled:opacity-50 motion-safe:transition-transform motion-safe:duration-[160ms] motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.97] ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
     >
       {children}
     </button>
   );
 }
 
-function MeetingPreview({ user }: { user: User }) {
+function MeetingPreview({
+  user,
+  open,
+  keyboard,
+}: {
+  user: User;
+  open: boolean;
+  keyboard: boolean;
+}) {
   const localMedia = useLocalMedia();
+  const { stopAll } = localMedia;
+  useEffect(() => {
+    if (!open) stopAll();
+  }, [open, stopAll]);
   const microphone = !!localMedia.streams.microphone;
   const camera = !!localMedia.streams.camera;
   return (
-    <Dialog.Portal>
-      <Dialog.Overlay className="fixed inset-0 z-50 bg-black/35 backdrop-blur-sm motion-reduce:backdrop-blur-none" />
-      <Dialog.Content
-        className="fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] max-w-xl -translate-1/2 overflow-y-auto overscroll-contain rounded-[1.75rem] border border-transparent bg-surface p-6 shadow-floating sm:p-8"
-        aria-describedby="preview-description"
-      >
-        <div className="flex items-center justify-between gap-4">
-          <Dialog.Title className="text-xl font-medium tracking-tight">
-            Before you meet
-          </Dialog.Title>
-          <Dialog.Close
-            aria-label="Close meeting preview"
-            className="grid size-11 cursor-pointer place-items-center rounded-full text-muted hover:bg-surface-muted"
-          >
-            <X size={20} aria-hidden="true" />
-          </Dialog.Close>
-        </div>
-        <Dialog.Description id="preview-description" className="mt-2 text-sm text-muted">
-          Make yourself comfortable.
-        </Dialog.Description>
-        <div className="relative mt-6 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-panel text-white">
-          <span className="grid size-20 place-items-center rounded-full bg-white/15 text-3xl font-medium">
-            {user.name.slice(0, 1).toUpperCase()}
-          </span>
-          {localMedia.streams.camera && (
-            <LocalVideo stream={localMedia.streams.camera} label="Your camera video" mirror />
-          )}
-          <span className="absolute bottom-4 left-4 max-w-[80%] truncate text-sm">{user.name}</span>
-          <span className="absolute top-4 right-4 rounded-full bg-black/20 px-3 py-1 text-xs">
-            Preview
-          </span>
-        </div>
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          <PreviewToggle
-            label="Microphone"
-            pending={localMedia.pending.microphone}
-            enabled={microphone}
-            onClick={() => localMedia.toggle('microphone')}
-          >
-            {microphone ? (
-              <Mic size={18} aria-hidden="true" />
-            ) : (
-              <MicOff size={18} aria-hidden="true" />
-            )}
-            Mic {microphone ? 'on' : 'off'}
-          </PreviewToggle>
-          <PreviewToggle
-            pending={localMedia.pending.camera}
-            label="Camera"
-            enabled={camera}
-            onClick={() => localMedia.toggle('camera')}
-          >
-            {camera ? (
-              <Video size={18} aria-hidden="true" />
-            ) : (
-              <VideoOff size={18} aria-hidden="true" />
-            )}
-            Camera {camera ? 'on' : 'off'}
-          </PreviewToggle>
-        </div>
-        <p
-          role="status"
-          className="mt-5 rounded-xl bg-surface-muted p-4 text-sm leading-6 text-muted"
+    <ModalSurface
+      open={open}
+      instant={keyboard}
+      className="max-w-xl rounded-[1.75rem] sm:p-8"
+      aria-describedby="preview-description"
+    >
+      <div className="flex items-center justify-between gap-4">
+        <Dialog.Title className="text-xl font-medium tracking-tight">Before you meet</Dialog.Title>
+        <Dialog.Close
+          aria-label="Close meeting preview"
+          className="grid size-11 cursor-pointer place-items-center rounded-full text-muted hover:bg-surface-muted"
         >
-          {localMedia.pending.camera || localMedia.pending.microphone
-            ? 'Waiting for device access…'
-            : 'Your preview stays on this device.'}
-        </p>
-        {localMedia.error && (
-          <p role="alert" className="mt-3 text-sm text-error">
-            {localMedia.error}
-          </p>
-        )}
-        <Link
-          to="/meeting"
-          search={{ demo: false, microphone, camera }}
-          className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary"
-        >
-          Enter meeting preview
-          <ArrowRight size={17} aria-hidden="true" />
-        </Link>
-        <Dialog.Close asChild>
-          <Button variant="secondary" size="lg" className="mt-6 w-full">
-            <ArrowLeft size={17} aria-hidden="true" />
-            Back to workspace
-          </Button>
+          <X size={20} aria-hidden="true" />
         </Dialog.Close>
-      </Dialog.Content>
-    </Dialog.Portal>
+      </div>
+      <Dialog.Description id="preview-description" className="mt-2 text-sm text-muted">
+        Make yourself comfortable.
+      </Dialog.Description>
+      <div className="relative mt-6 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-panel text-white">
+        <span className="grid size-20 place-items-center rounded-full bg-white/15 text-3xl font-medium">
+          {user.name.slice(0, 1).toUpperCase()}
+        </span>
+        {localMedia.streams.camera && (
+          <LocalVideo stream={localMedia.streams.camera} label="Your camera video" mirror />
+        )}
+        <span className="absolute bottom-4 left-4 max-w-[80%] truncate text-sm">{user.name}</span>
+        <span className="absolute top-4 right-4 rounded-full bg-black/20 px-3 py-1 text-xs">
+          Preview
+        </span>
+      </div>
+      <div className="mt-5 grid grid-cols-2 gap-3">
+        <PreviewToggle
+          label="Microphone"
+          pending={localMedia.pending.microphone}
+          enabled={microphone}
+          onClick={() => localMedia.toggle('microphone')}
+        >
+          {microphone ? (
+            <Mic size={18} aria-hidden="true" />
+          ) : (
+            <MicOff size={18} aria-hidden="true" />
+          )}
+          Mic {microphone ? 'on' : 'off'}
+        </PreviewToggle>
+        <PreviewToggle
+          pending={localMedia.pending.camera}
+          label="Camera"
+          enabled={camera}
+          onClick={() => localMedia.toggle('camera')}
+        >
+          {camera ? (
+            <Video size={18} aria-hidden="true" />
+          ) : (
+            <VideoOff size={18} aria-hidden="true" />
+          )}
+          Camera {camera ? 'on' : 'off'}
+        </PreviewToggle>
+      </div>
+      <p
+        role="status"
+        className="mt-5 rounded-xl bg-surface-muted p-4 text-sm leading-6 text-muted"
+      >
+        {localMedia.pending.camera || localMedia.pending.microphone
+          ? 'Waiting for device access…'
+          : 'Your preview stays on this device.'}
+      </p>
+      {localMedia.error && (
+        <p role="alert" className="mt-3 text-sm text-error">
+          {localMedia.error}
+        </p>
+      )}
+      <Link
+        to="/meeting"
+        search={{ demo: false, microphone, camera }}
+        className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary"
+      >
+        Enter meeting preview
+        <ArrowRight size={17} aria-hidden="true" />
+      </Link>
+      <Dialog.Close asChild>
+        <Button variant="secondary" size="lg" className="mt-6 w-full">
+          <ArrowLeft size={17} aria-hidden="true" />
+          Back to workspace
+        </Button>
+      </Dialog.Close>
+    </ModalSurface>
   );
 }
