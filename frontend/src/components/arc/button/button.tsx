@@ -1,5 +1,7 @@
 'use client';
 
+import { useReducedMotion } from '../../../hooks/use-reduced-motion';
+
 import {
   forwardRef,
   isValidElement,
@@ -10,14 +12,7 @@ import {
   useState,
 } from 'react';
 import type { ButtonHTMLAttributes, ReactNode, Ref, RefObject } from 'react';
-import {
-  AnimatePresence,
-  animate,
-  m as motion,
-  useIsPresent,
-  useMotionValue,
-  useReducedMotion,
-} from 'motion/react';
+import { AnimatePresence, animate, m as motion, useIsPresent, useMotionValue } from 'motion/react';
 import type { TargetAndTransition } from 'motion/react';
 import { motionTokens } from '../lib/motion-tokens';
 

@@ -1,6 +1,7 @@
+import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { ModalSurface } from '../../../components/modal-surface';
 import { useEffect } from 'react';
-import { m, useReducedMotion } from 'motion/react';
+import { m } from 'motion/react';
 import { AICompanion } from '../../../components/ai-companion';
 import { useLocalMedia, LocalVideo } from '../../media';
 import { useState, type ReactNode } from 'react';
@@ -175,7 +176,7 @@ export function WorkspacePage({ user }: { user: User }) {
                 </DrawerTrigger>
                 <DrawerContent
                   title="Your side panel"
-                  description="A little extra space, when you need it."
+                  description="Workspace"
                   className="xl:top-4! xl:right-4! xl:bottom-4! xl:w-80! xl:rounded-[1.75rem]!"
                 >
                   <div className="flex min-h-80 flex-col items-center justify-center text-center">
@@ -336,8 +337,8 @@ function MeetingPreview({
           <X size={20} aria-hidden="true" />
         </Dialog.Close>
       </div>
-      <Dialog.Description id="preview-description" className="mt-2 text-sm text-muted">
-        Make yourself comfortable.
+      <Dialog.Description id="preview-description" className="sr-only">
+        Camera and microphone preview.
       </Dialog.Description>
       <div className="relative mt-6 flex aspect-video items-center justify-center overflow-hidden rounded-2xl bg-panel text-white">
         <span className="grid size-20 place-items-center rounded-full bg-white/15 text-3xl font-medium">
@@ -385,7 +386,7 @@ function MeetingPreview({
       >
         {localMedia.pending.camera || localMedia.pending.microphone
           ? 'Waiting for device access…'
-          : 'Your preview stays on this device.'}
+          : 'Local preview'}
       </p>
       {localMedia.error && (
         <p role="alert" className="mt-3 text-sm text-error">

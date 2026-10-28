@@ -1,5 +1,7 @@
 'use client';
 
+import { useReducedMotion } from '../../../hooks/use-reduced-motion';
+
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import {
   createContext,
@@ -11,13 +13,7 @@ import {
   useState,
 } from 'react';
 import type { ComponentPropsWithoutRef, ReactNode, RefObject } from 'react';
-import {
-  AnimatePresence,
-  animate,
-  m as motion,
-  useMotionValue,
-  useReducedMotion,
-} from 'motion/react';
+import { AnimatePresence, animate, m as motion, useMotionValue } from 'motion/react';
 import type { PanInfo, Transition } from 'motion/react';
 import { X } from 'lucide-react';
 import { motionTokens } from '../lib/motion-tokens';
@@ -337,7 +333,13 @@ export function DrawerContent({
               initial={keyboard ? false : reduced ? { opacity: 0 } : { ...offscreen, opacity: 1 }}
               animate={{ [axis]: 0, opacity: 1 }}
               exit="exit"
-              transition={keyboard ? { duration: 0 } : reduced ? fade : motionTokens.spring.smooth}
+              transition={
+                keyboard
+                  ? { duration: 0 }
+                  : reduced
+                    ? { ...fade, [axis]: { duration: 0 } }
+                    : motionTokens.spring.smooth
+              }
             >
               {inner}
             </motion.div>

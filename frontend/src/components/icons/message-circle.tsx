@@ -1,7 +1,9 @@
 'use client';
 
+import { useReducedMotion } from '../../hooks/use-reduced-motion';
+
 import type { Variants } from 'motion/react';
-import { m as motion, useAnimation, useReducedMotion } from 'motion/react';
+import { m as motion, useAnimation } from 'motion/react';
 import type { HTMLAttributes } from 'react';
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { ModalSurface } from '../../../components/modal-surface';
 import { useCompanionMotion } from '../../../components/companion/motion-preference';
 import * as Dialog from '@radix-ui/react-dialog';
-import { Settings2, X } from 'lucide-react';
+import { Settings2, X, Mic, Video } from 'lucide-react';
+import { DevicePicker } from '../../../components/device-picker';
 import type { MediaSource } from '../../media';
 
 export function DeviceSettings({
@@ -41,55 +42,80 @@ export function DeviceSettings({
             <X size={18} />
           </Dialog.Close>
         </div>
-        <Dialog.Description className="mt-1 text-xs leading-6 text-muted">
-          Inputs are captured locally. Device names appear after you allow access.
-        </Dialog.Description>
+        <Dialog.Description className="sr-only">Audio and video preferences</Dialog.Description>
         {(['microphone', 'camera'] as const).map((source) => {
           const inputs = devices.filter(
             (device) => device.kind === (source === 'camera' ? 'videoinput' : 'audioinput'),
           );
           const track = streams[source]?.getTracks()[0];
+          const options = [
+            { value: 'system-default', label: 'System default' },
+            ...inputs
+              .filter((device) => device.deviceId && device.deviceId !== 'default')
+              .map((device, index) => ({
+                value: device.deviceId,
+                label:
+                  device.label || `${source === 'camera' ? 'Camera' : 'Microphone'} ${index + 1}`,
+              })),
+          ];
+          const deviceId = track?.getSettings().deviceId;
+          const selected =
+            options.find((option) => option.value === deviceId)?.value ?? 'system-default';
+          const label = source === 'camera' ? 'Camera' : 'Microphone';
           return (
-            <label key={source} className="mt-5 block text-xs font-medium capitalize">
-              {source}
-              <select
-                aria-label={`${source} input`}
+            <div key={source} className="mt-6 min-w-0">
+              <div className="mb-2 flex items-center justify-between gap-3">
+                <span className="text-xs font-medium">{label}</span>
+                <span
+                  role="status"
+                  className={`text-[11px] ${pending[source] ? 'text-muted' : track ? 'text-success' : 'text-error'}`}
+                >
+                  {pending[source] ? 'Connecting…' : track ? 'On' : 'Off'}
+                </span>
+              </div>
+              <DevicePicker
+                label={label}
+                icon={
+                  source === 'camera' ? (
+                    <Video size={17} strokeWidth={1.65} />
+                  ) : (
+                    <Mic size={17} strokeWidth={1.65} />
+                  )
+                }
                 disabled={pending[source]}
-                value={track?.getSettings().deviceId ?? ''}
-                onChange={(event) => onSelect(source, event.target.value || undefined)}
-                className="mt-2 min-h-11 w-full rounded-xl border border-border bg-surface-muted px-3 text-sm text-text disabled:opacity-50"
-              >
-                <option value="">Default input</option>
-                {inputs.map(
-                  (device, index) =>
-                    device.deviceId && (
-                      <option key={device.deviceId} value={device.deviceId}>
-                        {device.label || `${source} ${index + 1}`}
-                      </option>
-                    ),
-                )}
-              </select>
-            </label>
+                value={selected}
+                options={options}
+                onValueChange={(value) =>
+                  onSelect(source, value === 'system-default' ? undefined : value)
+                }
+              />
+            </div>
           );
         })}
-        <label className="mt-6 flex min-h-11 cursor-pointer items-center justify-between gap-4 border-t border-border pt-4 text-sm">
+        <label className="mt-6 flex min-h-14 cursor-pointer items-center justify-between gap-4 border-t border-border pt-4 text-sm">
           Companion animation
-          <input
-            type="checkbox"
-            checked={companionMotion}
-            onChange={(event) => setCompanionMotion(event.target.checked)}
-            className="size-4 accent-primary"
-          />
+          <span className="relative inline-flex shrink-0 items-center">
+            <input
+              type="checkbox"
+              checked={companionMotion}
+              onChange={(event) => setCompanionMotion(event.target.checked)}
+              className="peer sr-only"
+            />
+            <span
+              aria-hidden="true"
+              className="h-6 w-10 rounded-full bg-text/15 peer-checked:bg-primary peer-focus-visible:outline-2 peer-focus-visible:outline-offset-4 peer-focus-visible:outline-primary"
+            />
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-0.5 size-5 rounded-full bg-surface shadow-sm peer-checked:translate-x-4"
+            />
+          </span>
         </label>
         {error && (
           <p role="alert" className="mt-4 rounded-xl bg-error/10 p-3 text-xs leading-6 text-error">
             {error}
           </p>
         )}
-        <p className="mt-5 text-xs leading-6 text-muted">
-          Choosing an input turns it on. Changing an active input keeps the current device until its
-          replacement is ready.
-        </p>
       </ModalSurface>
     </Dialog.Root>
   );

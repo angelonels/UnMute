@@ -1,6 +1,7 @@
+import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { AICompanion } from '../../../components/ai-companion';
 import { MeetingLayoutIcon } from '../../../components/icons/meeting-layout';
-import { m, useReducedMotion } from 'motion/react';
+import { m } from 'motion/react';
 import {
   MessageCircleIcon,
   type MessageCircleIconHandle,
@@ -257,7 +258,7 @@ export function MeetingPage({
             aria-controls="meeting-ai"
             tone={showLeft ? 'primary' : 'neutral'}
             onClick={() => openPanel('left', !showLeft)}
-            icon={<AICompanion size={28} active={showLeft && !keyboard} />}
+            icon={<AICompanion size={36} dimensional active={showLeft && !keyboard} />}
           >
             <span className="hidden min-[420px]:inline">UnMute AI</span>
           </MeetingControl>

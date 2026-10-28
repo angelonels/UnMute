@@ -39,6 +39,10 @@ test('pointer modal can close during entrance and reduced motion removes scaling
   await settings.click();
   const modal = page.getByRole('dialog', { name: 'Device settings', exact: true });
   await expect(modal).toHaveAttribute('data-motion', 'reduced');
-  await expect(modal).toHaveCSS('transform', 'none');
+  await expect(modal).toHaveCSS('transform', 'matrix(1, 0, 0, 1, 0, 0)');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await expect(modal).toHaveAttribute('data-motion', 'pointer');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await expect(modal).toHaveAttribute('data-motion', 'reduced');
   await page.screenshot({ path: info.outputPath('reduced-settings.png'), fullPage: true });
 });

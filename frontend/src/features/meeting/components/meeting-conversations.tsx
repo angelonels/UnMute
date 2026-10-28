@@ -1,6 +1,6 @@
 import { AnimatePresence, m } from 'motion/react';
 import { AICompanion } from '../../../components/ai-companion';
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { useEffect, useRef, useState, type KeyboardEvent, type Ref } from 'react';
 import { ArrowDown, ArrowUp, Users } from 'lucide-react';
 import { ChatThread } from '../../../components/arc/chat-thread/chat-thread';
 import { initials, type MeetingMessage, type Participant } from '../meeting-model';
@@ -11,12 +11,14 @@ export function MessageComposer({
   onSend,
   label,
   disabled = false,
+  inputRef,
 }: {
   value: string;
   onChange: (text: string) => void;
   onSend: () => void;
   label: string;
   disabled?: boolean;
+  inputRef?: Ref<HTMLTextAreaElement>;
 }) {
   function keyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -28,6 +30,7 @@ export function MessageComposer({
     <div className="shrink-0 border-t border-border/70 p-4">
       <div className="rounded-[1.25rem] border border-border/80 bg-surface-muted/40 p-3 transition-[border-color,background-color] duration-150 ease-out-expo focus-within:border-input focus-within:bg-surface motion-reduce:transition-none">
         <textarea
+          ref={inputRef}
           aria-label={label}
           placeholder={disabled ? 'Reconnect to send' : label}
           value={value}
@@ -77,7 +80,7 @@ export function MeetingChat({
     <>
       <div className="mx-5 mb-1 flex items-center gap-2 py-1 text-[11px] text-muted">
         <Users size={13} aria-hidden="true" />
-        Everyone in this preview
+        Everyone
       </div>
       <div className="min-h-0 flex-1 [--accent:var(--primary)] [--accent-foreground:var(--on-primary)]">
         {messages.length ? (
@@ -97,10 +100,7 @@ export function MeetingChat({
             aria-label="Meeting messages"
             className="flex h-full flex-col items-center justify-center p-6 text-center"
           >
-            <span className="text-sm font-medium">Keep the conversation going.</span>
-            <p className="mt-2 text-xs leading-6 text-muted">
-              Messages you write here stay in this local preview.
-            </p>
+            <span className="text-sm font-medium">No messages yet</span>
           </div>
         )}
       </div>
@@ -134,6 +134,7 @@ export function AIConversation({
   demo: boolean;
   disabled: boolean;
 }) {
+  const composerRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const following = useRef(true);
@@ -180,9 +181,7 @@ export function AIConversation({
                 to think.
               </h2>
               <p className="mt-3 max-w-60 text-xs leading-6 text-muted">
-                {demo
-                  ? 'Explore the sample discussion, or ask a question of your own.'
-                  : 'Your private space for meeting questions. AI is not connected yet.'}
+                {demo ? 'Sample discussion' : 'AI is not connected.'}
               </p>
               <div className="mt-7 flex flex-col">
                 {['Summarize the discussion', 'List action items', 'What did I miss?'].map(
@@ -191,7 +190,10 @@ export function AIConversation({
                       type="button"
                       key={prompt}
                       disabled={disabled}
-                      onClick={() => onSuggestion(prompt)}
+                      onClick={() => {
+                        onSuggestion(prompt);
+                        composerRef.current?.focus();
+                      }}
                       className="group flex min-h-12 cursor-pointer items-center justify-between gap-3 rounded-lg py-2 text-left text-xs text-muted transition-colors duration-150 hover:text-text disabled:cursor-not-allowed disabled:opacity-50 motion-reduce:transition-none"
                     >
                       {prompt}
@@ -263,6 +265,7 @@ export function AIConversation({
         onChange={onDraft}
         onSend={onSend}
         label="Ask UnMute AI"
+        inputRef={composerRef}
         disabled={disabled}
       />
     </>

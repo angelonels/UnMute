@@ -1,5 +1,7 @@
 'use client';
 
+import { useReducedMotion } from '../../../hooks/use-reduced-motion';
+
 import {
   useEffect,
   useId,
@@ -8,7 +10,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from 'react';
-import { LayoutGroup, m as motion, useReducedMotion } from 'motion/react';
+import { LayoutGroup, m as motion } from 'motion/react';
 
 const styles = {
   root: 'inline-flex min-w-0 max-w-full rounded-xl border border-border bg-surface p-1',

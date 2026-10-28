@@ -1,4 +1,5 @@
-import { m, useReducedMotion } from 'motion/react';
+import { useReducedMotion } from '../../../hooks/use-reduced-motion';
+import { m } from 'motion/react';
 import { LocalVideo } from '../../media';
 import { AudioLines, Hand, MicOff, Pin, PinOff, Video, VideoOff } from 'lucide-react';
 import { initials, type Participant } from '../meeting-model';

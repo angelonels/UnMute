@@ -1,8 +1,9 @@
+import { useReducedMotion } from '../hooks/use-reduced-motion';
 import { useEffect, useId, useRef, useState } from 'react';
 import { useTheme } from 'next-themes';
 import { useCompanionMotion } from './companion/motion-preference';
 import type { CompanionEmotion, CompanionOptions, CompanionScene } from './companion/scene';
-import { m, useReducedMotion, type Variants } from 'motion/react';
+import { m, type Variants } from 'motion/react';
 
 // An original UnMute silhouette: a weighted pebble with a folded upper contour.
 const silhouette =
@@ -134,11 +135,16 @@ interface CompanionProps {
   className?: string;
   finish?: 'auto' | 'ceramic' | 'graphite';
   emotion?: CompanionEmotion;
+  dimensional?: boolean;
 }
 
 /** Compact marks share the silhouette; larger instances are live, full-volume WebGL characters. */
 export function AICompanion(props: CompanionProps) {
-  return (props.size ?? 24) >= 48 ? <Companion3D {...props} /> : <CompanionMark {...props} />;
+  return props.dimensional || (props.size ?? 24) >= 48 ? (
+    <Companion3D {...props} />
+  ) : (
+    <CompanionMark {...props} />
+  );
 }
 
 function Companion3D({
