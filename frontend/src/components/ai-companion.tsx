@@ -49,12 +49,28 @@ export function AICompanion({
   ...props
 }: CompanionProps) {
   const character = useRef<CompanionHandle>(null);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [greeting, setGreeting] = useState(0);
+  const engaged = hovered || focused;
+  useEffect(() => {
+    if (!greeting) return;
+    const timer = window.setTimeout(() => setGreeting(0), 1400);
+    return () => window.clearTimeout(timer);
+  }, [greeting]);
   useImperativeHandle(
     ref,
     () => ({ poke: () => character.current?.poke(), blink: () => character.current?.blink() }),
     [],
   );
-  const face = companionExpression(expression, emotion, state);
+  const face =
+    pokeable && state === 'idle' && !props.attention && expression === undefined
+      ? greeting
+        ? 'surprised'
+        : engaged
+          ? 'inspecting'
+          : companionExpression(expression, emotion, state)
+      : companionExpression(expression, emotion, state);
   const common = {
     ...props,
     state,
@@ -63,6 +79,7 @@ export function AICompanion({
     emotion,
     ref: character,
     label: pokeable ? undefined : props.label,
+    active: props.active || (pokeable && engaged),
   };
   const content =
     props.dimensional || (props.size ?? 24) >= 48 ? (
@@ -75,13 +92,33 @@ export function AICompanion({
       type="button"
       aria-label={props.label ?? 'Say hello to Mumo'}
       title="Say hello"
-      className="shrink-0 cursor-pointer rounded-full bg-transparent p-0"
+      data-interaction={greeting ? 'greeted' : engaged ? 'engaged' : 'idle'}
+      className="relative shrink-0 scale-100 cursor-pointer rounded-full bg-transparent p-0 transition-[background-color] duration-150 ease-out hover:bg-primary/5 motion-safe:transition-[scale,background-color] motion-safe:enabled:active:not-focus-visible:scale-[0.96]"
+      onPointerEnter={(event) => {
+        if (event.pointerType !== 'touch') setHovered(true);
+      }}
+      onPointerLeave={() => setHovered(false)}
+      onPointerCancel={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onClick={() => {
         character.current?.poke();
+        setGreeting((value) => value + 1);
         onPoke?.();
       }}
     >
       {content}
+      {greeting > 0 && (
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm"
+        >
+          Hi!
+        </span>
+      )}
+      <span role="status" className="sr-only">
+        {greeting ? 'Mumo says hello.' : ''}
+      </span>
     </button>
   ) : (
     content
@@ -90,6 +127,7 @@ export function AICompanion({
 
 function CompanionMark({
   size = 24,
+  active = false,
   label,
   className = '',
   state,
@@ -128,6 +166,9 @@ function CompanionMark({
   useEffect(() => {
     engine.current?.update({ state, shape, expression, attention, reducedMotion: reduced });
   }, [state, shape, expression, attention, reduced]);
+  useEffect(() => {
+    if (active) engine.current?.blink();
+  }, [active]);
   return (
     <span
       ref={host}
@@ -160,6 +201,7 @@ function Companion3D({
   const host = useRef<HTMLSpanElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<CompanionScene | null>(null);
+  const fallback = useRef<CompanionHandle>(null);
   const visible = useRef(false);
   const ceramic = finish === 'ceramic' || (finish === 'auto' && resolvedTheme === 'dark');
   const options = useRef<CompanionOptions>({
@@ -175,7 +217,10 @@ function Companion3D({
   });
   useImperativeHandle(
     ref,
-    () => ({ poke: () => scene.current?.poke(), blink: () => scene.current?.blink() }),
+    () => ({
+      poke: () => (scene.current ?? fallback.current)?.poke(),
+      blink: () => (scene.current ?? fallback.current)?.blink(),
+    }),
     [],
   );
   useEffect(() => {
@@ -260,7 +305,15 @@ function Companion3D({
         className={`absolute inset-0 size-full ${status === 'ready' ? 'visible' : 'invisible'}`}
       />
       {status !== 'ready' && (
-        <CompanionMark size={size} state={state} shape={shape} expression={expression} />
+        <CompanionMark
+          ref={fallback}
+          size={size}
+          active={active}
+          state={state}
+          shape={shape}
+          expression={expression}
+          attention={attention}
+        />
       )}
       {status === 'unavailable' && label && (
         <span className="sr-only">3D rendering unavailable.</span>
