@@ -9,7 +9,8 @@ import {
 } from './dotty-engine';
 
 // Failure cases before adapting the renderer: invalid shape buffers, broken expression/state
-// mapping, motion despite reduced-motion, and callbacks surviving destroyed ownership.
+// mapping, motion despite reduced-motion, redundant still-frame callbacks for unchanged options,
+// and callbacks surviving destroyed ownership (including stale public handles).
 describe('Dotty numeric renderer adapter', () => {
   let handle: EngineHandle | undefined;
   let host: HTMLDivElement;
@@ -39,7 +40,7 @@ describe('Dotty numeric renderer adapter', () => {
     for (const shape of SHAPE_NAMES) handle.update({ shape });
     for (const expression of EXPRESSION_NAMES) handle.update({ expression });
     for (const state of STATE_NAMES) handle.update({ state });
-    expect(frames.length).toBeGreaterThan(48);
+    expect(frames.length).toBeGreaterThanOrEqual(48);
     for (const frame of frames) {
       expect(frame.radii).toHaveLength(96);
       expect(frame.radii.every((value) => Number.isFinite(value) && value > 0)).toBe(true);
@@ -58,6 +59,28 @@ describe('Dotty numeric renderer adapter', () => {
     handle.destroy();
     handle = undefined;
     expect(cancelAnimationFrame).toHaveBeenCalled();
+  });
+  it('does not redraw unchanged still options but redraws for a new renderer', () => {
+    const callback = vi.fn();
+    handle = createEngine(host, { reducedMotion: true, state: 'idle', onFrame: callback });
+    const count = callback.mock.calls.length;
+    handle.update({ reducedMotion: true, state: 'idle', onFrame: callback });
+    expect(callback).toHaveBeenCalledTimes(count);
+    handle.update({ state: 'thinking' });
+    expect(callback).toHaveBeenCalledTimes(count + 1);
+    const replacement = vi.fn();
+    handle.update({ onFrame: replacement });
+    expect(replacement).toHaveBeenCalledOnce();
+  });
+  it('ignores stale handles after destruction', () => {
+    const callback = vi.fn();
+    handle = createEngine(host, { reducedMotion: true, onFrame: callback });
+    const count = callback.mock.calls.length;
+    handle.destroy();
+    handle.update({ state: 'thinking' });
+    handle.poke();
+    handle.blink();
+    expect(callback).toHaveBeenCalledTimes(count);
   });
   it('unregisters an engine if its initial renderer fails', () => {
     expect(() =>

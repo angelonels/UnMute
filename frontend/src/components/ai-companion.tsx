@@ -199,16 +199,12 @@ function Companion3D({
     let alive = true,
       requested = false,
       prepareFrame = 0;
-    const module = import('./companion/scene');
-    void module.catch(() => {
-      if (alive) setStatus('unavailable');
-    });
     const observer = new IntersectionObserver(([entry]) => {
       visible.current = !!entry?.isIntersecting;
       scene.current?.update({ ...options.current, visible: visible.current });
       if (!visible.current || requested) return;
       requested = true;
-      void module
+      void import('./companion/scene')
         .then(({ createCompanionScene }) => {
           if (!alive) return;
           prepareFrame = requestAnimationFrame(() => {

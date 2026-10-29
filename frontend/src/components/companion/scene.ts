@@ -184,7 +184,7 @@ export function createCompanionScene(
         const material = mat(
           new THREE.MeshBasicMaterial({
             color: 0x83aaff,
-            map: texture,
+            ...(texture ? { map: texture } : {}),
             transparent: true,
             depthWrite: false,
             side: THREE.DoubleSide,
@@ -249,30 +249,39 @@ export function createCompanionScene(
       const pose = frame.pose;
       const sx = pose.sx * (1 + 0.7 * frame.squash),
         sy = pose.sy * (1 - frame.squash);
-      const bodyPosition = bodyGeometry.getAttribute('position');
+      let bodyChanged = false,
+        maxRadius = 0;
       for (let i = 0; i < segments; i++) {
         const a = angles[i]!;
         const wobble =
           1 +
           pose.wob *
             (0.6 * Math.sin(3 * a + time * pose.ws) + 0.4 * Math.sin(5 * a - time * pose.ws * 1.3));
-        outlineRadius[i] = frame.radii[i]! * wobble;
+        const radius = frame.radii[i]! * wobble;
+        if (radius !== outlineRadius[i]) bodyChanged = true;
+        outlineRadius[i] = radius;
+        maxRadius = Math.max(maxRadius, frame.radii[i]!);
       }
-      for (let ring = 0; ring <= rings; ring++) {
-        for (let i = 0; i < segments; i++) {
-          const radius = outlineRadius[i]! * ringSin[ring]!;
-          bodyPosition.setXYZ(
-            ring * segments + i,
-            outlineCos[i]! * radius,
-            -outlineSin[i]! * radius,
-            ringDepth[ring]!,
-          );
+      // Idle breathing, gaze and pokes use object transforms; keep their shell buffers on the GPU.
+      if (bodyChanged) {
+        const bodyPosition = bodyGeometry.getAttribute('position');
+        for (let ring = 0; ring <= rings; ring++) {
+          for (let i = 0; i < segments; i++) {
+            const radius = outlineRadius[i]! * ringSin[ring]!;
+            bodyPosition.setXYZ(
+              ring * segments + i,
+              outlineCos[i]! * radius,
+              -outlineSin[i]! * radius,
+              ringDepth[ring]!,
+            );
+          }
         }
+        bodyPosition.needsUpdate = true;
+        bodyGeometry.computeVertexNormals();
+        bodyGeometry.computeBoundingSphere();
       }
-      bodyPosition.needsUpdate = true;
-      bodyGeometry.computeVertexNormals();
       // Normalize intrinsic outlines, not time-varying poses, so long ears fit without zoom pumping.
-      const fit = Math.min(1, 1.1 / Math.max(...frame.radii));
+      const fit = Math.min(1, 1.1 / maxRadius);
       actor.scale.set(sx * fit, sy * fit, fit);
       // Attention retargets translation without snapping when typing interrupts an excursion.
       actor.position.set(
@@ -407,9 +416,16 @@ export function createCompanionScene(
       reducedMotion: options.reduced || !options.visible,
       onFrame: renderFrame,
     });
+    let width = 0,
+      height = 0;
     const size = () => {
       const rect = canvas.getBoundingClientRect();
-      renderer.setSize(Math.max(1, rect.width), Math.max(1, rect.height), false);
+      const nextWidth = Math.max(1, rect.width),
+        nextHeight = Math.max(1, rect.height);
+      if (nextWidth === width && nextHeight === height) return;
+      width = nextWidth;
+      height = nextHeight;
+      renderer.setSize(width, height, false);
       if (lastFrame) renderFrame(lastFrame);
     };
     size();
@@ -423,9 +439,11 @@ export function createCompanionScene(
       update(next) {
         const greet = next.active && !options.active;
         const recolorNeeded = next.ceramic !== options.ceramic;
+        const becameVisible = next.visible && !options.visible;
         options = next;
         if (recolorNeeded) recolor();
         engine?.update(engineOptions());
+        if ((recolorNeeded || becameVisible) && lastFrame) renderFrame(lastFrame);
         if (greet) engine?.blink();
       },
       poke() {

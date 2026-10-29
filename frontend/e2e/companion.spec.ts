@@ -100,3 +100,57 @@ test('short Mumo panels reveal explicit submissions while preserving passive rea
     fullPage: true,
   });
 });
+
+// Failure cases: idle transforms must not rebuild the shell;
+// losing a WebGL context must release the scene and leave a usable SVG character.
+test('Mumo keeps idle shell buffers and falls back after context loss', async ({ page }, info) => {
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
+  const character = page.getByRole('button', { name: 'Say hello to Mumo', exact: true });
+  const canvas = character.locator('canvas');
+  await expect(canvas).toHaveAttribute('data-renderer', 'webgl');
+  const idleNormalUpdates = await page.evaluate(async () => {
+    const moduleUrl = performance
+      .getEntriesByType('resource')
+      .map((entry) => entry.name)
+      .find((url) => /\/three\.js\?/.test(url));
+    if (!moduleUrl) throw new Error('Three.js module was not loaded');
+    interface Geometry {
+      getAttribute(name: string): { count: number } | undefined;
+      computeVertexNormals(): void;
+    }
+    const module = (await import(moduleUrl)) as {
+      BufferGeometry: { prototype: Geometry };
+    };
+    const prototype = module.BufferGeometry.prototype;
+    const original = prototype.computeVertexNormals;
+    let updates = 0;
+    prototype.computeVertexNormals = function () {
+      if (this.getAttribute('position')?.count === 2400) updates++;
+      original.call(this);
+    };
+    try {
+      for (let i = 0; i < 20; i++)
+        await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      return updates;
+    } finally {
+      prototype.computeVertexNormals = original;
+    }
+  });
+  expect(idleNormalUpdates).toBe(0);
+  await canvas.evaluate((element) =>
+    element.dispatchEvent(new Event('webglcontextlost', { cancelable: true })),
+  );
+  await expect(canvas).not.toBeVisible();
+  await expect(character.locator('svg')).toBeVisible();
+  await character.click();
+  await expect(character.locator('svg')).toBeVisible();
+  await info.attach('mumo-shell-work.json', {
+    body: JSON.stringify({ idleFramesObserved: 20, idleNormalUpdates }, null, 2),
+    contentType: 'application/json',
+  });
+  await page.screenshot({
+    path: info.outputPath('mumo-context-loss-fallback.png'),
+    fullPage: true,
+  });
+});
