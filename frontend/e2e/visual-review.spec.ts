@@ -29,8 +29,9 @@ for (const surface of ['login', 'workspace'] as const) {
     }
     await page.goto('/');
     for (const theme of ['light', 'dark'] as const) {
-      const toggle = page.getByRole('button', { name: `Use ${theme} mode`, exact: true });
-      if (await toggle.isVisible()) await toggle.click();
+      await page.evaluate((value) => localStorage.setItem('theme', value), theme);
+      await page.reload();
+      await expect(page.locator('html')).toHaveClass(new RegExp(theme));
       for (const width of [375, 1440]) {
         await page.setViewportSize({ width, height: width === 375 ? 812 : 900 });
         await expect(

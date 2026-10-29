@@ -437,7 +437,7 @@ function MeetingFooter({ room }: { room: MeetingRoom }) {
           aria-label="Open Mumo"
           aria-expanded={showLeft}
           aria-controls="meeting-ai"
-          tone={showLeft ? 'primary' : 'neutral'}
+          tone={showLeft ? 'secondary' : 'neutral'}
           onClick={() => openPanel('left', !showLeft)}
           icon={
             <AICompanion
