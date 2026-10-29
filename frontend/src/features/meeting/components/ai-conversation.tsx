@@ -13,6 +13,7 @@ import {
 } from 'react';
 import { ArrowDown, ArrowUp, Check, Copy, List, Refresh, Square, Text } from 'iconoir-react';
 import type { useAIConversation } from '../use-ai-conversation';
+import { LoadingIndicator } from '../../../components/loading-indicator';
 
 type Conversation = ReturnType<typeof useAIConversation>;
 const suggestions = [
@@ -57,13 +58,15 @@ const Answer = memo(function Answer({ text }: { text: string }) {
 });
 
 function CopyAnswer({ text }: { text: string }) {
-  const [state, setState] = useState<'idle' | 'copied' | 'error'>('idle');
+  const [state, setState] = useState<'idle' | 'copying' | 'copied' | 'error'>('idle');
   useEffect(() => {
     if (state !== 'copied') return;
     const timer = setTimeout(() => setState('idle'), 2000);
     return () => clearTimeout(timer);
   }, [state]);
   async function copy() {
+    if (state === 'copying') return;
+    setState('copying');
     try {
       if (!navigator.clipboard) {
         setState('error');
@@ -79,12 +82,26 @@ function CopyAnswer({ text }: { text: string }) {
     <button
       type="button"
       aria-label="Copy answer"
+      aria-busy={state === 'copying' || undefined}
+      aria-disabled={state === 'copying' || undefined}
       onClick={() => void copy()}
-      className="inline-flex min-h-11 items-center gap-1.5 rounded-lg px-2 text-[11px] text-muted hover:bg-surface-muted hover:text-text"
+      className="inline-flex min-h-11 min-w-24 items-center gap-1.5 rounded-lg px-2 text-[11px] text-muted hover:bg-surface-muted hover:text-text aria-busy:cursor-progress"
     >
-      {state === 'copied' ? <Check width={14} height={14} /> : <Copy width={14} height={14} />}
+      {state === 'copying' ? (
+        <LoadingIndicator />
+      ) : state === 'copied' ? (
+        <Check width={14} height={14} aria-hidden="true" />
+      ) : (
+        <Copy width={14} height={14} aria-hidden="true" />
+      )}
       <span role="status">
-        {state === 'copied' ? 'Copied' : state === 'error' ? 'Copy unavailable' : 'Copy'}
+        {state === 'copying'
+          ? 'Copying…'
+          : state === 'copied'
+            ? 'Copied'
+            : state === 'error'
+              ? 'Copy unavailable'
+              : 'Copy'}
       </span>
     </button>
   );
@@ -109,7 +126,9 @@ export function AIConversation({
   const unavailable = !ai.available;
   const lastAnswer = ai.messages.at(-1);
   const announcement = ai.busy
-    ? 'Mumo is responding'
+    ? lastAnswer?.state === 'waiting'
+      ? 'Mumo is thinking'
+      : 'Mumo is writing'
     : lastAnswer?.authorId === 'assistant'
       ? `${lastAnswer.state === 'stopped' ? 'Response stopped.' : lastAnswer.state === 'error' ? lastAnswer.error : 'Mumo.'} ${lastAnswer.text}`
       : '';
@@ -199,7 +218,7 @@ export function AIConversation({
           )}
         </div>
       </div>
-      <span className="sr-only" role="status" aria-atomic="true">
+      <span className="sr-only" role="status" aria-label="Mumo response" aria-atomic="true">
         {announcement}
       </span>
       {away && (
@@ -302,8 +321,7 @@ function ConversationComposer({
         />
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] text-muted">
-            {ai.busy ? 'Mumo is on it…' : 'Just a thought away'}
-            {ai.draft.length > 1600 && ` · ${ai.draft.length}/2000`}
+            {ai.draft.length > 1600 && `${ai.draft.length}/2000`}
           </span>
           <button
             type="button"
@@ -348,11 +366,16 @@ function ConversationAnswer({
 }) {
   const unavailable = !ai.available;
   return (
-    <article aria-label="Mumo’s answer">
+    <article aria-label="Mumo’s answer" className="min-h-28">
       {message.state === 'waiting' ? (
-        <p className="text-sm text-muted" role="status">
-          Thinking…
-        </p>
+        <div>
+          <div aria-hidden="true" className="space-y-3 py-2">
+            <div className="h-2.5 w-4/5 rounded-full bg-surface-muted" />
+            <div className="h-2.5 w-full rounded-full bg-surface-muted" />
+            <div className="h-2.5 w-3/5 rounded-full bg-surface-muted" />
+          </div>
+          <ResponseProgress>Thinking…</ResponseProgress>
+        </div>
       ) : (
         <m.div
           key="answer"
@@ -363,9 +386,7 @@ function ConversationAnswer({
           <Answer text={message.text} />
         </m.div>
       )}
-      {message.state === 'streaming' && (
-        <span className="mt-2 block h-1 w-5 rounded-full bg-primary/50" aria-hidden="true" />
-      )}
+      {message.state === 'streaming' && <ResponseProgress>Writing…</ResponseProgress>}
       {message.state === 'stopped' && <p className="mt-2 text-xs text-muted">Stopped</p>}
       {message.error && (
         <p role="alert" className="mt-3 text-xs leading-5 text-error">
@@ -388,5 +409,14 @@ function ConversationAnswer({
         </div>
       )}
     </article>
+  );
+}
+
+function ResponseProgress({ children }: { children: string }) {
+  return (
+    <p className="mt-2 flex min-h-6 items-center gap-2 text-xs text-muted">
+      <LoadingIndicator />
+      {children}
+    </p>
   );
 }
