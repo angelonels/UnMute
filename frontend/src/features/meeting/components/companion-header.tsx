@@ -15,7 +15,7 @@ export function CompanionHeader({
   return (
     <header
       data-companion-activity={behavior.activity}
-      className="relative shrink-0 border-b border-border/50 bg-secondary-soft px-4 pt-1 pb-3"
+      className="relative shrink-0 border-b border-border/50 bg-surface-muted px-4 pt-1 pb-3"
     >
       <Dialog.Title className="sr-only">Mumo</Dialog.Title>
       <Dialog.Description className="sr-only">Your private meeting companion</Dialog.Description>

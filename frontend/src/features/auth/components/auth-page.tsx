@@ -249,10 +249,9 @@ function SignInArtwork() {
       <AICompanion
         size={640}
         stage="sculpture"
-        finish="ceramic"
         pokeable
         label="Say hello to Mumo"
-        className="size-full! [--companion-body:var(--companion-paper-body)] [--companion-face:var(--companion-paper-face)]"
+        className="size-full!"
       />
     </div>
   );

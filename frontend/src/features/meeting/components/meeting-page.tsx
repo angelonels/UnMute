@@ -437,7 +437,7 @@ function MeetingFooter({ room }: { room: MeetingRoom }) {
           aria-label="Open Mumo"
           aria-expanded={showLeft}
           aria-controls="meeting-ai"
-          tone={showLeft ? 'secondary' : 'neutral'}
+          tone={showLeft ? 'primary' : 'neutral'}
           onClick={() => openPanel('left', !showLeft)}
           icon={
             <AICompanion
@@ -777,7 +777,7 @@ function MediaDock({ room }: { room: MeetingRoom }) {
           localMedia.stopAll();
           setEnded(true);
         }}
-        className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-2.5 text-xs font-medium text-white dark:text-canvas"
+        className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-2.5 text-xs font-medium text-on-error"
       >
         <PhoneOff width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
         <span className="hidden sm:inline">Leave</span>

@@ -54,7 +54,7 @@ export function DemoControls({
         <button
           type="button"
           aria-label="Demo controls"
-          className="flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-warning/25 bg-warning/8 px-3 text-[11px] text-warning"
+          className="flex min-h-9 cursor-pointer items-center gap-1.5 rounded-full border border-border bg-surface-muted px-3 text-[11px] text-muted"
         >
           <FlaskConical width={13} height={13} aria-hidden="true" />
           <span className="hidden min-[420px]:inline">Playground</span>

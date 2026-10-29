@@ -10,6 +10,9 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-primary: var(--primary);
+  --color-primary-soft: var(--primary-soft);
+  --color-primary-ink: var(--primary-ink);
+  --color-on-error: var(--on-error);
   --color-secondary: var(--secondary);
   --color-on-secondary: var(--on-secondary);
   --color-secondary-soft: var(--secondary-soft);
@@ -42,28 +45,25 @@
 
 /* Brand material tokens belong to the original AI character, not status surfaces. */
 :root {
-  --companion-paper-light: oklch(0.98 0.012 85);
-  --companion-paper-body: oklch(0.89 0.018 85);
-  --companion-paper-shade: oklch(0.75 0.025 85);
-  --companion-paper-face: oklch(0.23 0.025 255);
-  --companion-light: oklch(0.42 0.055 255);
-  --companion-body: oklch(0.29 0.04 255);
-  --companion-shade: oklch(0.2 0.025 255);
-  --companion-face: oklch(0.97 0.015 85);
-  --companion-edge: oklch(0.74 0.035 255);
-  --companion-fold: oklch(0.57 0.075 255);
-  --person-sage: #dbe7df;
-  --person-sage-ink: #355346;
-  --person-clay: #f0e1d8;
-  --person-clay-ink: #795741;
-  --person-lavender: #e5dff1;
-  --person-lavender-ink: #65507f;
-  --person-slate: #dce4ed;
-  --person-slate-ink: #465b74;
-  --person-sand: #ebe6d5;
-  --person-sand-ink: #6e6344;
-  --person-rose: #f1dfe1;
-  --person-rose-ink: #7b4d55;
+  --companion-light: oklch(0.98 0.012 85);
+  --companion-body: oklch(0.89 0.018 85);
+  --companion-shade: oklch(0.75 0.025 85);
+  --companion-face: oklch(0.23 0.025 282);
+  --companion-edge: oklch(1 0 0);
+  --companion-fold: oklch(0.66 0.035 282);
+  /* Existing participant tone keys resolve to three decorative brand families. */
+  --person-sage: var(--primary-soft);
+  --person-sage-ink: var(--primary-ink);
+  --person-clay: var(--secondary-soft);
+  --person-clay-ink: var(--secondary-ink);
+  --person-lavender: var(--primary-soft);
+  --person-lavender-ink: var(--primary-ink);
+  --person-slate: var(--surface-muted);
+  --person-slate-ink: var(--muted);
+  --person-sand: var(--surface-muted);
+  --person-sand-ink: var(--muted);
+  --person-rose: var(--secondary-soft);
+  --person-rose-ink: var(--secondary-ink);
   color-scheme: light;
   /* Lower-luminance iris neutrals soften large surfaces; lightness carries depth. */
   --canvas: oklch(0.94 0.014 282);
@@ -73,6 +73,8 @@
   --border: oklch(0.845 0.018 282);
   --primary: oklch(0.52 0.17 282);
   --primary-hover: oklch(0.47 0.17 282);
+  --primary-soft: oklch(0.89 0.035 282);
+  --primary-ink: oklch(0.43 0.12 282);
   --on-primary: oklch(1 0 0);
   --focus: oklch(0.52 0.17 282);
   /* Iris actions and restrained rose identity accents have separate readable inks. */
@@ -80,11 +82,12 @@
   --on-secondary: oklch(0.25 0.035 340);
   --secondary-soft: oklch(0.935 0.018 350);
   --secondary-ink: oklch(0.42 0.08 350);
-  --accent: var(--secondary);
+  --accent: var(--primary);
   --success: oklch(0.45 0.1 165);
   --warning: oklch(0.5 0.1 75);
   --error: oklch(0.48 0.18 25);
-  --disabled: oklch(0.55 0.025 255);
+  --on-error: oklch(1 0 0);
+  --disabled: oklch(0.55 0.018 282);
   --selection: oklch(0.92 0.035 282);
   --panel: oklch(0.38 0.13 282);
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -99,24 +102,6 @@
   -webkit-font-smoothing: antialiased;
 }
 :root.dark {
-  --companion-light: oklch(0.98 0.012 85);
-  --companion-body: oklch(0.89 0.018 85);
-  --companion-shade: oklch(0.75 0.025 85);
-  --companion-face: oklch(0.23 0.025 255);
-  --companion-edge: oklch(1 0 0);
-  --companion-fold: oklch(0.66 0.055 255);
-  --person-sage: #233a31;
-  --person-sage-ink: #bdcebf;
-  --person-clay: #443128;
-  --person-clay-ink: #dbc0ab;
-  --person-lavender: #352d46;
-  --person-lavender-ink: #cfc0e1;
-  --person-slate: #293644;
-  --person-slate-ink: #bdcbdc;
-  --person-sand: #3d3828;
-  --person-sand-ink: #d3cba9;
-  --person-rose: #452c31;
-  --person-rose-ink: #d9b7be;
   color-scheme: dark;
   --canvas: oklch(0.155 0.009 282);
   --surface: oklch(0.22 0.012 282);
@@ -129,12 +114,15 @@
   --secondary-ink: oklch(0.86 0.065 350);
   --primary: oklch(0.76 0.125 282);
   --primary-hover: oklch(0.81 0.105 282);
+  --primary-soft: oklch(0.31 0.045 282);
+  --primary-ink: oklch(0.82 0.085 282);
   --on-primary: oklch(0.17 0.035 282);
   --focus: oklch(0.79 0.12 282);
   --success: oklch(0.75 0.1 165);
   --warning: oklch(0.84 0.12 75);
   --error: oklch(0.76 0.13 25);
-  --disabled: oklch(0.58 0.008 265);
+  --on-error: var(--canvas);
+  --disabled: oklch(0.58 0.012 282);
   --selection: oklch(0.35 0.075 282);
   --panel: oklch(0.3 0.08 282);
 }
@@ -166,7 +154,7 @@
   --surface-muted: color-mix(in oklab, var(--text) 4%, var(--surface));
   --border-strong: var(--input);
   --danger: var(--error);
-  --input: oklch(0.61 0.025 255);
+  --input: oklch(0.61 0.018 282);
   --space-2: 0.5rem;
   --space-3: 0.75rem;
   --space-4: 1rem;
@@ -191,13 +179,14 @@
   --ease-standard: var(--ease-out);
   --ease-enter: var(--ease-out);
   --ease-spring: var(--ease-out);
-  --shadow-resting: 0 1px 2px #10275608, 0 2px 8px #10275606;
-  --shadow-floating: 0 4px 16px #1027560a, 0 24px 64px #1027561a;
+  --shadow-resting: 0 1px 2px oklch(0.2 0.025 282 / 0.03), 0 2px 8px oklch(0.2 0.025 282 / 0.025);
+  --shadow-floating: 0 4px 16px oklch(0.2 0.025 282 / 0.04), 0 24px 64px oklch(0.2 0.025 282 / 0.1);
   --shadow-shell:
-    0 0 0 1px color-mix(in oklab, var(--border) 45%, transparent), 0 4px 24px #10275604;
+    0 0 0 1px color-mix(in oklab, var(--border) 45%, transparent),
+    0 4px 24px oklch(0.2 0.025 282 / 0.016);
 }
 :root.dark {
-  --input: oklch(0.49 0.01 265);
+  --input: oklch(0.49 0.014 282);
   --surface-raised: oklch(0.265 0.014 282);
   --surface-muted: oklch(0.25 0.013 282);
   --shadow-shell:

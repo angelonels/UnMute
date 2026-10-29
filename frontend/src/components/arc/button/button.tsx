@@ -19,7 +19,7 @@ import { motionTokens } from '../lib/motion-tokens';
 const styles = {
   button:
     'relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-sm font-medium leading-normal whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
-  primary: 'border-text bg-text text-surface',
+  primary: 'border-transparent bg-primary text-on-primary hover:enabled:bg-primary-hover',
   secondary: 'border-border bg-surface text-text hover:enabled:bg-surface-muted',
   ghost: 'bg-transparent text-muted hover:enabled:bg-surface-muted hover:enabled:text-text',
   danger:

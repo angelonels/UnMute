@@ -52,9 +52,12 @@ export function syntheticCapture(source: MediaSource): Promise<MediaStream> {
   canvas.height = 720;
   const context = canvas.getContext('2d');
   if (!context) return Promise.reject(new DOMException('Unavailable', 'NotSupportedError'));
-  context.fillStyle = source === 'screen' ? '#e4e9e1' : '#355346';
+  const palette = getComputedStyle(document.documentElement);
+  const background = palette.getPropertyValue('--primary-soft').trim();
+  const foreground = palette.getPropertyValue('--primary-ink').trim();
+  context.fillStyle = background;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = source === 'screen' ? '#355346' : '#e4e9e1';
+  context.fillStyle = foreground;
   context.font = '44px system-ui';
   context.fillText(
     source === 'screen' ? 'A clearer space to connect.' : 'Your camera preview',

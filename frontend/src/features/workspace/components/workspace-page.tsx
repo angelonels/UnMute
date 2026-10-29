@@ -284,7 +284,7 @@ function OverviewLink({ compact = false }: { compact?: boolean }) {
       aria-current="page"
       aria-label="Overview"
       title={compact ? 'Overview' : undefined}
-      className={`flex min-h-11 items-center gap-3 rounded-xl bg-primary/9 text-sm font-medium text-primary ${compact ? 'justify-center' : 'px-3'}`}
+      className={`flex min-h-11 items-center gap-3 rounded-xl bg-primary-soft text-sm font-medium text-primary-ink ${compact ? 'justify-center' : 'px-3'}`}
     >
       <LayoutGrid width={18} height={18} aria-hidden="true" />
       {!compact && 'Overview'}
@@ -501,7 +501,7 @@ function AppearanceSetting() {
         {(['light', 'dark', 'system'] as const).map((value) => (
           <label
             key={value}
-            className="relative flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-xl border border-input px-2 py-2 text-center text-sm capitalize has-checked:border-primary has-checked:bg-primary/10 has-checked:text-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-focus"
+            className="relative flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-xl border border-input px-2 py-2 text-center text-sm capitalize has-checked:border-primary has-checked:bg-primary-soft has-checked:text-primary-ink has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-focus"
           >
             <input
               type="radio"

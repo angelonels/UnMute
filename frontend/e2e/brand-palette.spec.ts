@@ -1,7 +1,8 @@
 import { writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
-// Failures: low-contrast action labels, accent copy, muted copy, and missing theme overrides.
+// Failures: unreadable action/status labels, decorative avatar inks, selected controls,
+// and theme overrides that disconnect brand surfaces from their semantic foregrounds.
 test('brand palette retains readable semantic pairs in both themes', async ({ page }, info) => {
   await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: null }));
   await page.goto('/');
@@ -33,6 +34,15 @@ test('brand palette retains readable semantic pairs in both themes', async ({ pa
           ['--secondary-ink', '--secondary-soft'],
           ['--muted', '--surface'],
           ['--text', '--canvas'],
+          ['--primary-ink', '--primary-soft'],
+          ['--on-error', '--error'],
+          ['--success', '--surface'],
+          ['--warning', '--surface'],
+          ['--error', '--surface'],
+          ...['sage', 'clay', 'lavender', 'slate', 'sand', 'rose'].map((tone) => [
+            `--person-${tone}-ink`,
+            `--person-${tone}`,
+          ]),
         ].map(([foreground, background]) => {
           const a = luminance(foreground!);
           const b = luminance(background!);
@@ -51,3 +61,36 @@ test('brand palette retains readable semantic pairs in both themes', async ({ pa
   expect(favicon.ok()).toBe(true);
   expect(await favicon.text()).toContain('<svg');
 });
+
+for (const theme of ['light', 'dark'] as const) {
+  test(`meeting identity and indicative controls stay distinct in ${theme}`, async ({
+    page,
+  }, info) => {
+    await page.addInitScript((value) => localStorage.setItem('theme', value), theme);
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto('/meeting?demo=true&microphone=false&camera=false');
+    await expect(page.getByRole('heading', { name: 'Design sync', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Microphone off', exact: true })).toHaveClass(
+      /text-error/,
+    );
+    await expect(page.getByRole('button', { name: 'Camera off', exact: true })).toHaveClass(
+      /text-error/,
+    );
+    await expect(page.getByRole('button', { name: 'Demo controls', exact: true })).not.toHaveClass(
+      /text-warning/,
+    );
+    const mumo = page.getByRole('button', { name: 'Open Mumo', exact: true });
+    await mumo.click();
+    await expect(mumo).toHaveClass(/bg-primary-soft/);
+    await page.screenshot({
+      path: info.outputPath(`meeting-brand-${theme}-1440.png`),
+      fullPage: true,
+    });
+    await page.setViewportSize({ width: 375, height: 812 });
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.screenshot({
+      path: info.outputPath(`meeting-brand-${theme}-375.png`),
+      fullPage: true,
+    });
+  });
+}

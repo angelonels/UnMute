@@ -12,7 +12,7 @@ const tones = {
   off: 'border-error/25 bg-error/10 text-error hover:bg-error/15',
   success: 'border-success/25 bg-success/10 text-success hover:bg-success/15',
   warning: 'border-warning/25 bg-warning/10 text-warning hover:bg-warning/15',
-  primary: 'border-transparent bg-primary/10 text-primary hover:bg-primary/15',
+  primary: 'border-transparent bg-primary-soft text-primary-ink hover:bg-primary/15',
   secondary: 'border-transparent bg-secondary-soft text-secondary-ink hover:bg-secondary/20',
 };
 export const MeetingControl = forwardRef<HTMLButtonElement, Props>(function MeetingControl(

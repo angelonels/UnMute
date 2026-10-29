@@ -28,7 +28,7 @@ export function DemoDataSelector({
             key={mode}
             type="button"
             aria-pressed={value === mode}
-            className={`shrink-0 rounded-full px-2 py-1 ${value === mode ? 'bg-primary/10 text-primary' : ''}`}
+            className={`shrink-0 rounded-full px-2 py-1 ${value === mode ? 'bg-primary-soft text-primary-ink' : ''}`}
             onClick={() => {
               const url = new URL(window.location.href);
               url.searchParams.set('data', mode);
