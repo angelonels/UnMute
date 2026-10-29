@@ -440,7 +440,7 @@ function AccountControl({
             trigger.current?.focus();
           }}
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center justify-between gap-3">
             <Dialog.Title className="text-xl font-medium tracking-tight">Settings</Dialog.Title>
             <Dialog.Close
               aria-label="Close settings"
@@ -472,9 +472,9 @@ function AccountControl({
 function AppearanceSetting() {
   const { theme, setTheme } = useTheme();
   return (
-    <fieldset className="mt-6">
+    <fieldset className="mt-6 min-w-0">
       <legend className="text-sm font-medium">Appearance</legend>
-      <div className="mt-3 grid grid-cols-3 gap-2">
+      <div className="mt-3 grid grid-cols-[repeat(auto-fit,minmax(min(100%,7rem),1fr))] gap-2">
         {(['light', 'dark', 'system'] as const).map((value) => (
           <label
             key={value}

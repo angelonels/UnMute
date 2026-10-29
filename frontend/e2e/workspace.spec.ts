@@ -191,3 +191,47 @@ test('account popover closes outside and removed workspace placeholders stay abs
   await expect(account).toBeVisible();
   await page.screenshot({ path: info.outputPath('workspace-compact-account.png'), fullPage: true });
 });
+
+test('mobile account settings reflow at enlarged text with long profile details', async ({
+  page,
+}, info) => {
+  const name = 'Alexanderthegreatwithanunbrokenfamilyname';
+  const email = 'anunbrokenlocalpartthatmustwrap@examplewithalongdomain.test';
+  await page.route('**/api/auth/get-session**', (route) =>
+    route.fulfill({ json: { ...session, user: { ...session.user, name, email } } }),
+  );
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  await page.getByRole('button', { name: 'Open navigation', exact: true }).click();
+  await page.getByRole('button', { name: `Account: ${name}`, exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Account', exact: true })
+    .getByRole('button', { name: 'Settings', exact: true })
+    .click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(settings).toBeVisible();
+  await expect(settings.getByText(name, { exact: true })).toBeVisible();
+  await expect(settings.getByText(email, { exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(await settings.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  for (const appearance of ['Light', 'Dark', 'System']) {
+    const control = settings.getByRole('radio', { name: appearance, exact: true });
+    await control.scrollIntoViewIfNeeded();
+    await expect(control).toBeInViewport({ ratio: 1 });
+    expect(
+      await control.locator('..').evaluate((node) => node.scrollWidth <= node.clientWidth),
+    ).toBe(true);
+    await control.check();
+    await expect(control).toBeChecked();
+  }
+  expect(await settings.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await page.screenshot({
+    path: info.outputPath('settings-mobile-enlarged-profile.png'),
+    fullPage: true,
+  });
+  await settings.press('Escape');
+  await expect(page.getByRole('button', { name: `Account: ${name}`, exact: true })).toBeFocused();
+});
