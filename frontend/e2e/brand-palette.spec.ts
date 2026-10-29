@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises';
 import { expect, test } from '@playwright/test';
 
 // Failures: low-contrast action labels, accent copy, muted copy, and missing theme overrides.
@@ -8,6 +9,7 @@ test('brand palette retains readable semantic pairs in both themes', async ({ pa
   for (const theme of ['light', 'dark']) {
     const toggle = page.getByRole('button', { name: `Use ${theme} mode`, exact: true });
     if (await toggle.isVisible()) await toggle.click();
+    await expect(page.locator('html')).toHaveClass(new RegExp(theme));
     measurements[theme] = await page.evaluate(() => {
       const styles = getComputedStyle(document.documentElement);
       const canvas = document.createElement('canvas');
@@ -40,10 +42,9 @@ test('brand palette retains readable semantic pairs in both themes', async ({ pa
     for (const ratio of Object.values(measurements[theme]!))
       expect(ratio).toBeGreaterThanOrEqual(4.5);
   }
-  await info.attach('palette-contrast.json', {
-    body: JSON.stringify(measurements, null, 2),
-    contentType: 'application/json',
-  });
+  const report = info.outputPath('palette-contrast.json');
+  await writeFile(report, JSON.stringify(measurements, null, 2));
+  await info.attach('palette-contrast.json', { path: report, contentType: 'application/json' });
   await expect(page.getByRole('link', { name: 'UnMute home' })).toBeVisible();
   const favicon = await page.request.get('/unmute-mark.svg');
   expect(favicon.ok()).toBe(true);

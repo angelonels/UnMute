@@ -237,10 +237,10 @@ function ConversationIllustration() {
             </div>
           </div>
           <div className="mt-3 flex items-center justify-center gap-2" aria-hidden="true">
-            <span className="grid size-7 place-items-center rounded-lg bg-white">
+            <span className="grid size-7 place-items-center rounded-lg bg-canvas">
               <Microphone width={13} height={13} />
             </span>
-            <span className="grid size-7 place-items-center rounded-lg bg-white">
+            <span className="grid size-7 place-items-center rounded-lg bg-canvas">
               <VideoCamera width={13} height={13} />
             </span>
             <span className="grid h-7 w-10 place-items-center rounded-lg bg-[#bf5353] text-white">

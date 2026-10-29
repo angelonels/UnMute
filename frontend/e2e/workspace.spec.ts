@@ -215,6 +215,24 @@ test('mobile account settings reflow at enlarged text with long profile details'
   await expect(settings).toBeVisible();
   await expect(settings.getByText(name, { exact: true })).toBeVisible();
   await expect(settings.getByText(email, { exact: true })).toBeVisible();
+  const navigationLayer = await page
+    .getByRole('dialog', { name: 'Your workspace', exact: true, includeHidden: true })
+    .evaluate((node) => Number(getComputedStyle(node).zIndex));
+  expect(await settings.evaluate((node) => Number(getComputedStyle(node).zIndex))).toBeGreaterThan(
+    navigationLayer,
+  );
+  await expect
+    .poll(() =>
+      settings.evaluate((node) => {
+        const rect = node.getBoundingClientRect();
+        return (
+          document
+            .elementFromPoint(rect.left + rect.width / 2, rect.top + 24)
+            ?.closest('[role="dialog"]') === node
+        );
+      }),
+    )
+    .toBe(true);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await settings.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
   for (const appearance of ['Light', 'Dark', 'System']) {

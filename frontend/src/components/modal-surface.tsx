@@ -4,7 +4,7 @@ import { AnimatePresence, m } from 'motion/react';
 import { useLayoutEffect, useRef, type ComponentPropsWithoutRef } from 'react';
 import { motionTokens } from './arc/lib/motion-tokens';
 
-/** Keeps Radix focus/escape behaviour while exit presence owns the visual lifetime. */
+/** Dialogs sit above navigation drawers; exit presence owns their visual lifetime. */
 export function ModalSurface({
   open,
   instant = false,
@@ -25,7 +25,7 @@ export function ModalSurface({
         <Dialog.Portal forceMount>
           <Dialog.Overlay asChild forceMount>
             <m.div
-              className="fixed inset-0 z-50 bg-black/35"
+              className="fixed inset-0 z-[69] bg-black/35"
               initial={{ opacity: instant ? 1 : 0 }}
               animate={{ opacity: 1 }}
               custom={mode}
@@ -51,7 +51,7 @@ export function ModalSurface({
           >
             <m.div
               data-motion={mode}
-              className={`fixed top-1/2 left-1/2 z-50 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-1/2 overflow-y-auto overscroll-contain rounded-3xl border border-transparent bg-surface-raised p-6 shadow-floating ${className}`}
+              className={`fixed top-1/2 left-1/2 z-70 max-h-[calc(100dvh-2rem)] w-[calc(100%-2rem)] -translate-1/2 overflow-y-auto overscroll-contain rounded-3xl border border-transparent bg-surface-raised p-6 shadow-floating ${className}`}
               initial={
                 instant ? false : { opacity: 0, transform: reduced ? 'scale(1)' : 'scale(0.97)' }
               }
