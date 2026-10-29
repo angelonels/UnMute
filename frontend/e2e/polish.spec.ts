@@ -55,3 +55,21 @@ test('pointer-open panels exit instantly with Escape and retain scroll containme
   await expect(panel).toHaveCSS('overscroll-behavior-y', 'contain');
   await page.screenshot({ path: info.outputPath('keyboard-panel.png'), fullPage: true });
 });
+
+test('development meeting preview does not fetch an authenticated session', async ({
+  page,
+}, info) => {
+  const sessionRequests: string[] = [];
+  page.on('request', (request) => {
+    if (request.url().includes('/api/auth/get-session')) sessionRequests.push(request.url());
+  });
+  await page.goto('/meeting?demo=true&microphone=false&camera=false');
+  await expect(page.getByRole('heading', { name: 'Design sync', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Open Mumo', exact: true }).click();
+  await expect(page.getByRole('textbox', { name: 'Message Mumo', exact: true })).toBeVisible();
+  expect(sessionRequests).toEqual([]);
+  await info.attach('preview-session-requests.json', {
+    body: JSON.stringify(sessionRequests),
+    contentType: 'application/json',
+  });
+});
