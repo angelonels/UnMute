@@ -27,13 +27,14 @@ const styles = {
     'fixed z-[51] flex max-h-dvh w-[min(30rem,calc(100vw-1rem))] max-w-screen flex-col overflow-hidden border border-border bg-surface text-text shadow-floating data-[side=right]:inset-y-0 data-[side=right]:right-0 data-[side=right]:rounded-l-3xl data-[side=left]:inset-y-0 data-[side=left]:left-0 data-[side=left]:rounded-r-3xl data-[side=top]:inset-x-0 data-[side=top]:top-0 data-[side=top]:max-h-[min(32rem,100dvh)] data-[side=top]:w-full data-[side=top]:rounded-b-3xl data-[side=bottom]:inset-x-0 data-[side=bottom]:bottom-0 data-[side=bottom]:max-h-[min(32rem,100dvh)] data-[side=bottom]:w-full data-[side=bottom]:rounded-t-3xl data-[contained]:absolute data-[contained]:z-20 data-[contained]:max-h-full data-[contained]:w-[min(22rem,calc(100%-2rem))] data-[state=closed]:pointer-events-none!',
   overlay:
     'fixed inset-0 z-50 bg-black/35 backdrop-blur-sm data-[contained]:absolute data-[contained]:z-10 data-[contained]:bg-black/15 data-[contained]:backdrop-blur-none data-[state=closed]:pointer-events-none! motion-reduce:backdrop-blur-none',
-  header: 'flex shrink-0 items-start justify-between gap-5 border-b border-border p-5 sm:p-6',
+  header:
+    'flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-border p-5 sm:p-6',
   handle: 'touch-none select-none',
   swap: 'block leading-normal',
   title: 'relative m-0 text-lg leading-normal font-medium tracking-normal',
   description: 'relative mt-2 max-w-lg text-sm leading-normal text-muted',
   close:
-    'grid size-11 shrink-0 cursor-pointer place-items-center rounded-xl border border-border bg-surface-muted text-muted hover:text-text motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:[&:active:not(:focus-visible)]:scale-[0.96]',
+    'ms-auto grid size-11 shrink-0 cursor-pointer place-items-center rounded-xl border border-border bg-surface-muted text-muted hover:text-text motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:[&:active:not(:focus-visible)]:scale-[0.96]',
   body: 'min-h-0 overflow-auto overscroll-contain p-5 text-sm leading-normal sm:p-6 [scrollbar-width:thin]',
   keyframes: '',
 };
@@ -212,7 +213,7 @@ export function DrawerContent({
         onPan={panMove}
         onPanEnd={panEnd}
       >
-        <div>
+        <div className="min-w-0 flex-1 basis-32 [overflow-wrap:anywhere]">
           <DialogPrimitive.Title className={styles.title}>
             <SwapText text={title} />
           </DialogPrimitive.Title>
