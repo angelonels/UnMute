@@ -319,8 +319,23 @@ export function createCompanionScene(
       if (sculptureMode) canvas.dataset.sculptureYaw = '-0.200';
       const time = options.reduced ? 0 : frame.time;
       const pose = frame.pose;
-      const sx = pose.sx * (1 + 0.7 * frame.squash),
-        sy = pose.sy * (1 - frame.squash);
+      // Short, separated beats read as personality rather than a looping dance.
+      // Deform the actor transform, keeping the cached shell and its seat contact.
+      const stageTime = time % 9;
+      const delight =
+        sculptureMode && !options.reduced && stageTime > 1.2 && stageTime < 3
+          ? Math.sin(((stageTime - 1.2) / 1.8) * Math.PI) ** 2
+          : 0;
+      const surprise =
+        sculptureMode && !options.reduced && !options.active && options.expression === 'happy'
+          ? THREE.MathUtils.smoothstep(stageTime, 4.1, 4.45) *
+            (1 - THREE.MathUtils.smoothstep(stageTime, 5.15, 5.6))
+          : 0;
+      const spring = Math.sin(time * 10) * delight;
+      const stretch = 1 + spring * 0.09;
+      const widen = 1 / Math.sqrt(stretch);
+      const sx = pose.sx * (1 + 0.7 * frame.squash) * widen,
+        sy = pose.sy * (1 - frame.squash) * stretch;
       let bodyChanged = false,
         maxRadius = 0;
       for (let i = 0; i < segments; i++) {
@@ -354,7 +369,7 @@ export function createCompanionScene(
       }
       // Normalize intrinsic outlines, not time-varying poses, so long ears fit without zoom pumping.
       const fit = Math.min(1, 1.1 / maxRadius);
-      actor.scale.set(sx * fit, sy * fit, fit);
+      actor.scale.set(sx * fit, sy * fit, fit * widen);
       // Attention retargets translation without snapping when typing interrupts an excursion.
       actor.position.set(
         options.reduced || sculptureMode
@@ -366,22 +381,31 @@ export function createCompanionScene(
       const turnPhase = time % 12;
       const turn = turnPhase > 10.6 ? (turnPhase - 10.6) / 1.4 : 0;
       const spin = turn * turn * (3 - 2 * turn) * Math.PI * 2;
-      const pitch =
-        options.attention === 'composer'
+      const pitch = sculptureMode
+        ? -0.035 + Math.sin(time * 1.7) * 0.09 + delight * Math.sin(time * 8) * 0.08
+        : options.attention === 'composer'
           ? 0.24
           : options.attention === 'answer'
             ? 0.08
             : Math.sin(time * 1.5) * 0.08;
-      const yaw = options.attention
-        ? frame.gaze.x * 0.2
-        : Math.sin(time * 1.3) * 0.3 +
-          Math.sin(time * 0.55) * 0.18 +
-          (options.state === 'celebrating' ? (pose.rot * Math.PI) / 180 : spin);
+      const yaw = sculptureMode
+        ? Math.sin(time * 0.85) * 0.27 + Math.sin(time * 1.65) * 0.11
+        : options.attention
+          ? frame.gaze.x * 0.2
+          : Math.sin(time * 1.3) * 0.3 +
+            Math.sin(time * 0.55) * 0.18 +
+            (options.state === 'celebrating' ? (pose.rot * Math.PI) / 180 : spin);
       const turnTo = (from: number, to: number) => THREE.MathUtils.damp(from, to, 14, elapsed);
       actor.rotation.set(
         options.reduced ? 0 : turnTo(actor.rotation.x, pitch),
         options.reduced ? 0 : turnTo(actor.rotation.y, yaw),
-        options.state === 'celebrating' ? 0 : (-pose.rot * Math.PI) / 180,
+        options.reduced
+          ? 0
+          : sculptureMode
+            ? Math.sin(time * 1.8) * 0.045 + spring * 0.07
+            : options.state === 'celebrating'
+              ? 0
+              : (-pose.rot * Math.PI) / 180,
       );
       if (sculptureMode) {
         // Seat the current deformed pose on the ceramic counter. Removing idle
@@ -400,15 +424,24 @@ export function createCompanionScene(
         }
         actor.position.y = -bottom;
         canvas.dataset.supportGap = (actor.position.y + bottom).toFixed(3);
+        canvas.dataset.mumoYaw = actor.rotation.y.toFixed(3);
+        canvas.dataset.personality = options.reduced
+          ? 'resting'
+          : surprise > 0.1
+            ? 'surprised'
+            : delight > 0.1
+              ? 'delighted'
+              : 'content';
       }
       for (let sideIndex = 0; sideIndex < eyeBuffers.length; sideIndex++) {
         const { side, geometry } = eyeBuffers[sideIndex]!;
         const e = frame.eyes[sideIndex]!;
         const positions = geometry.getAttribute('position');
         const w = e.w * (1 - 0.16 * Math.abs(frame.gaze.x)),
-          h = e.h;
+          h = THREE.MathUtils.lerp(e.h, 0.23, surprise);
         const lt = e.lt + (1 - e.lt) * frame.blink * 0.5,
-          lb = e.lb + (1 - e.lb) * frame.blink * 0.5;
+          eyeLower = THREE.MathUtils.lerp(e.lb, 0, surprise),
+          lb = eyeLower + (1 - eyeLower) * frame.blink * 0.5;
         let cx = 0,
           cy = 0,
           cz = 0;
@@ -429,7 +462,7 @@ export function createCompanionScene(
             frame.gaze.y * 0.11 +
             e.dy +
             THREE.MathUtils.clamp(y0, top, bottom) -
-            e.bend * (1 - (x / w) ** 2)
+            e.bend * (1 - surprise) * (1 - (x / w) ** 2)
           );
           const angle = (Math.atan2(-py, px) + Math.PI / 2 + Math.PI * 2) % (Math.PI * 2);
           const outlineRadius =
