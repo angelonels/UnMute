@@ -24,7 +24,15 @@ for (const theme of ['light', 'dark'] as const) {
     expect(paths).toEqual(geometry);
     const bounds = await mark.evaluate((node: SVGSVGElement) => {
       const box = node.getBBox();
-      return { x: box.x, y: box.y, right: box.x + box.width, bottom: box.y + box.height };
+      // SVG bounds use float32 internally; compare at subpixel precision rather
+      // than treating a millionth of a view-box unit as visible clipping.
+      const subpixel = (value: number) => Math.round(value * 1000) / 1000;
+      return {
+        x: subpixel(box.x),
+        y: subpixel(box.y),
+        right: subpixel(box.x + box.width),
+        bottom: subpixel(box.y + box.height),
+      };
     });
     expect(bounds.x).toBeGreaterThanOrEqual(2);
     expect(bounds.y).toBeGreaterThanOrEqual(2);
