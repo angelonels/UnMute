@@ -82,6 +82,24 @@ for (const theme of ['light', 'dark'] as const) {
     const mumo = page.getByRole('button', { name: 'Open Mumo', exact: true });
     await mumo.click();
     await expect(mumo).toHaveClass(/bg-primary-soft/);
+    // Opening Mumo reflows the gallery. Capture settled geometry, not an in-flight frame.
+    await expect(async () => {
+      const tiles = await page.locator('[class*="container-name:tile"]').evaluateAll((nodes) =>
+        nodes.map((node) => {
+          const { left, right, top, bottom } = node.getBoundingClientRect();
+          return { left, right, top, bottom };
+        }),
+      );
+      for (let i = 0; i < tiles.length; i++) {
+        for (const other of tiles.slice(i + 1)) {
+          const tile = tiles[i]!;
+          const overlap =
+            Math.max(0, Math.min(tile.right, other.right) - Math.max(tile.left, other.left)) *
+            Math.max(0, Math.min(tile.bottom, other.bottom) - Math.max(tile.top, other.top));
+          expect(overlap).toBeLessThan(1);
+        }
+      }
+    }).toPass({ timeout: 5000 });
     await page.screenshot({
       path: info.outputPath(`meeting-brand-${theme}-1440.png`),
       fullPage: true,
