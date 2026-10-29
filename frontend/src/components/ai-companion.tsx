@@ -27,6 +27,7 @@ interface CompanionProps {
   expression?: ExpressionName | null;
   attention?: 'composer' | 'answer' | null;
   dimensional?: boolean;
+  stage?: 'sculpture';
   pokeable?: boolean;
   onPoke?: () => void;
   ref?: Ref<CompanionHandle>;
@@ -82,7 +83,7 @@ export function AICompanion({
     active: props.active || (pokeable && engaged),
   };
   const content =
-    props.dimensional || (props.size ?? 24) >= 48 ? (
+    props.stage === 'sculpture' || props.dimensional || (props.size ?? 24) >= 48 ? (
       <Companion3D {...common} />
     ) : (
       <CompanionMark {...common} />
@@ -93,7 +94,7 @@ export function AICompanion({
       aria-label={props.label ?? 'Say hello to Mumo'}
       title="Say hello"
       data-interaction={greeting ? 'greeted' : engaged ? 'engaged' : 'idle'}
-      className="relative shrink-0 scale-100 cursor-pointer rounded-full bg-transparent p-0 transition-[background-color] duration-150 ease-out hover:bg-primary/5 motion-safe:transition-[scale,background-color] motion-safe:enabled:active:not-focus-visible:scale-[0.96]"
+      className={`relative shrink-0 scale-100 cursor-pointer bg-transparent p-0 transition-[background-color] duration-150 ease-out motion-safe:transition-[scale,background-color] motion-safe:enabled:active:not-focus-visible:scale-[0.96] ${props.stage ? 'rounded-3xl' : 'rounded-full hover:bg-primary/5'}`}
       onPointerEnter={(event) => {
         if (event.pointerType !== 'touch') setHovered(true);
       }}
@@ -111,7 +112,7 @@ export function AICompanion({
       {greeting > 0 && (
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm"
+          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm ${props.stage ? 'top-[55%]' : '-top-2'}`}
         >
           Hi!
         </span>
@@ -188,6 +189,7 @@ function Companion3D({
   label,
   className = '',
   finish = 'auto',
+  stage,
   emotion = 'auto',
   state,
   shape,
@@ -214,6 +216,7 @@ function Companion3D({
     shape,
     expression,
     attention,
+    stage,
   });
   useImperativeHandle(
     ref,
@@ -234,9 +237,10 @@ function Companion3D({
       shape,
       expression,
       attention,
+      stage,
     };
     scene.current?.update(options.current);
-  }, [ceramic, reduced, active, emotion, state, shape, expression, attention]);
+  }, [ceramic, reduced, active, emotion, state, shape, expression, attention, stage]);
   useEffect(() => {
     const node = host.current,
       surface = canvas.current;
@@ -280,7 +284,7 @@ function Companion3D({
       scene.current?.dispose();
       scene.current = null;
     };
-  }, []);
+  }, [stage]);
   useEffect(() => {
     if (status === 'unavailable') {
       scene.current?.dispose();
@@ -296,6 +300,8 @@ function Companion3D({
       style={{ width: size, height: size }}
       data-companion-state={state}
       data-companion-shape={shape}
+      data-companion-stage={stage}
+      data-scene-status={status}
     >
       <canvas
         ref={canvas}
@@ -305,15 +311,39 @@ function Companion3D({
         className={`absolute inset-0 size-full ${status === 'ready' ? 'visible' : 'invisible'}`}
       />
       {status !== 'ready' && (
-        <CompanionMark
-          ref={fallback}
-          size={size}
-          active={active}
-          state={state}
-          shape={shape}
-          expression={expression}
-          attention={attention}
-        />
+        <span className="absolute inset-0 size-full">
+          {stage && (
+            <img
+              src="/images/auth-sculpture.webp"
+              srcSet="/images/auth-sculpture-small.webp 480w, /images/auth-sculpture.webp 1200w"
+              sizes="(min-width: 1024px) 52vw, 240px"
+              fetchPriority="high"
+              decoding="async"
+              alt=""
+              width={1200}
+              height={1200}
+              className="absolute inset-0 size-full object-contain"
+            />
+          )}
+          <span
+            className={
+              stage
+                ? 'absolute top-[55%] left-[43%] aspect-square w-[29%]'
+                : 'absolute inset-0 size-full'
+            }
+          >
+            <CompanionMark
+              ref={fallback}
+              size={stage ? 64 : size}
+              className="size-full!"
+              active={active}
+              state={state}
+              shape={shape}
+              expression={expression}
+              attention={attention}
+            />
+          </span>
+        </span>
       )}
       {status === 'unavailable' && label && (
         <span className="sr-only">3D rendering unavailable.</span>

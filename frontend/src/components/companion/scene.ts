@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { createSculpture } from './sculpture';
 import {
   createEngine,
   type EngineHandle,
@@ -19,6 +20,7 @@ export interface CompanionOptions {
   shape: ShapeName;
   expression: ExpressionName | null;
   attention?: 'composer' | 'answer' | null;
+  stage?: 'sculpture';
 }
 export interface CompanionScene {
   update: (options: CompanionOptions) => void;
@@ -48,6 +50,19 @@ export function createCompanionScene(
   let options = initial;
   let lastFrame: FrameInput | undefined;
   let pokeAt = -10;
+  const sculptureMode = initial.stage === 'sculpture';
+  let targetYaw = -0.2;
+  let targetPitch = 0.04;
+  const pointer = (event: PointerEvent) => {
+    if (!sculptureMode || options.reduced) return;
+    const bounds = canvas.getBoundingClientRect();
+    targetYaw = -0.2 + ((event.clientX - bounds.left) / bounds.width - 0.5) * 0.3;
+    targetPitch = 0.04 + ((event.clientY - bounds.top) / bounds.height - 0.5) * 0.1;
+  };
+  const resetPointer = () => {
+    targetYaw = -0.2;
+    targetPitch = 0.04;
+  };
   const geo = <T extends THREE.BufferGeometry>(value: T): T => {
     geometries.push(value);
     return value;
@@ -68,6 +83,8 @@ export function createCompanionScene(
     engine?.destroy();
     resize?.disconnect();
     canvas.removeEventListener('webglcontextlost', lost);
+    canvas.removeEventListener('pointermove', pointer);
+    canvas.removeEventListener('pointerleave', resetPointer);
     geometries.forEach((value) => value.dispose());
     materials.forEach((value) => value.dispose());
     textures.forEach((value) => value.dispose());
@@ -75,25 +92,70 @@ export function createCompanionScene(
     renderer.forceContextLoss();
   };
   try {
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+    renderer.setPixelRatio(
+      Math.min(window.devicePixelRatio, sculptureMode && canvas.clientWidth < 400 ? 1.25 : 1.5),
+    );
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.setClearColor(0x000000, 0);
     const scene = new THREE.Scene();
-    const camera = new THREE.OrthographicCamera(-1.65, 1.65, 1.65, -1.65, 0.1, 20);
-    camera.position.set(0, 0, 5);
-    scene.add(new THREE.HemisphereLight(0xeaf1ff, 0x706257, 2.5));
+    const extent = sculptureMode ? 2.18 : 1.65;
+    const camera = new THREE.OrthographicCamera(-extent, extent, extent, -extent, 0.1, 20);
+    camera.position.set(0, sculptureMode ? 0.9 : 0, sculptureMode ? 6 : 5);
+    if (sculptureMode) camera.lookAt(0, 0.08, 0);
+    renderer.shadowMap.enabled = sculptureMode;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
+    const world = new THREE.Group();
+    scene.add(world);
+    const companion = new THREE.Group();
+    world.add(companion);
+    if (sculptureMode) {
+      companion.scale.setScalar(0.36);
+      companion.position.set(0.03, -0.5, 0.2);
+      const sculpture = createSculpture(geo, mat);
+      world.add(sculpture.group);
+      canvas.dataset.sculptureVertices = String(sculpture.vertices);
+      canvas.dataset.sculptureDepth = String(sculpture.depth);
+      world.rotation.set(0.04, -0.2, 0);
+      const floor = new THREE.Mesh(
+        geo(new THREE.PlaneGeometry(12, 12)),
+        mat(new THREE.ShadowMaterial({ opacity: 0.025 })),
+      );
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -1.82;
+      floor.receiveShadow = true;
+      world.add(floor);
+    }
+    let shadowLight: THREE.DirectionalLight | undefined;
+    scene.add(new THREE.HemisphereLight(0xeaf1ff, 0x706257, sculptureMode ? 1.5 : 2.5));
     for (const [color, intensity, x, y, z] of [
       [0xfff4df, 4, -3, 5, 5],
       [0xb3d2ff, 2.5, 4, 1, 3],
       [0xffffff, 3, 1, 3, -3],
     ] as const) {
-      const light = new THREE.DirectionalLight(color, intensity);
+      const light = new THREE.DirectionalLight(color, sculptureMode ? intensity * 0.5 : intensity);
       light.position.set(x, y, z);
+      if (sculptureMode && x === -3) {
+        shadowLight = light;
+        light.position.set(-3, 8, 5);
+        light.castShadow = true;
+        const shadowSize = canvas.clientWidth < 400 ? 512 : 1024;
+        light.shadow.mapSize.set(shadowSize, shadowSize);
+        Object.assign(light.shadow.camera, {
+          left: -3,
+          right: 3,
+          top: 3,
+          bottom: -3,
+          near: 0.5,
+          far: 14,
+        });
+        light.shadow.bias = -0.0003;
+        light.shadow.normalBias = 0.015;
+      }
       scene.add(light);
     }
     const actor = new THREE.Group();
-    scene.add(actor);
+    companion.add(actor);
     const segments = 96,
       rings = 24,
       depth = 0.61;
@@ -135,7 +197,9 @@ export function createCompanionScene(
         clearcoatRoughness: 0.24,
       }),
     );
-    actor.add(new THREE.Mesh(bodyGeometry, shell));
+    const bodyMesh = new THREE.Mesh(bodyGeometry, shell);
+    bodyMesh.castShadow = sculptureMode;
+    actor.add(bodyMesh);
     const ink = mat(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
     const eyeBuffers = [-1, 1].map((side) => {
       const geometry = geo(new THREE.BufferGeometry());
@@ -151,7 +215,7 @@ export function createCompanionScene(
       return { side, geometry };
     });
     const effectGroup = new THREE.Group();
-    scene.add(effectGroup);
+    companion.add(effectGroup);
     effectGroup.scale.setScalar(0.84);
     const circle = geo(new THREE.CircleGeometry(1, 24));
     const ringGeometry = geo(new THREE.RingGeometry(0.96, 1, 64));
@@ -214,7 +278,8 @@ export function createCompanionScene(
     const shadow = new THREE.Mesh(circle, shadowMaterial);
     shadow.scale.set(0.65, 0.055, 1);
     shadow.position.set(0, -1.05, -0.8);
-    scene.add(shadow);
+    companion.add(shadow);
+    shadow.visible = !sculptureMode;
     const recolor = () => {
       shell.color.setHex(options.ceramic ? 0xe6e5dc : 0x4569ad);
       ink.color.setHex(options.ceramic ? 0x24334b : 0xf8f3e6);
@@ -245,6 +310,15 @@ export function createCompanionScene(
       const elapsed = lastFrame ? Math.max(0, Math.min(0.1, frame.time - lastFrame.time)) : 1;
       lastFrame = frame;
       if (disposed || !options.visible || document.hidden) return;
+      if (sculptureMode) {
+        world.rotation.y = options.reduced
+          ? -0.2
+          : THREE.MathUtils.damp(world.rotation.y, targetYaw, 9, elapsed);
+        world.rotation.x = options.reduced
+          ? 0.04
+          : THREE.MathUtils.damp(world.rotation.x, targetPitch, 9, elapsed);
+        canvas.dataset.sculptureYaw = world.rotation.y.toFixed(3);
+      }
       const time = options.reduced ? 0 : frame.time;
       const pose = frame.pose;
       const sx = pose.sx * (1 + 0.7 * frame.squash),
@@ -412,7 +486,13 @@ export function createCompanionScene(
       expression: options.expression,
       attention: options.attention ?? null,
       followPointer: false,
-      maxFrameRate: canvas.clientWidth >= 96 ? 60 : 30,
+      maxFrameRate: sculptureMode
+        ? canvas.clientWidth < 400
+          ? 24
+          : 30
+        : canvas.clientWidth >= 96
+          ? 60
+          : 30,
       reducedMotion: options.reduced || !options.visible,
       onFrame: renderFrame,
     });
@@ -425,7 +505,21 @@ export function createCompanionScene(
       if (nextWidth === width && nextHeight === height) return;
       width = nextWidth;
       height = nextHeight;
+      const compact = sculptureMode && width < 400;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, compact ? 1.25 : 1.5));
+      if (shadowLight) {
+        const shadowSize = compact ? 512 : 1024;
+        if (shadowLight.shadow.mapSize.x !== shadowSize) {
+          shadowLight.shadow.map?.dispose();
+          shadowLight.shadow.map = null;
+          shadowLight.shadow.mapSize.set(shadowSize, shadowSize);
+          shadowLight.shadow.needsUpdate = true;
+        }
+        canvas.dataset.shadowSize = String(shadowSize);
+      }
+      canvas.dataset.qualityTier = compact ? 'compact' : 'wide';
       renderer.setSize(width, height, false);
+      engine?.update(engineOptions());
       if (lastFrame) renderFrame(lastFrame);
     };
     size();
@@ -433,6 +527,11 @@ export function createCompanionScene(
     resize = new ResizeObserver(size);
     resize.observe(canvas);
     canvas.addEventListener('webglcontextlost', lost);
+    if (sculptureMode) {
+      canvas.addEventListener('pointermove', pointer);
+      canvas.addEventListener('pointerleave', resetPointer);
+      canvas.dataset.stage = 'sculpture';
+    }
     canvas.dataset.renderer = 'webgl';
     canvas.dataset.engine = 'dotty';
     return {
