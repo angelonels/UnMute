@@ -65,7 +65,6 @@
   --person-rose: #f1dfe1;
   --person-rose-ink: #7b4d55;
   color-scheme: light;
-  --auth-haze: oklch(0.86 0.055 285);
   --canvas: oklch(0.99 0.004 310);
   --surface: oklch(0.998 0.002 310);
   --text: oklch(0.16 0.025 275);
@@ -118,7 +117,6 @@
   --person-rose: #452c31;
   --person-rose-ink: #d9b7be;
   color-scheme: dark;
-  --auth-haze: oklch(0.28 0.045 285);
   --canvas: oklch(0.155 0.009 282);
   --surface: oklch(0.22 0.012 282);
   --text: oklch(0.95 0.006 285);

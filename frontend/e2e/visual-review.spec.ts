@@ -43,6 +43,16 @@ for (const surface of ['login', 'workspace'] as const) {
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
           true,
         );
+        if (width === 1440) {
+          await expect(page.locator('canvas[data-renderer="webgl"]')).toBeVisible();
+        }
+        if (surface === 'login') {
+          expect(
+            await page
+              .locator('img[src="/images/auth-sculpture.webp"]')
+              .evaluate((node: HTMLImageElement) => node.complete && node.naturalWidth > 0),
+          ).toBe(true);
+        }
         await page.screenshot({
           path: info.outputPath(`${surface}-${theme}-${width}.png`),
           fullPage: true,

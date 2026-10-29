@@ -86,7 +86,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
     <div className="relative isolate flex min-h-svh flex-col overflow-x-clip bg-canvas">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-y-0 left-0 -z-10 hidden w-[70%] bg-[radial-gradient(ellipse_at_25%_45%,var(--auth-haze),transparent_70%)] lg:block"
+        className="pointer-events-none absolute inset-0 -z-10 hidden bg-[url('/images/auth-studio-light.webp')] bg-cover bg-center lg:block dark:bg-[url('/images/auth-studio-dark.webp')]"
       />
       <header className="mx-auto flex min-h-20 w-full max-w-[112rem] shrink-0 flex-wrap items-center justify-between gap-4 px-6 py-4 [&>a]:max-w-full [&>a]:flex-wrap sm:px-10 lg:min-h-24 lg:px-12">
         <Brand />
