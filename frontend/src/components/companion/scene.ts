@@ -11,7 +11,6 @@ import {
 
 export type CompanionEmotion = 'auto' | 'calm' | 'curious' | 'happy';
 export interface CompanionOptions {
-  ceramic: boolean;
   reduced: boolean;
   visible: boolean;
   active: boolean;
@@ -253,7 +252,7 @@ export function createCompanionScene(
       Array.from({ length: count }, () => {
         const material = mat(
           new THREE.MeshBasicMaterial({
-            color: 0x83aaff,
+            color: 0xffffff,
             ...(texture ? { map: texture } : {}),
             transparent: true,
             depthWrite: false,
@@ -286,15 +285,25 @@ export function createCompanionScene(
     shadow.position.set(0, -1.05, -0.8);
     companion.add(shadow);
     shadow.visible = !sculptureMode;
+    const paletteSurface = document.createElement('canvas');
+    paletteSurface.width = paletteSurface.height = 1;
+    const paletteContext = paletteSurface.getContext('2d', { willReadFrequently: true });
+    if (!paletteContext) throw new Error('Companion palette canvas is unavailable');
+    const brandColor = (styles: CSSStyleDeclaration, token: string) => {
+      paletteContext.fillStyle = styles.getPropertyValue(token).trim();
+      paletteContext.fillRect(0, 0, 1, 1);
+      const [red, green, blue] = paletteContext.getImageData(0, 0, 1, 1).data;
+      return new THREE.Color().setRGB(red! / 255, green! / 255, blue! / 255, THREE.SRGBColorSpace);
+    };
     const recolor = () => {
-      shell.color.setHex(options.ceramic ? 0xe6e5dc : 0x4569ad);
-      ink.color.setHex(options.ceramic ? 0x24334b : 0xf8f3e6);
-      allEffects.forEach((mesh) =>
-        mesh.material.color.setHex(options.ceramic ? 0x91b8ff : 0x436fbc),
-      );
-      sparks.forEach((mesh, i) =>
-        mesh.material.color.setHex(i % 2 ? 0xf4c87e : options.ceramic ? 0xa9c5ff : 0x4f7fca),
-      );
+      // Mumo has one ceramic identity; themes change its surroundings, never its finish.
+      const styles = getComputedStyle(canvas);
+      shell.color.copy(brandColor(styles, '--companion-body'));
+      ink.color.copy(brandColor(styles, '--companion-face'));
+      const primary = brandColor(styles, '--primary');
+      const secondary = brandColor(styles, '--secondary');
+      allEffects.forEach((mesh) => mesh.material.color.copy(primary));
+      sparks.forEach((mesh, i) => mesh.material.color.copy(i % 2 ? secondary : primary));
     };
     recolor();
     const effect = (
@@ -585,15 +594,15 @@ export function createCompanionScene(
     return {
       update(next) {
         const greet = next.active && !options.active;
-        const recolorNeeded = next.ceramic !== options.ceramic;
         const becameVisible = next.visible && !options.visible;
         const lightingChanged = next.dark !== options.dark;
         options = next;
-        if (recolorNeeded) recolor();
-        if (lightingChanged) applyLighting();
+        if (lightingChanged) {
+          recolor();
+          applyLighting();
+        }
         engine?.update(engineOptions());
-        if ((recolorNeeded || becameVisible || lightingChanged) && lastFrame)
-          renderFrame(lastFrame);
+        if ((becameVisible || lightingChanged) && lastFrame) renderFrame(lastFrame);
         if (greet) engine?.blink();
       },
       poke() {

@@ -20,7 +20,6 @@ interface CompanionProps {
   active?: boolean;
   label?: string;
   className?: string;
-  finish?: 'auto' | 'ceramic' | 'graphite';
   emotion?: CompanionEmotion;
   state?: StateName;
   shape?: ShapeName;
@@ -198,7 +197,6 @@ function Companion3D({
   active = false,
   label,
   className = '',
-  finish = 'auto',
   stage,
   emotion = 'auto',
   state,
@@ -215,9 +213,7 @@ function Companion3D({
   const scene = useRef<CompanionScene | null>(null);
   const fallback = useRef<CompanionHandle>(null);
   const visible = useRef(false);
-  const ceramic = finish === 'ceramic' || (finish === 'auto' && resolvedTheme === 'dark');
   const options = useRef<CompanionOptions>({
-    ceramic,
     dark: resolvedTheme === 'dark',
     reduced,
     visible: false,
@@ -239,7 +235,6 @@ function Companion3D({
   );
   useEffect(() => {
     options.current = {
-      ceramic,
       dark: resolvedTheme === 'dark',
       reduced,
       visible: visible.current,
@@ -252,18 +247,7 @@ function Companion3D({
       stage,
     };
     scene.current?.update(options.current);
-  }, [
-    ceramic,
-    resolvedTheme,
-    reduced,
-    active,
-    emotion,
-    state,
-    shape,
-    expression,
-    attention,
-    stage,
-  ]);
+  }, [resolvedTheme, reduced, active, emotion, state, shape, expression, attention, stage]);
   useEffect(() => {
     const node = host.current,
       surface = canvas.current;
