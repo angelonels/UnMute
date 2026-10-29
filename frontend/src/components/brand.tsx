@@ -1,3 +1,5 @@
+import { Link } from '@tanstack/react-router';
+
 /** The lifted terminal opens the U; keep the same silhouette in public/unmute-mark.svg. */
 export function BrandMark({ className = 'size-9' }: { className?: string }) {
   return (
@@ -10,13 +12,14 @@ export function BrandMark({ className = 'size-9' }: { className?: string }) {
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <a
-      href="/"
+    <Link
+      to="/"
+      search={{ error: undefined }}
       aria-label="UnMute home"
       className="inline-flex shrink-0 items-center gap-2.5 rounded-lg text-[1.25rem] font-semibold tracking-[-0.055em] no-underline"
     >
       <BrandMark className="size-9 shrink-0 text-primary" />
       {!compact && <span>UnMute</span>}
-    </a>
+    </Link>
   );
 }
