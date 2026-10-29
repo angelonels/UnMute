@@ -1,23 +1,23 @@
 import { personInitials } from '../../../lib/person-initials';
 import { useReducedMotion } from '../../../hooks/use-reduced-motion';
 import { ModalSurface } from '../../../components/modal-surface';
-import { useEffect } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react';
 import { m } from 'motion/react';
+import { useTheme } from 'next-themes';
 import { AICompanion } from '../../../components/ai-companion';
 import { useLocalMedia, LocalVideo } from '../../media';
-import { useState, type ReactNode } from 'react';
 import { Link } from '@tanstack/react-router';
 import {
   ArrowLeft,
   ArrowRight,
-  HelpCircle as CircleHelp,
   ViewGrid as LayoutGrid,
   LogOut,
   Microphone as Mic,
   MicrophoneMute as MicOff,
   SidebarCollapse as PanelLeftClose,
   SidebarExpand as PanelLeftOpen,
-  SidebarExpand as PanelRightOpen,
+  Settings,
+  NavArrowUp,
   VideoCamera as Video,
   VideoCameraOff as VideoOff,
   Xmark as X,
@@ -26,7 +26,6 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { type authClient } from '../../../api/auth-client';
 import { useAuthActions } from '../../auth';
 import { Brand } from '../../../components/brand';
-import { ThemeToggle } from '../../../components/theme-toggle';
 import { Button } from '../../../components/arc/button/button';
 import { Drawer, DrawerContent, DrawerTrigger } from '../../../components/arc/drawer/drawer';
 
@@ -35,11 +34,8 @@ type User = typeof authClient.$Infer.Session.user;
 export function WorkspacePage({ user }: { user: User }) {
   const reduced = useReducedMotion();
   const [keyboard, setKeyboard] = useState(false);
-  const [greeting, setGreeting] = useState(false);
   const [navigationOpen, setNavigationOpen] = useState(true);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [sidePanelOpen, setSidePanelOpen] = useState(false);
-  const { busy, failed, signOut } = useAuthActions(false);
   return (
     <div
       className="flex min-h-svh flex-col p-3 sm:p-4"
@@ -48,133 +44,60 @@ export function WorkspacePage({ user }: { user: User }) {
     >
       <div className="relative flex flex-1 gap-3">
         <WorkspaceNavigation
+          user={user}
+          keyboard={keyboard}
           navigationOpen={navigationOpen}
           onToggle={() => setNavigationOpen(!navigationOpen)}
-          busy={busy}
-          failed={failed}
-          signOut={signOut}
         />
         <m.main
           layout={reduced || keyboard ? false : 'position'}
-          layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
+          layoutDependency={navigationOpen}
           transition={{ type: 'spring', stiffness: 420, damping: 42 }}
-          className={`relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell ${sidePanelOpen ? 'xl:mr-84' : ''}`}
+          className="relative flex min-w-0 flex-1 flex-col overflow-hidden rounded-[1.75rem] border border-transparent bg-surface shadow-shell"
         >
-          <div className="flex min-h-16 items-center justify-between gap-3 px-5 sm:px-8">
-            <div className="flex items-center gap-2">
-              <div className="lg:hidden">
-                <Drawer>
-                  <DrawerTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Open navigation"
-                      className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none"
-                    >
-                      <PanelLeftOpen width={19} height={19} aria-hidden="true" />
-                    </button>
-                  </DrawerTrigger>
-                  <DrawerContent
-                    title="Your workspace"
-                    description="Workspace navigation"
-                    side="left"
-                  >
-                    <a
-                      href="/"
-                      aria-current="page"
-                      className="flex min-h-12 items-center gap-3 rounded-xl bg-primary/10 px-4 text-primary"
-                    >
-                      <LayoutGrid width={18} height={18} aria-hidden="true" />
-                      Overview
-                    </a>
-                    <div className="mt-8">
-                      <Help />
-                      <button
-                        disabled={busy}
-                        aria-busy={busy}
-                        onClick={() => void signOut()}
-                        className="flex min-h-12 w-full cursor-pointer items-center gap-3 px-3 text-muted"
-                      >
-                        <LogOut width={18} height={18} aria-hidden="true" />
-                        {busy ? 'Signing out…' : 'Sign out'}
-                      </button>
-                      {failed && (
-                        <p role="alert" className="text-error">
-                          Sign-out failed. Try again.
-                        </p>
-                      )}
-                    </div>
-                  </DrawerContent>
-                </Drawer>
-              </div>
-              <span className="lg:hidden">
-                <Brand compact />
-              </span>
-              <h1 className="sr-only text-sm font-medium sm:not-sr-only">Overview</h1>
-            </div>
-            <div className="flex items-center gap-1 sm:gap-2">
-              <ThemeToggle />
-              <span
-                className="me-2 grid size-8 place-items-center rounded-full bg-surface-muted text-xs font-medium"
-                aria-label={`Signed in as ${user.name}`}
-              >
-                {personInitials(user.name)}
-              </span>
-              <Drawer modal={false} open={sidePanelOpen} onOpenChange={setSidePanelOpen}>
+          <header className="flex min-h-18 items-center gap-3 border-b border-border/50 px-5 sm:px-8">
+            <div className="lg:hidden">
+              <Drawer>
                 <DrawerTrigger asChild>
                   <button
                     type="button"
-                    className="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 text-sm text-muted hover:bg-surface-muted hover:text-text"
+                    aria-label="Open navigation"
+                    className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted hover:bg-surface-muted hover:text-text"
                   >
-                    <span className="hidden sm:inline">Side panel</span>
-                    <PanelRightOpen
-                      width={19}
-                      height={19}
-                      className="-scale-x-100"
-                      aria-hidden="true"
-                    />
-                    <span className="sr-only sm:hidden">Open side panel</span>
+                    <PanelLeftOpen width={19} height={19} aria-hidden="true" />
                   </button>
                 </DrawerTrigger>
                 <DrawerContent
-                  title="Your side panel"
-                  description="Workspace"
-                  className="xl:top-4! xl:right-4! xl:bottom-4! xl:w-80! xl:rounded-[1.75rem]!"
+                  title="Your workspace"
+                  description="Workspace navigation"
+                  side="left"
                 >
-                  <div className="flex min-h-80 flex-col items-center justify-center text-center">
-                    <PanelRightOpen
-                      width={28}
-                      height={28}
-                      strokeWidth={1.5}
-                      className="-scale-x-100 text-muted/60"
-                      aria-hidden="true"
-                    />
-                    <p className="mt-5 text-base font-medium">Room for more.</p>
-                    <p className="mt-2 max-w-56 text-sm leading-relaxed text-muted">
-                      Your workspace tools will live here.
-                    </p>
+                  <div className="flex min-h-[calc(100dvh-12rem)] flex-col">
+                    <OverviewLink />
+                    <div className="mt-auto pt-8">
+                      <AccountControl user={user} keyboard={keyboard} />
+                    </div>
                   </div>
                 </DrawerContent>
               </Drawer>
             </div>
-          </div>
+            <span className="lg:hidden">
+              <Brand compact />
+            </span>
+            <h1 className="text-sm font-medium">Overview</h1>
+          </header>
           <m.div
             layout={reduced || keyboard ? false : 'position'}
-            layoutDependency={`${navigationOpen}:${sidePanelOpen}`}
+            layoutDependency={navigationOpen}
             transition={{ type: 'spring', stiffness: 420, damping: 42 }}
-            className="flex flex-1 flex-col items-center justify-center px-5 py-8 text-center sm:px-8 sm:py-14"
-            onPointerEnter={() => setGreeting(true)}
-            onPointerLeave={() => setGreeting(false)}
+            className="flex flex-1 flex-col items-center justify-center px-5 py-12 text-center sm:px-8 sm:py-16"
           >
-            <AICompanion size={112} active={greeting} className="mb-6" />
-            <p className="mb-3 text-sm text-muted">Your next good conversation</p>
-            <h2 className="max-w-2xl text-[clamp(2rem,4.5vw,4rem)] leading-[1.07] font-medium tracking-[-0.055em]">
-              A little more presence.
-              <br />
-              <span className="text-muted">A lot more possibility.</span>
+            <div className="mb-6 rounded-full bg-secondary-soft p-4">
+              <AICompanion size={112} pokeable label="Say hello to Mumo" />
+            </div>
+            <h2 className="max-w-2xl text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.1] font-medium tracking-[-0.045em]">
+              Ready when you are.
             </h2>
-            <p className="mt-6 max-w-sm text-sm leading-7 text-muted sm:text-base">
-              A clear space to meet, listen, and be heard.
-            </p>
             <Dialog.Root open={previewOpen} onOpenChange={setPreviewOpen}>
               <Dialog.Trigger asChild>
                 <Button
@@ -198,44 +121,9 @@ export function WorkspacePage({ user }: { user: User }) {
               </Link>
             )}
           </m.div>
-          <footer className="mx-5 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 py-5 text-xs text-muted sm:mx-8">
-            <span className="inline-flex items-center gap-2">
-              <span className="size-1.5 rounded-full bg-muted/50" />
-              Made for being here.
-            </span>
-            <span>UnMute © {new Date().getFullYear()}</span>
-          </footer>
         </m.main>
       </div>
     </div>
-  );
-}
-
-function Help({ compact = false }: { compact?: boolean }) {
-  return (
-    <Drawer>
-      <DrawerTrigger asChild>
-        <button
-          type="button"
-          aria-label="About this workspace"
-          className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text ${compact ? 'justify-center' : 'px-3'}`}
-        >
-          <CircleHelp width={18} height={18} aria-hidden="true" />
-          {!compact && 'About this workspace'}
-        </button>
-      </DrawerTrigger>
-      <DrawerContent
-        title="A clearer space to connect"
-        description="The beginning of your UnMute workspace."
-      >
-        <div className="space-y-5 leading-7 text-muted">
-          <p>
-            Start meeting opens a preview where you can set your microphone and camera preferences.
-          </p>
-          <p>Meeting connections, invitations, and workspace tools are coming in a later update.</p>
-        </div>
-      </DrawerContent>
-    </Drawer>
   );
 }
 
@@ -373,35 +261,50 @@ function MeetingPreview({
   );
 }
 
+function OverviewLink({ compact = false }: { compact?: boolean }) {
+  return (
+    <Link
+      to="/"
+      search={{ error: undefined }}
+      aria-current="page"
+      aria-label="Overview"
+      title={compact ? 'Overview' : undefined}
+      className={`flex min-h-11 items-center gap-3 rounded-xl bg-primary/9 text-sm font-medium text-primary ${compact ? 'justify-center' : 'px-3'}`}
+    >
+      <LayoutGrid width={18} height={18} aria-hidden="true" />
+      {!compact && 'Overview'}
+    </Link>
+  );
+}
+
 function WorkspaceNavigation({
+  user,
   navigationOpen,
   onToggle,
-  busy,
-  failed,
-  signOut,
+  keyboard,
 }: {
+  user: User;
   navigationOpen: boolean;
   onToggle: () => void;
-  busy: boolean;
-  failed: boolean;
-  signOut: () => Promise<void>;
+  keyboard: boolean;
 }) {
   return (
     <aside
-      className={`hidden shrink-0 flex-col rounded-3xl border border-transparent bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
+      className={`hidden shrink-0 flex-col rounded-3xl border border-transparent bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-64' : 'w-18'}`}
       aria-label="Workspace navigation"
     >
       <div
-        className={`flex h-12 items-center ${navigationOpen ? 'justify-between px-2' : 'justify-center'}`}
+        className={`flex items-center gap-2 ${navigationOpen ? 'min-h-12 justify-between px-1' : 'flex-col py-1'}`}
       >
-        {navigationOpen && <Brand />}
+        <Brand compact={!navigationOpen} />
         <button
           type="button"
           aria-label={navigationOpen ? 'Collapse navigation' : 'Expand navigation'}
+          title={navigationOpen ? 'Collapse navigation' : 'Expand navigation'}
           aria-expanded={navigationOpen}
           aria-controls="navigation-content"
           onClick={onToggle}
-          className="grid size-11 cursor-pointer place-items-center rounded-xl text-muted transition-colors duration-150 ease-out-expo hover:bg-surface-muted motion-reduce:transition-none hover:text-text"
+          className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-xl border border-border/60 text-muted hover:bg-surface-muted hover:text-text"
         >
           {navigationOpen ? (
             <PanelLeftClose width={19} height={19} aria-hidden="true" />
@@ -410,36 +313,185 @@ function WorkspaceNavigation({
           )}
         </button>
       </div>
-      <nav id="navigation-content" className="mt-4 flex flex-1 flex-col">
-        <a
-          href="/"
-          aria-current="page"
-          aria-label="Overview"
-          className={`flex h-11 items-center gap-3 rounded-xl bg-primary/9 text-sm font-medium text-primary ${navigationOpen ? 'px-3' : 'justify-center'}`}
-        >
-          <LayoutGrid width={18} height={18} aria-hidden="true" />
-          {navigationOpen && 'Overview'}
-        </a>
+      <nav id="navigation-content" className="mt-5 flex-1">
+        <OverviewLink compact={!navigationOpen} />
       </nav>
       <div className="mt-8 border-t border-border/60 pt-3">
-        <Help compact={!navigationOpen} />
-        <button
-          type="button"
-          disabled={busy}
-          aria-busy={busy}
-          onClick={() => void signOut()}
-          aria-label="Sign out"
-          className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text disabled:cursor-wait ${navigationOpen ? 'px-3' : 'justify-center'}`}
-        >
-          <LogOut width={18} height={18} aria-hidden="true" />
-          {navigationOpen && (busy ? 'Signing out…' : 'Sign out')}
-        </button>
-        {failed && (
-          <p role="alert" className="px-2 text-xs text-error">
-            Sign-out failed. Try again.
-          </p>
-        )}
+        <AccountControl user={user} compact={!navigationOpen} keyboard={keyboard} />
       </div>
     </aside>
+  );
+}
+
+function AccountControl({
+  user,
+  compact = false,
+  keyboard,
+}: {
+  user: User;
+  compact?: boolean;
+  keyboard: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const trigger = useRef<HTMLButtonElement>(null);
+  const [position, setPosition] = useState({ left: 12, bottom: 12 });
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const rect = trigger.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPosition({
+        left: Math.max(12, Math.min(rect.left, window.innerWidth - 252)),
+        bottom: Math.max(12, window.innerHeight - rect.top + 8),
+      });
+    };
+    place();
+    window.addEventListener('resize', place);
+    window.addEventListener('scroll', place, true);
+    return () => {
+      window.removeEventListener('resize', place);
+      window.removeEventListener('scroll', place, true);
+    };
+  }, [open]);
+  const { busy, failed, signOut } = useAuthActions(false);
+  return (
+    <div className="relative">
+      <Dialog.Root modal={false} open={open} onOpenChange={setOpen}>
+        <Dialog.Trigger asChild>
+          <button
+            ref={trigger}
+            type="button"
+            aria-label={`Account: ${user.name}`}
+            title={compact ? user.name : undefined}
+            className={`flex min-h-12 w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl text-left hover:bg-surface-muted data-[state=open]:bg-surface-muted ${compact ? 'justify-center' : 'px-2'}`}
+          >
+            <span
+              className="grid size-9 shrink-0 place-items-center rounded-full bg-secondary-soft text-xs font-medium text-secondary-ink"
+              aria-hidden="true"
+            >
+              {personInitials(user.name)}
+            </span>
+            {!compact && (
+              <>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{user.name}</span>
+                <NavArrowUp
+                  width={15}
+                  height={15}
+                  className="shrink-0 text-muted"
+                  aria-hidden="true"
+                />
+              </>
+            )}
+          </button>
+        </Dialog.Trigger>
+        <Dialog.Portal>
+          <Dialog.Content
+            style={position}
+            aria-describedby={undefined}
+            onCloseAutoFocus={(event) => {
+              if (settingsOpen) event.preventDefault();
+            }}
+            className="fixed z-60 w-60 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border bg-surface-raised p-1.5 shadow-floating"
+          >
+            <Dialog.Title className="sr-only">Account</Dialog.Title>
+            <p
+              className="truncate border-b border-border/60 px-3 pt-2 pb-3 text-xs text-muted"
+              title={user.email}
+            >
+              {user.email}
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setSettingsOpen(true);
+                setOpen(false);
+              }}
+              className="mt-1 flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-sm hover:bg-surface-muted"
+            >
+              <Settings width={18} height={18} aria-hidden="true" />
+              Settings
+            </button>
+            <button
+              type="button"
+              disabled={busy}
+              aria-busy={busy}
+              onClick={() => void signOut()}
+              className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl px-3 text-sm text-muted hover:bg-surface-muted hover:text-text disabled:cursor-wait disabled:opacity-50"
+            >
+              <LogOut width={18} height={18} aria-hidden="true" />
+              {busy ? 'Signing out…' : 'Sign out'}
+            </button>
+            {failed && (
+              <p role="alert" className="px-3 py-2 text-xs leading-5 text-error">
+                Sign-out failed. Try again.
+              </p>
+            )}
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
+      <Dialog.Root open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <ModalSurface
+          open={settingsOpen}
+          instant={keyboard}
+          className="max-w-lg"
+          onCloseAutoFocus={(event) => {
+            event.preventDefault();
+            trigger.current?.focus();
+          }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <Dialog.Title className="text-xl font-medium tracking-tight">Settings</Dialog.Title>
+            <Dialog.Close
+              aria-label="Close settings"
+              className="grid size-11 shrink-0 cursor-pointer place-items-center rounded-full text-muted hover:bg-surface-muted"
+            >
+              <X width={20} height={20} aria-hidden="true" />
+            </Dialog.Close>
+          </div>
+          <Dialog.Description className="sr-only">
+            Your account and appearance preferences.
+          </Dialog.Description>
+          <dl className="mt-6 space-y-4 border-b border-border/60 pb-6 text-sm">
+            <div>
+              <dt className="text-xs text-muted">Name</dt>
+              <dd className="mt-1 [overflow-wrap:anywhere]">{user.name}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted">Email</dt>
+              <dd className="mt-1 [overflow-wrap:anywhere]">{user.email}</dd>
+            </div>
+          </dl>
+          <AppearanceSetting />
+        </ModalSurface>
+      </Dialog.Root>
+    </div>
+  );
+}
+
+function AppearanceSetting() {
+  const { theme, setTheme } = useTheme();
+  return (
+    <fieldset className="mt-6">
+      <legend className="text-sm font-medium">Appearance</legend>
+      <div className="mt-3 grid grid-cols-3 gap-2">
+        {(['light', 'dark', 'system'] as const).map((value) => (
+          <label
+            key={value}
+            className="relative flex min-h-12 min-w-0 cursor-pointer items-center justify-center rounded-xl border border-input px-2 py-2 text-center text-sm capitalize has-checked:border-primary has-checked:bg-primary/10 has-checked:text-primary has-focus-visible:outline-2 has-focus-visible:outline-offset-3 has-focus-visible:outline-focus"
+          >
+            <input
+              type="radio"
+              name="appearance"
+              value={value}
+              checked={theme === value}
+              onChange={() => setTheme(value)}
+              className="absolute inset-0 size-full cursor-pointer opacity-0"
+            />
+            {value.charAt(0).toUpperCase() + value.slice(1)}
+          </label>
+        ))}
+      </div>
+    </fieldset>
   );
 }

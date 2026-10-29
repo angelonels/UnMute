@@ -49,13 +49,22 @@ test('workspace panels and meeting preview preserve keyboard access', async ({
     'false',
   );
   await page.getByRole('button', { name: 'Expand navigation' }).click();
-  await page.getByRole('button', { name: 'Side panel', exact: true }).click();
-  const panel = page.getByRole('dialog', { name: 'Your side panel', exact: true });
-  await expect(panel).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath('workspace-panel.png'), fullPage: true });
-  await panel.getByRole('button', { name: 'Close drawer' }).press('Escape');
-  await expect(panel).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Side panel', exact: true })).toBeFocused();
+  const account = page.getByRole('button', { name: 'Account: Alex Morgan', exact: true });
+  await account.press('Enter');
+  const accountPanel = page.getByRole('dialog', { name: 'Account', exact: true });
+  await expect(accountPanel).toBeVisible();
+  await accountPanel.getByRole('button', { name: 'Settings', exact: true }).click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(settings).toBeVisible();
+  await expect(settings.getByText('alex@example.test', { exact: true })).toBeVisible();
+  await settings.getByRole('radio', { name: 'Dark', exact: true }).check();
+  await expect(page.locator('html')).toHaveClass(/dark/);
+  await settings.getByRole('radio', { name: 'System', exact: true }).check();
+  await expect(settings.getByRole('radio', { name: 'System', exact: true })).toBeChecked();
+  await page.screenshot({ path: testInfo.outputPath('workspace-settings.png'), fullPage: true });
+  await settings.press('Escape');
+  await expect(settings).toHaveCount(0);
+  await expect(account).toBeFocused();
   await start.press('Enter');
   const preview = page.getByRole('dialog', { name: 'Before you meet' });
   await expect(preview).toBeVisible();
@@ -76,8 +85,10 @@ test('workspace panels and meeting preview preserve keyboard access', async ({
 test('workspace fits narrow and wide screens in both themes', async ({ page }, testInfo) => {
   await page.goto('/');
   for (const theme of ['light', 'dark']) {
-    const switcher = page.getByRole('button', { name: `Use ${theme} mode` });
-    if (await switcher.isVisible()) await switcher.click();
+    await page.evaluate((value) => {
+      localStorage.setItem('theme', value);
+    }, theme);
+    await page.reload();
     for (const width of [320, 375, 768, 1024, 1440, 2560]) {
       await page.setViewportSize({ width, height: 900 });
       await expect(page.getByRole('button', { name: 'Start meeting', exact: true })).toBeVisible();
@@ -97,10 +108,19 @@ test('workspace fits narrow and wide screens in both themes', async ({ page }, t
     });
   }
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.getByRole('button', { name: 'Open side panel' }).click();
-  await expect(page.getByRole('dialog', { name: 'Your side panel' })).toBeVisible();
-  await page.getByRole('button', { name: 'Close drawer' }).click();
-  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  const navigation = page.getByRole('dialog', { name: 'Your workspace', exact: true });
+  await navigation.getByRole('button', { name: 'Account: Alex Morgan', exact: true }).click();
+  const account = page.getByRole('dialog', { name: 'Account', exact: true });
+  await account.getByRole('button', { name: 'Settings', exact: true }).click();
+  const settings = page.getByRole('dialog', { name: 'Settings', exact: true });
+  await expect(settings).toBeVisible();
+  await settings.getByRole('radio', { name: 'Light', exact: true }).check();
+  await expect(page.locator('html')).toHaveClass(/light/);
+  await settings.press('Escape');
+  await expect(
+    navigation.getByRole('button', { name: 'Account: Alex Morgan', exact: true }),
+  ).toBeFocused();
 });
 
 test('sign-out failure leaves a working retry', async ({ page }) => {
@@ -108,6 +128,7 @@ test('sign-out failure leaves a working retry', async ({ page }) => {
     route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
   );
   await page.goto('/');
+  await page.getByRole('button', { name: 'Account: Alex Morgan', exact: true }).click();
   await page.getByRole('button', { name: 'Sign out', exact: true }).click();
   await expect(page.getByRole('alert').filter({ visible: true })).toContainText('Sign-out failed');
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeEnabled();
@@ -146,4 +167,27 @@ test('meeting preview keeps device controls and long names within a narrow viewp
   });
   await preview.getByRole('button', { name: 'Back to workspace' }).press('Enter');
   await expect(page.getByRole('button', { name: 'Start meeting', exact: true })).toBeFocused();
+});
+
+test('account popover closes outside and removed workspace placeholders stay absent', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const account = page.getByRole('button', { name: 'Account: Alex Morgan', exact: true });
+  await account.click();
+  await expect(page.getByRole('dialog', { name: 'Account', exact: true })).toBeVisible();
+  await page.getByRole('heading', { name: 'Overview', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Account', exact: true })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /About this workspace|Side panel|Open side panel/ }),
+  ).toHaveCount(0);
+  await page.getByRole('button', { name: 'Collapse navigation' }).click();
+  await expect(
+    page
+      .getByRole('complementary', { name: 'Workspace navigation' })
+      .getByRole('link', { name: 'UnMute home' }),
+  ).toBeVisible();
+  await expect(account).toBeVisible();
+  await page.screenshot({ path: info.outputPath('workspace-compact-account.png'), fullPage: true });
 });
