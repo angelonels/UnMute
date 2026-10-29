@@ -95,6 +95,7 @@ export function createCompanionScene(
     scene.add(world);
     const companion = new THREE.Group();
     world.add(companion);
+    let floorShadow: THREE.ShadowMaterial | undefined;
     if (sculptureMode) {
       companion.scale.setScalar(0.36);
       companion.position.set(0.03, 0, 0.2);
@@ -104,14 +105,43 @@ export function createCompanionScene(
       canvas.dataset.sculptureVertices = String(sculpture.vertices);
       canvas.dataset.sculptureDepth = String(sculpture.depth);
       world.rotation.set(0.04, -0.2, 0);
-      const floor = new THREE.Mesh(
-        geo(new THREE.PlaneGeometry(12, 12)),
-        mat(new THREE.ShadowMaterial({ opacity: 0.045 })),
-      );
+      floorShadow = mat(new THREE.ShadowMaterial({ opacity: 0.24 }));
+      const floor = new THREE.Mesh(geo(new THREE.PlaneGeometry(12, 12)), floorShadow);
       floor.rotation.x = -Math.PI / 2;
       floor.position.y = sculpture.floorY - 0.002;
       floor.receiveShadow = true;
       world.add(floor);
+      // A tight ambient contact layer anchors the curved foot. The directional
+      // shadow remains responsible for the wider shadow and Mumo's shadow on the U.
+      const contactMap = document.createElement('canvas');
+      contactMap.width = contactMap.height = 128;
+      const contactContext = contactMap.getContext('2d');
+      if (!contactContext) throw new Error('Contact shadow canvas unavailable');
+      const falloff = contactContext.createRadialGradient(64, 64, 0, 64, 64, 64);
+      falloff.addColorStop(0, 'rgba(0,0,0,0.48)');
+      falloff.addColorStop(0.25, 'rgba(0,0,0,0.3)');
+      falloff.addColorStop(0.6, 'rgba(0,0,0,0.08)');
+      falloff.addColorStop(1, 'rgba(0,0,0,0)');
+      contactContext.fillStyle = falloff;
+      contactContext.fillRect(0, 0, 128, 128);
+      const contactTexture = new THREE.CanvasTexture(contactMap);
+      textures.push(contactTexture);
+      const contact = new THREE.Mesh(
+        geo(new THREE.PlaneGeometry(1.65, 0.95)),
+        mat(
+          new THREE.MeshBasicMaterial({
+            map: contactTexture,
+            transparent: true,
+            depthWrite: false,
+            polygonOffset: true,
+            polygonOffsetFactor: -1,
+            toneMapped: false,
+          }),
+        ),
+      );
+      contact.rotation.x = -Math.PI / 2;
+      contact.position.set(0, sculpture.floorY - 0.001, 0);
+      world.add(contact);
     }
     let shadowLight: THREE.DirectionalLight | undefined;
     const hemisphere = new THREE.HemisphereLight(0xeaf1ff, 0x706257, sculptureMode ? 1.5 : 2.5);
@@ -139,22 +169,26 @@ export function createCompanionScene(
           far: 14,
         });
         light.shadow.radius = shadowSize / 64;
-        light.shadow.bias = -0.0003;
-        light.shadow.normalBias = 0.015;
+        light.shadow.bias = -0.0001;
+        light.shadow.normalBias = 0.002;
       }
       scene.add(light);
       studioLights.push(light);
     }
+    const portraitFill = new THREE.DirectionalLight(0xfffaf3, sculptureMode ? 0.85 : 0);
+    portraitFill.position.set(0, 1.5, 6);
+    scene.add(portraitFill);
     const applyLighting = () => {
       if (!sculptureMode) return;
       const dark = options.dark === true;
-      renderer.toneMappingExposure = dark ? 0.82 : 1;
-      hemisphere.intensity = dark ? 1.05 : 1.5;
-      hemisphere.color.setHex(dark ? 0xd9d1ff : 0xeaf1ff);
+      renderer.toneMappingExposure = dark ? 1.04 : 1;
+      hemisphere.intensity = dark ? 1.3 : 1.5;
+      hemisphere.color.setHex(dark ? 0xe9e5f7 : 0xf1f0ff);
       studioLights.forEach((light, index) => {
-        light.intensity = [2, 1.25, 1.5][index]! * (dark ? 0.7 : 1);
-        if (index === 1) light.color.setHex(dark ? 0xc4b8ff : 0xb3d2ff);
+        light.intensity = (dark ? [2.6, 1.05, 1.5] : [2.6, 1.1, 1.5])[index]!;
+        if (index === 1) light.color.setHex(dark ? 0xe0d8fa : 0xe1e8fa);
       });
+      if (floorShadow) floorShadow.opacity = dark ? 0.32 : 0.24;
       canvas.dataset.lighting = dark ? 'night-studio' : 'day-studio';
     };
     applyLighting();
