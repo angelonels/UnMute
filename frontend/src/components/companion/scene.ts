@@ -107,7 +107,7 @@ export function createCompanionScene(
       world.rotation.set(0.04, -0.2, 0);
       const floor = new THREE.Mesh(
         geo(new THREE.PlaneGeometry(12, 12)),
-        mat(new THREE.ShadowMaterial({ opacity: 0.07 })),
+        mat(new THREE.ShadowMaterial({ opacity: 0.045 })),
       );
       floor.rotation.x = -Math.PI / 2;
       floor.position.y = sculpture.floorY - 0.002;
@@ -127,7 +127,7 @@ export function createCompanionScene(
       light.position.set(x, y, z);
       if (sculptureMode && x === -3) {
         shadowLight = light;
-        light.position.set(-3, 8, 5);
+        light.position.set(-1.5, 9, 5);
         light.castShadow = true;
         const shadowSize = canvas.clientWidth < 400 ? 512 : 1024;
         light.shadow.mapSize.set(shadowSize, shadowSize);
@@ -139,7 +139,7 @@ export function createCompanionScene(
           near: 0.5,
           far: 14,
         });
-        light.shadow.radius = 5;
+        light.shadow.radius = shadowSize / 64;
         light.shadow.bias = -0.0003;
         light.shadow.normalBias = 0.015;
       }
@@ -529,6 +529,7 @@ export function createCompanionScene(
           shadowLight.shadow.map?.dispose();
           shadowLight.shadow.map = null;
           shadowLight.shadow.mapSize.set(shadowSize, shadowSize);
+          shadowLight.shadow.radius = shadowSize / 64;
           shadowLight.shadow.needsUpdate = true;
         }
         canvas.dataset.shadowSize = String(shadowSize);
