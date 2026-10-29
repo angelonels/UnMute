@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-29",
+  "branch": "polish/frontend-mumo-refinement",
+  "pnpmVerify": "passed",
+  "backendTests": 3,
+  "frontendTests": 32,
+  "playwright": {
+    "passed": 33,
+    "failed": 0,
+    "workers": 2,
+    "durationSeconds": 44.8
+  },
+  "reactDoctor": {
+    "score": 89,
+    "warnings": 1,
+    "assessment": "Object URL warning is a verified ownership-analysis false positive"
+  },
+  "mumo": {
+    "idleBrowserFramesObserved": 20,
+    "idleShellNormalRebuilds": 0,
+    "contextLossFallback": "passed",
+    "hiddenArtworkSceneDeferral": "passed"
+  },
+  "developmentPreviewSessionRequests": 0,
+  "coreWebVitals": "Not measured: required Chrome DevTools MCP tools unavailable",
+  "screenshots": [
+    "login-dark-1440.png",
+    "login-dark-375.png",
+    "login-light-1440.png",
+    "login-light-375.png",
+    "mumo-context-loss-fallback.png",
+    "mumo-dark-1618.png",
+    "mumo-dark-320.png",
+    "mumo-light-1618.png",
+    "mumo-light-320.png",
+    "preview-narrow-long-name.png",
+    "workspace-dark-1440.png",
+    "workspace-dark-375.png",
+    "workspace-light-1440.png",
+    "workspace-light-375.png"
+  ]
+}
