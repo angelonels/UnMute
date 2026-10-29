@@ -11,5 +11,10 @@ onlyBuiltDependencies:
   - esbuild
   - workerd
 
+# Optional adapter peers; authentication uses Cloudflare D1 through Drizzle.
+ignoredBuiltDependencies:
+  - '@prisma/client'
+  - better-sqlite3
+
 minimumReleaseAge: 1440
 strictDepBuilds: true

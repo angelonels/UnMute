@@ -28,4 +28,17 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm verify
       - run: pnpm --filter @unmute/frontend exec playwright install --with-deps chromium
+      - name: Prepare disposable auth fixture
+        run: |
+          node --input-type=module <<'NODE'
+          import { randomBytes } from 'node:crypto';
+          import { writeFileSync } from 'node:fs';
+          writeFileSync('backend/.dev.vars', [
+            'BETTER_AUTH_URL=http://localhost:5173',
+            `BETTER_AUTH_SECRET=${randomBytes(32).toString('base64')}`,
+            'GOOGLE_CLIENT_ID=ci-only.apps.googleusercontent.com',
+            'GOOGLE_CLIENT_SECRET=ci-only-not-a-real-oauth-secret',
+          ].join('\n'), { mode: 0o600 });
+          NODE
+          pnpm --filter @unmute/backend db:migrate:local
       - run: pnpm --filter @unmute/frontend test:e2e

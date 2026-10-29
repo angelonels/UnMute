@@ -8,6 +8,9 @@
 - Make the smallest complete change. No speculative layers, dependencies, services, empty directories, deep imports across features, or disabled checks.
 - Keep TypeScript strict: no `any`, `@ts-ignore`, swallowed errors, skipped tests, or weakened security.
 - Comments explain reasons or contracts. Change generated artifacts only through their generator.
+- Keep UI copy direct and minimal; omit handholding, obvious workflow explanations, and unsolicited reassurance unless needed for a meaningful decision or error recovery.
+- Use Tailwind CSS utilities as the default for all UI styling; reserve custom CSS for shared theme tokens and platform behavior that utilities cannot reasonably express.
+- Build every page with the shared spacing scale, consistent alignment edges, and clear visual hierarchy, then verify its actual rendering on narrow and wide screens in both themes before calling it complete.
 
 ## Shape and dependencies
 

@@ -9,16 +9,25 @@
     "typecheck": "wrangler types && tsc --noEmit",
     "test": "vitest run",
     "openapi": "tsx scripts/export-openapi.ts",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "auth:generate": "auth generate --config ./auth-schema.config.ts --output ./src/features/auth/db/schema.ts --yes && prettier --write src/features/auth/db/schema.ts",
+    "db:generate": "drizzle-kit generate && prettier --write migrations/meta",
+    "db:migrate:local": "wrangler d1 migrations apply unmute-auth --local"
   },
   "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.7.7",
+    "@better-auth/utils": "0.4.2",
     "@hono/zod-openapi": "^1.6.3",
+    "better-auth": "^1.7.7",
+    "drizzle-orm": "^0.45.4",
     "effect": "4.0.2",
     "hono": "^4.13.7",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
+    "auth": "^1.7.7",
+    "drizzle-kit": "^0.31.11",
     "tsx": "^4.23.13",
     "typescript": "catalog:",
     "vitest": "catalog:",

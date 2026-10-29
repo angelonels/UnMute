@@ -1,13 +1,8 @@
-import { HealthStatus } from '../../health';
+import { authClient } from '../../../api/auth-client';
+import { AuthPage } from '../../auth';
+import { WorkspacePage } from '../../workspace';
 
-export function HomePage() {
-  return (
-    <main>
-      <h1>UnMute</h1>
-      <p>
-        A video platform smart enough to take the heat, take the notes, and let you take the credit.
-      </p>
-      <HealthStatus />
-    </main>
-  );
+export function HomePage({ authError = false }: { authError?: boolean }) {
+  const { data: session } = authClient.useSession();
+  return session ? <WorkspacePage user={session.user} /> : <AuthPage authError={authError} />;
 }

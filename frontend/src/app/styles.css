@@ -1,0 +1,211 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-on-primary: var(--on-primary);
+  --color-focus: var(--focus);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-disabled: var(--disabled);
+  --color-selection: var(--selection);
+  --color-panel: var(--panel);
+  --color-person-sage: var(--person-sage);
+  --color-person-sage-ink: var(--person-sage-ink);
+  --color-person-clay: var(--person-clay);
+  --color-person-clay-ink: var(--person-clay-ink);
+  --color-person-lavender: var(--person-lavender);
+  --color-person-lavender-ink: var(--person-lavender-ink);
+  --color-person-slate: var(--person-slate);
+  --color-person-slate-ink: var(--person-slate-ink);
+  --color-person-sand: var(--person-sand);
+  --color-person-sand-ink: var(--person-sand-ink);
+  --color-person-rose: var(--person-rose);
+  --color-person-rose-ink: var(--person-rose-ink);
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --ease-out-expo: var(--ease-out);
+}
+
+/* Brand material tokens belong to the original AI character, not status surfaces. */
+:root {
+  --companion-paper-light: oklch(0.98 0.012 85);
+  --companion-paper-body: oklch(0.89 0.018 85);
+  --companion-paper-shade: oklch(0.75 0.025 85);
+  --companion-paper-face: oklch(0.23 0.025 255);
+  --companion-light: oklch(0.42 0.055 255);
+  --companion-body: oklch(0.29 0.04 255);
+  --companion-shade: oklch(0.2 0.025 255);
+  --companion-face: oklch(0.97 0.015 85);
+  --companion-edge: oklch(0.74 0.035 255);
+  --companion-fold: oklch(0.57 0.075 255);
+  --person-sage: #dbe7df;
+  --person-sage-ink: #355346;
+  --person-clay: #f0e1d8;
+  --person-clay-ink: #795741;
+  --person-lavender: #e5dff1;
+  --person-lavender-ink: #65507f;
+  --person-slate: #dce4ed;
+  --person-slate-ink: #465b74;
+  --person-sand: #ebe6d5;
+  --person-sand-ink: #6e6344;
+  --person-rose: #f1dfe1;
+  --person-rose-ink: #7b4d55;
+  color-scheme: light;
+  --canvas: oklch(0.982 0.004 255);
+  --surface: oklch(1 0 0);
+  --text: oklch(0.235 0.027 255);
+  --muted: oklch(0.49 0.025 255);
+  --border: oklch(0.88 0.013 255);
+  --primary: oklch(0.49 0.215 260);
+  --primary-hover: oklch(0.445 0.2 260);
+  --on-primary: oklch(1 0 0);
+  --focus: oklch(0.49 0.215 260);
+  --accent: oklch(0.84 0.12 75);
+  --success: oklch(0.45 0.1 165);
+  --warning: oklch(0.5 0.1 75);
+  --error: oklch(0.48 0.18 25);
+  --disabled: oklch(0.55 0.025 255);
+  --selection: oklch(0.9 0.05 260);
+  --panel: oklch(0.46 0.205 260);
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --page-gutter: clamp(1.5rem, 3.5vw, 3rem);
+  font:
+    100%/1.5 -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+:root.dark {
+  --companion-light: oklch(0.98 0.012 85);
+  --companion-body: oklch(0.89 0.018 85);
+  --companion-shade: oklch(0.75 0.025 85);
+  --companion-face: oklch(0.23 0.025 255);
+  --companion-edge: oklch(1 0 0);
+  --companion-fold: oklch(0.66 0.055 255);
+  --person-sage: #233a31;
+  --person-sage-ink: #bdcebf;
+  --person-clay: #443128;
+  --person-clay-ink: #dbc0ab;
+  --person-lavender: #352d46;
+  --person-lavender-ink: #cfc0e1;
+  --person-slate: #293644;
+  --person-slate-ink: #bdcbdc;
+  --person-sand: #3d3828;
+  --person-sand-ink: #d3cba9;
+  --person-rose: #452c31;
+  --person-rose-ink: #d9b7be;
+  color-scheme: dark;
+  --canvas: oklch(0.155 0.004 265);
+  --surface: oklch(0.225 0.006 265);
+  --text: oklch(0.945 0.004 265);
+  --muted: oklch(0.725 0.008 265);
+  --border: oklch(0.355 0.008 265);
+  --primary: oklch(0.745 0.125 260);
+  --primary-hover: oklch(0.79 0.105 260);
+  --on-primary: oklch(0.17 0.04 260);
+  --focus: oklch(0.76 0.14 260);
+  --success: oklch(0.75 0.1 165);
+  --warning: oklch(0.84 0.12 75);
+  --error: oklch(0.76 0.13 25);
+  --disabled: oklch(0.58 0.008 265);
+  --selection: oklch(0.35 0.08 260);
+  --panel: oklch(0.32 0.13 260);
+}
+
+@layer base {
+  body {
+    @apply bg-canvas text-text;
+  }
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection {
+    @apply bg-selection;
+  }
+  :focus-visible {
+    @apply outline-2 outline-offset-3 outline-focus;
+    outline-style: solid;
+  }
+}
+
+/* Arc's semantic token adapter keeps the vendored components on UnMute's palette. */
+:root {
+  --background: var(--canvas);
+  --foreground: var(--text);
+  --text-secondary: var(--muted);
+  --text-muted: var(--disabled);
+  --surface-raised: var(--surface);
+  --surface-muted: color-mix(in oklab, var(--text) 4%, var(--surface));
+  --border-strong: var(--input);
+  --danger: var(--error);
+  --input: oklch(0.61 0.025 255);
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --control-height-sm: 2.75rem;
+  --control-height-md: 2.75rem;
+  --control-height-lg: 3rem;
+  --radius-control: 0.75rem;
+  --radius-pill: 9999px;
+  --text-sm: 0.875rem;
+  --text-lg: 1.125rem;
+  --leading-body: 1.5;
+  --font-body: var(--font-sans);
+  --tracking-body: 0;
+  --duration-instant: 150ms;
+  --duration-fast: 150ms;
+  --duration-standard: 250ms;
+  --duration-considered: 250ms;
+  --duration-spring: 250ms;
+  --ease-standard: var(--ease-out);
+  --ease-enter: var(--ease-out);
+  --ease-spring: var(--ease-out);
+  --shadow-resting: 0 1px 2px #10275608, 0 2px 8px #10275606;
+  --shadow-floating: 0 4px 16px #1027560a, 0 24px 64px #1027561a;
+  --shadow-shell:
+    0 0 0 1px color-mix(in oklab, var(--border) 45%, transparent), 0 4px 24px #10275604;
+}
+:root.dark {
+  --input: oklch(0.49 0.01 265);
+  --surface-raised: oklch(0.27 0.007 265);
+  --surface-muted: oklch(0.255 0.006 265);
+  --shadow-shell:
+    0 0 0 1px color-mix(in oklab, var(--border) 45%, transparent), inset 0 1px 0 #ffffff04;
+  --shadow-floating: 0 4px 16px #0002, 0 24px 64px #0004;
+}
+@theme inline {
+  --color-surface-muted: var(--surface-muted);
+  --color-input: var(--input);
+  --shadow-shell: var(--shadow-shell);
+  --shadow-floating: var(--shadow-floating);
+}
+@media (prefers-reduced-transparency: reduce), (prefers-contrast: more) {
+  [role='dialog'] {
+    background: var(--surface);
+    backdrop-filter: none;
+  }
+}
+@media (prefers-contrast: more) {
+  [role='dialog'],
+  main,
+  aside {
+    border: 1px solid var(--text);
+  }
+}
