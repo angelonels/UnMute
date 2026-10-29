@@ -4,9 +4,7 @@ test('Google sign-in surface supports themes, keyboard access, and narrow screen
   page,
 }, testInfo) => {
   await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: 'Make room for the conversation.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to UnMute' })).toBeVisible();
   const google = page.getByRole('button', { name: 'Continue with Google' });
   await expect(google).toBeVisible();
   await page.getByRole('button', { name: 'Use dark mode' }).click();

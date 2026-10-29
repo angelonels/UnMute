@@ -1,10 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
   <style>
-    .body { fill: oklch(0.49 0.215 260); }
-    .lift { fill: oklch(0.40 0.075 180); }
+    .body { fill: oklch(0.56 0.18 282); }
+    .lift { fill: oklch(0.42 0.08 350); }
     @media (prefers-color-scheme: dark) {
-      .body { fill: oklch(0.745 0.125 260); }
-      .lift { fill: oklch(0.84 0.085 175); }
+      .body { fill: oklch(0.76 0.125 282); }
+      .lift { fill: oklch(0.86 0.065 350); }
     }
   </style>
   <path class="body" d="M4 5h7v14.5a5 5 0 0 0 10 0V14h7v5.5a12 12 0 0 1-24 0V5Z"/>

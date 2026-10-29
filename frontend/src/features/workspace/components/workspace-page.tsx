@@ -92,7 +92,7 @@ export function WorkspacePage({ user }: { user: User }) {
             transition={{ type: 'spring', stiffness: 420, damping: 42 }}
             className="flex flex-1 flex-col items-center justify-center px-5 py-12 text-center sm:px-8 sm:py-16"
           >
-            <div className="mb-6 rounded-full bg-secondary-soft p-4">
+            <div className="mb-6">
               <AICompanion size={112} pokeable label="Say hello to Mumo" />
             </div>
             <h2 className="max-w-2xl text-[clamp(2rem,4.5vw,3.5rem)] leading-[1.1] font-medium tracking-[-0.045em]">
