@@ -117,7 +117,7 @@ export function AICompanion({
           Hi!
         </span>
       )}
-      <span role="status" className="sr-only">
+      <span role="status" aria-label="Mumo greeting" className="sr-only">
         {greeting ? 'Mumo says hello.' : ''}
       </span>
     </button>

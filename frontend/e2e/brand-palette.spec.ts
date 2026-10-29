@@ -5,6 +5,7 @@ import { expect, test } from '@playwright/test';
 test('brand palette retains readable semantic pairs in both themes', async ({ page }, info) => {
   await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: null }));
   await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Sign in to UnMute', exact: true })).toBeVisible();
   const measurements: Record<string, Record<string, number>> = {};
   for (const theme of ['light', 'dark']) {
     const toggle = page.getByRole('button', { name: `Use ${theme} mode`, exact: true });

@@ -32,7 +32,9 @@ test('seated Mumo is playful and expressive while the sculpture stays still', as
     .toBe(true);
   expect((await scene.screenshot()).equals(first)).toBe(false);
   await page.getByRole('button', { name: 'Say hello to Mumo', exact: true }).click();
-  await expect(page.getByRole('status')).toContainText('Mumo says hello');
+  await expect(page.getByRole('status', { name: 'Mumo greeting', exact: true })).toContainText(
+    'Mumo says hello',
+  );
   await page.screenshot({ path: info.outputPath('mumo-playful-greeting.png'), fullPage: true });
   // Settle the explicit greeting before measuring autonomous stillness.
   await page.mouse.move(1430, 10);
@@ -40,7 +42,7 @@ test('seated Mumo is playful and expressive while the sculpture stays still', as
   await expect(
     page.getByRole('button', { name: 'Say hello to Mumo', exact: true }),
   ).toHaveAttribute('data-interaction', 'idle');
-  await expect(page.getByRole('status')).toBeEmpty();
+  await expect(page.getByRole('status', { name: 'Mumo greeting', exact: true })).toBeEmpty();
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await expect(scene).toHaveAttribute('data-motion', 'still');
   await expect(scene).toHaveAttribute('data-personality', 'resting');

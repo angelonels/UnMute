@@ -233,7 +233,7 @@ function GoogleSignInButton({
           aria-hidden="true"
         />
       </button>
-      <span role="status" className="sr-only">
+      <span role="status" aria-label="Sign-in progress" className="sr-only">
         {busy ? 'Connecting to Google…' : ''}
       </span>
     </>

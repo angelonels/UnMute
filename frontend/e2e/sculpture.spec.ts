@@ -56,7 +56,9 @@ test('sign-in sculpture shares real depth, lighting and a fixed camera with Mumo
     .getByRole('button', { name: 'Say hello to Mumo', exact: true })
     .filter({ visible: true })
     .click();
-  await expect(page.getByRole('status').filter({ visible: true })).toContainText('Mumo says hello');
+  await expect(
+    page.getByRole('status', { name: 'Mumo greeting', exact: true }).filter({ visible: true }),
+  ).toContainText('Mumo says hello');
   await page.screenshot({
     path: info.outputPath('sculpture-context-loss-fallback.png'),
     fullPage: true,
