@@ -1,11 +1,14 @@
 import { Link } from '@tanstack/react-router';
 
-/** The lifted terminal opens the U; keep the same silhouette in public/unmute-mark.svg. */
+/** Rounded asymmetric arms echo the ceramic sculpture; keep the favicon paths identical. */
 export function BrandMark({ className = 'size-9' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <path d="M4 5h7v14.5a5 5 0 0 0 10 0V14h7v5.5a12 12 0 0 1-24 0V5Z" fill="currentColor" />
-      <path d="m21 3 7-2v8l-7 2V3Z" className="fill-secondary-ink" />
+      <path
+        d="M4 5.7Q4 2.6 6.6 3.3l2.3.7Q11 4.6 11 6.8V19c0 6.8 10 6.8 10 0v-6q0-2 1.8-2.6l2.6-.8Q28 8.8 28 11.2V19C28 32 4 32 4 19V5.7Z"
+        fill="currentColor"
+      />
+      <path d="M21 13q0-2 1.8-2.6l2.6-.8Q28 8.8 28 11.2V13l-7 2.2V13Z" className="fill-secondary" />
     </svg>
   );
 }

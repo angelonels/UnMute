@@ -1,12 +1,23 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
   <style>
-    .body { fill: oklch(0.56 0.18 282); }
-    .lift { fill: oklch(0.42 0.08 350); }
+    .body {
+      fill: oklch(0.56 0.18 282);
+    }
+    .terminal {
+      fill: oklch(0.85 0.075 350);
+    }
     @media (prefers-color-scheme: dark) {
-      .body { fill: oklch(0.76 0.125 282); }
-      .lift { fill: oklch(0.86 0.065 350); }
+      .body {
+        fill: oklch(0.76 0.125 282);
+      }
+      .terminal {
+        fill: oklch(0.84 0.065 350);
+      }
     }
   </style>
-  <path class="body" d="M4 5h7v14.5a5 5 0 0 0 10 0V14h7v5.5a12 12 0 0 1-24 0V5Z"/>
-  <path class="lift" d="m21 3 7-2v8l-7 2V3Z"/>
+  <path
+    class="body"
+    d="M4 5.7Q4 2.6 6.6 3.3l2.3.7Q11 4.6 11 6.8V19c0 6.8 10 6.8 10 0v-6q0-2 1.8-2.6l2.6-.8Q28 8.8 28 11.2V19C28 32 4 32 4 19V5.7Z"
+  />
+  <path class="terminal" d="M21 13q0-2 1.8-2.6l2.6-.8Q28 8.8 28 11.2V13l-7 2.2V13Z" />
 </svg>
