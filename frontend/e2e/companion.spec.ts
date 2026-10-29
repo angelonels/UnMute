@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Route } from '@playwright/test';
 
 test('the AI companion moves autonomously and respects system reduced motion', async ({
   page,
@@ -158,7 +158,7 @@ test('Mumo keeps idle shell buffers and falls back after context loss', async ({
 test('login defers the sculpture renderer until the session resolves and uses one scene on phone', async ({
   page,
 }, info) => {
-  let pending: import('@playwright/test').Route | undefined;
+  let pending: Route | undefined;
   await page.route('**/api/auth/get-session**', (route) => {
     pending = route;
   });
