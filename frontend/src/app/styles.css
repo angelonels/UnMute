@@ -65,7 +65,7 @@
   --person-rose: #f1dfe1;
   --person-rose-ink: #7b4d55;
   color-scheme: light;
-  --canvas: oklch(0.977 0.008 75);
+  --canvas: oklch(0.98 0.003 255);
   --surface: oklch(1 0 0);
   --text: oklch(0.235 0.027 255);
   --muted: oklch(0.49 0.025 255);
@@ -74,11 +74,11 @@
   --primary-hover: oklch(0.445 0.2 260);
   --on-primary: oklch(1 0 0);
   --focus: oklch(0.49 0.215 260);
-  /* Blue actions and warm apricot identity accents have separate readable inks. */
-  --secondary: oklch(0.79 0.125 55);
-  --on-secondary: oklch(0.25 0.045 50);
-  --secondary-soft: oklch(0.96 0.035 65);
-  --secondary-ink: oklch(0.43 0.105 50);
+  /* Blue actions and cool mint identity accents have separate readable inks. */
+  --secondary: oklch(0.84 0.105 175);
+  --on-secondary: oklch(0.23 0.04 180);
+  --secondary-soft: oklch(0.955 0.035 175);
+  --secondary-ink: oklch(0.4 0.075 180);
   --accent: var(--secondary);
   --success: oklch(0.45 0.1 165);
   --warning: oklch(0.5 0.1 75);
@@ -117,15 +117,15 @@
   --person-rose: #452c31;
   --person-rose-ink: #d9b7be;
   color-scheme: dark;
-  --canvas: oklch(0.165 0.012 260);
-  --surface: oklch(0.225 0.014 260);
+  --canvas: oklch(0.16 0.003 260);
+  --surface: oklch(0.225 0.004 260);
   --text: oklch(0.945 0.004 265);
   --muted: oklch(0.725 0.008 265);
   --border: oklch(0.355 0.008 265);
-  --secondary: oklch(0.79 0.115 60);
-  --on-secondary: oklch(0.23 0.04 50);
-  --secondary-soft: oklch(0.29 0.035 55);
-  --secondary-ink: oklch(0.83 0.095 65);
+  --secondary: oklch(0.81 0.1 175);
+  --on-secondary: oklch(0.23 0.04 180);
+  --secondary-soft: oklch(0.28 0.025 180);
+  --secondary-ink: oklch(0.84 0.085 175);
   --primary: oklch(0.745 0.125 260);
   --primary-hover: oklch(0.79 0.105 260);
   --on-primary: oklch(0.17 0.04 260);

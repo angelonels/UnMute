@@ -216,7 +216,7 @@ function ConversationIllustration() {
           </div>
           <div className="grid grid-cols-2 gap-2">
             <div className="relative grid h-32 place-items-center rounded-2xl bg-selection xl:h-36">
-              <span className="grid size-16 place-items-center rounded-full bg-primary/15 text-xl font-medium tracking-tight text-primary">
+              <span className="grid size-16 place-items-center rounded-full bg-primary text-xl font-medium tracking-tight text-on-primary">
                 MC
               </span>
               <span className="absolute bottom-2 left-3 text-[10px] text-primary">Maya</span>
@@ -230,7 +230,7 @@ function ConversationIllustration() {
               </span>
             </div>
             <div className="relative grid h-32 place-items-center rounded-2xl bg-secondary-soft xl:h-36">
-              <span className="grid size-16 place-items-center rounded-full bg-secondary/45 text-xl font-medium tracking-tight text-secondary-ink">
+              <span className="grid size-16 place-items-center rounded-full bg-secondary text-xl font-medium tracking-tight text-on-secondary">
                 TB
               </span>
               <span className="absolute bottom-2 left-3 text-[10px] text-secondary-ink">Theo</span>

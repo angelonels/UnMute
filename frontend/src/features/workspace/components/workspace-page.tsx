@@ -335,15 +335,22 @@ function AccountControl({
   const [open, setOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
-  const [position, setPosition] = useState({ left: 12, bottom: 12 });
+  const menu = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ left: 12, bottom: 12, maxHeight: 240 });
   useLayoutEffect(() => {
     if (!open) return;
     const place = () => {
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) return;
+      const menuWidth = menu.current?.getBoundingClientRect().width ?? 240;
+      const bottom = Math.max(
+        12,
+        Math.min(window.innerHeight - rect.top + 8, Math.max(12, window.innerHeight - 252)),
+      );
       setPosition({
-        left: Math.max(12, Math.min(rect.left, window.innerWidth - 252)),
-        bottom: Math.max(12, window.innerHeight - rect.top + 8),
+        left: Math.max(12, Math.min(rect.left, window.innerWidth - menuWidth - 12)),
+        bottom,
+        maxHeight: Math.max(1, window.innerHeight - bottom - 12),
       });
     };
     place();
@@ -387,12 +394,13 @@ function AccountControl({
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Content
+            ref={menu}
             style={position}
             aria-describedby={undefined}
             onCloseAutoFocus={(event) => {
               if (settingsOpen) event.preventDefault();
             }}
-            className="fixed z-60 w-60 max-w-[calc(100vw-1.5rem)] rounded-2xl border border-border bg-surface-raised p-1.5 shadow-floating"
+            className="fixed z-60 w-60 max-w-[calc(100vw-1.5rem)] overflow-y-auto overscroll-contain rounded-2xl border border-border bg-surface-raised p-1.5 shadow-floating"
           >
             <Dialog.Title className="sr-only">Account</Dialog.Title>
             <p
