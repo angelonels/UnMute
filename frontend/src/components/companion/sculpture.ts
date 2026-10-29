@@ -7,22 +7,28 @@ export function createSculpture(
   material: <T extends THREE.Material>(value: T) => T,
 ) {
   const shape = new THREE.Shape();
-  shape.moveTo(-1.4, 1.72);
+  shape.moveTo(-1.4, 1.44);
   shape.lineTo(-1.4, -0.22);
   shape.bezierCurveTo(-1.4, -2.04, 1.4, -2.04, 1.4, -0.22);
-  shape.lineTo(1.4, 0.96);
-  shape.lineTo(0.74, 0.75);
+  shape.lineTo(1.4, 0.7);
+  shape.quadraticCurveTo(1.4, 0.96, 1.16, 0.884);
+  shape.lineTo(0.98, 0.826);
+  shape.quadraticCurveTo(0.74, 0.75, 0.74, 0.51);
   shape.lineTo(0.74, -0.22);
   shape.bezierCurveTo(0.74, -1.4, -0.74, -1.4, -0.74, -0.22);
-  shape.lineTo(-0.74, 1.54);
+  shape.lineTo(-0.74, 1.26);
+  shape.quadraticCurveTo(-0.74, 1.54, -1.02, 1.616);
+  shape.lineTo(-1.14, 1.649);
+  shape.quadraticCurveTo(-1.4, 1.72, -1.4, 1.44);
   shape.closePath();
   const extruded = new THREE.ExtrudeGeometry(shape, {
     depth: 0.56,
     bevelEnabled: true,
     bevelSegments: 12,
     steps: 1,
-    bevelSize: 0.22,
-    bevelThickness: 0.22,
+    bevelSize: 0.3,
+    bevelThickness: 0.3,
+    bevelOffset: -0.14,
     curveSegments: 48,
   });
   extruded.translate(0, 0, -0.28);
@@ -64,5 +70,14 @@ export function createSculpture(
   const mesh = new THREE.Mesh(body, ceramic);
   mesh.castShadow = mesh.receiveShadow = true;
   group.add(mesh);
-  return { group, vertices: positions.count, depth: 1 };
+  body.computeBoundingBox();
+  return {
+    group,
+    vertices: positions.count,
+    depth: 1.16,
+    floorY: body.boundingBox!.min.y,
+    // The cubic counter reaches its low point at t=.5. Its middle depth
+    // contour receives the full bevel offset and supports the seated companion.
+    supportY: -0.22 * 0.25 - 1.4 * 0.75 + 0.3 - 0.14,
+  };
 }

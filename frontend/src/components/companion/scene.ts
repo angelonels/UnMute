@@ -21,6 +21,7 @@ export interface CompanionOptions {
   expression: ExpressionName | null;
   attention?: 'composer' | 'answer' | null;
   stage?: 'sculpture';
+  dark?: boolean;
 }
 export interface CompanionScene {
   update: (options: CompanionOptions) => void;
@@ -51,18 +52,6 @@ export function createCompanionScene(
   let lastFrame: FrameInput | undefined;
   let pokeAt = -10;
   const sculptureMode = initial.stage === 'sculpture';
-  let targetYaw = -0.2;
-  let targetPitch = 0.04;
-  const pointer = (event: PointerEvent) => {
-    if (!sculptureMode || options.reduced) return;
-    const bounds = canvas.getBoundingClientRect();
-    targetYaw = -0.2 + ((event.clientX - bounds.left) / bounds.width - 0.5) * 0.3;
-    targetPitch = 0.04 + ((event.clientY - bounds.top) / bounds.height - 0.5) * 0.1;
-  };
-  const resetPointer = () => {
-    targetYaw = -0.2;
-    targetPitch = 0.04;
-  };
   const geo = <T extends THREE.BufferGeometry>(value: T): T => {
     geometries.push(value);
     return value;
@@ -83,8 +72,6 @@ export function createCompanionScene(
     engine?.destroy();
     resize?.disconnect();
     canvas.removeEventListener('webglcontextlost', lost);
-    canvas.removeEventListener('pointermove', pointer);
-    canvas.removeEventListener('pointerleave', resetPointer);
     geometries.forEach((value) => value.dispose());
     materials.forEach((value) => value.dispose());
     textures.forEach((value) => value.dispose());
@@ -111,23 +98,26 @@ export function createCompanionScene(
     world.add(companion);
     if (sculptureMode) {
       companion.scale.setScalar(0.36);
-      companion.position.set(0.03, -0.5, 0.2);
+      companion.position.set(0.03, 0, 0.2);
       const sculpture = createSculpture(geo, mat);
+      companion.position.y = sculpture.supportY;
       world.add(sculpture.group);
       canvas.dataset.sculptureVertices = String(sculpture.vertices);
       canvas.dataset.sculptureDepth = String(sculpture.depth);
       world.rotation.set(0.04, -0.2, 0);
       const floor = new THREE.Mesh(
         geo(new THREE.PlaneGeometry(12, 12)),
-        mat(new THREE.ShadowMaterial({ opacity: 0.025 })),
+        mat(new THREE.ShadowMaterial({ opacity: 0.07 })),
       );
       floor.rotation.x = -Math.PI / 2;
-      floor.position.y = -1.82;
+      floor.position.y = sculpture.floorY - 0.002;
       floor.receiveShadow = true;
       world.add(floor);
     }
     let shadowLight: THREE.DirectionalLight | undefined;
-    scene.add(new THREE.HemisphereLight(0xeaf1ff, 0x706257, sculptureMode ? 1.5 : 2.5));
+    const hemisphere = new THREE.HemisphereLight(0xeaf1ff, 0x706257, sculptureMode ? 1.5 : 2.5);
+    scene.add(hemisphere);
+    const studioLights: THREE.DirectionalLight[] = [];
     for (const [color, intensity, x, y, z] of [
       [0xfff4df, 4, -3, 5, 5],
       [0xb3d2ff, 2.5, 4, 1, 3],
@@ -149,11 +139,26 @@ export function createCompanionScene(
           near: 0.5,
           far: 14,
         });
+        light.shadow.radius = 5;
         light.shadow.bias = -0.0003;
         light.shadow.normalBias = 0.015;
       }
       scene.add(light);
+      studioLights.push(light);
     }
+    const applyLighting = () => {
+      if (!sculptureMode) return;
+      const dark = options.dark === true;
+      renderer.toneMappingExposure = dark ? 0.82 : 1;
+      hemisphere.intensity = dark ? 1.05 : 1.5;
+      hemisphere.color.setHex(dark ? 0xd9d1ff : 0xeaf1ff);
+      studioLights.forEach((light, index) => {
+        light.intensity = [2, 1.25, 1.5][index]! * (dark ? 0.7 : 1);
+        if (index === 1) light.color.setHex(dark ? 0xc4b8ff : 0xb3d2ff);
+      });
+      canvas.dataset.lighting = dark ? 'night-studio' : 'day-studio';
+    };
+    applyLighting();
     const actor = new THREE.Group();
     companion.add(actor);
     const segments = 96,
@@ -199,6 +204,7 @@ export function createCompanionScene(
     );
     const bodyMesh = new THREE.Mesh(bodyGeometry, shell);
     bodyMesh.castShadow = sculptureMode;
+    bodyMesh.receiveShadow = sculptureMode;
     actor.add(bodyMesh);
     const ink = mat(new THREE.MeshBasicMaterial({ side: THREE.DoubleSide }));
     const eyeBuffers = [-1, 1].map((side) => {
@@ -310,15 +316,7 @@ export function createCompanionScene(
       const elapsed = lastFrame ? Math.max(0, Math.min(0.1, frame.time - lastFrame.time)) : 1;
       lastFrame = frame;
       if (disposed || !options.visible || document.hidden) return;
-      if (sculptureMode) {
-        world.rotation.y = options.reduced
-          ? -0.2
-          : THREE.MathUtils.damp(world.rotation.y, targetYaw, 9, elapsed);
-        world.rotation.x = options.reduced
-          ? 0.04
-          : THREE.MathUtils.damp(world.rotation.x, targetPitch, 9, elapsed);
-        canvas.dataset.sculptureYaw = world.rotation.y.toFixed(3);
-      }
+      if (sculptureMode) canvas.dataset.sculptureYaw = '-0.200';
       const time = options.reduced ? 0 : frame.time;
       const pose = frame.pose;
       const sx = pose.sx * (1 + 0.7 * frame.squash),
@@ -359,7 +357,7 @@ export function createCompanionScene(
       actor.scale.set(sx * fit, sy * fit, fit);
       // Attention retargets translation without snapping when typing interrupts an excursion.
       actor.position.set(
-        options.reduced
+        options.reduced || sculptureMode
           ? 0
           : THREE.MathUtils.damp(actor.position.x, (pose.ox / 54) * fit, 10, elapsed),
         ((-pose.oy / 54) * 0.5 + (sy - 1)) * fit,
@@ -385,6 +383,24 @@ export function createCompanionScene(
         options.reduced ? 0 : turnTo(actor.rotation.y, yaw),
         options.state === 'celebrating' ? 0 : (-pose.rot * Math.PI) / 180,
       );
+      if (sculptureMode) {
+        // Seat the current deformed pose on the ceramic counter. Removing idle
+        // translation while retaining gaze/squash keeps a resting body in contact.
+        actor.updateMatrix();
+        const matrix = actor.matrix.elements;
+        const position = bodyGeometry.getAttribute('position');
+        let bottom = Infinity;
+        for (let index = 0; index < position.count; index++) {
+          bottom = Math.min(
+            bottom,
+            matrix[1]! * position.getX(index) +
+              matrix[5]! * position.getY(index) +
+              matrix[9]! * position.getZ(index),
+          );
+        }
+        actor.position.y = -bottom;
+        canvas.dataset.supportGap = (actor.position.y + bottom).toFixed(3);
+      }
       for (let sideIndex = 0; sideIndex < eyeBuffers.length; sideIndex++) {
         const { side, geometry } = eyeBuffers[sideIndex]!;
         const e = frame.eyes[sideIndex]!;
@@ -528,8 +544,6 @@ export function createCompanionScene(
     resize.observe(canvas);
     canvas.addEventListener('webglcontextlost', lost);
     if (sculptureMode) {
-      canvas.addEventListener('pointermove', pointer);
-      canvas.addEventListener('pointerleave', resetPointer);
       canvas.dataset.stage = 'sculpture';
     }
     canvas.dataset.renderer = 'webgl';
@@ -539,10 +553,13 @@ export function createCompanionScene(
         const greet = next.active && !options.active;
         const recolorNeeded = next.ceramic !== options.ceramic;
         const becameVisible = next.visible && !options.visible;
+        const lightingChanged = next.dark !== options.dark;
         options = next;
         if (recolorNeeded) recolor();
+        if (lightingChanged) applyLighting();
         engine?.update(engineOptions());
-        if ((recolorNeeded || becameVisible) && lastFrame) renderFrame(lastFrame);
+        if ((recolorNeeded || becameVisible || lightingChanged) && lastFrame)
+          renderFrame(lastFrame);
         if (greet) engine?.blink();
       },
       poke() {
