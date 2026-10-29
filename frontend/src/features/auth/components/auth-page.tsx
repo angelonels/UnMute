@@ -179,7 +179,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
 
 function SignInArtwork() {
   return (
-    <div className="relative mx-auto aspect-square w-[min(11rem,65vw)] max-w-full sm:w-60 lg:w-[min(100%,76svh)] lg:max-w-[52rem] [&>button]:size-full">
+    <div className="relative mx-auto aspect-square w-[min(11rem,65vw)] max-w-full sm:w-60 lg:w-[min(100%,76svh)] lg:max-w-[52rem]">
       <AICompanion
         size={640}
         stage="sculpture"

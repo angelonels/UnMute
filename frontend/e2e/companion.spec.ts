@@ -191,3 +191,30 @@ test('login defers the sculpture renderer until the session resolves and uses on
   });
   await page.screenshot({ path: info.outputPath('visible-login-companion.png'), fullPage: true });
 });
+
+// Failure cases: the sculpture itself must not greet, tilt, or scale on interaction;
+// Mumo's separate target must remain keyboard-accessible and announce his response.
+test('the sculpture stays composed while only Mumo responds to interaction', async ({
+  page,
+}, info) => {
+  await page.route('**/api/auth/get-session**', (route) => route.fulfill({ json: null }));
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  const scene = page.locator('canvas[data-stage="sculpture"][data-renderer="webgl"]');
+  await expect(scene).toBeVisible();
+  const sculpture = await scene.boundingBox();
+  if (!sculpture) throw new Error('Sculpture bounds unavailable');
+  await page.mouse.click(
+    sculpture.x + sculpture.width * 0.27,
+    sculpture.y + sculpture.height * 0.35,
+  );
+  await expect(page.getByRole('status')).not.toContainText('Mumo says hello');
+  const mumo = page.getByRole('button', { name: 'Say hello to Mumo', exact: true });
+  const target = await mumo.boundingBox();
+  if (!target) throw new Error('Mumo target unavailable');
+  expect(target.width).toBeLessThan(sculpture.width * 0.3);
+  await mumo.focus();
+  await mumo.press('Enter');
+  await expect(page.getByRole('status')).toContainText('Mumo says hello');
+  await page.screenshot({ path: info.outputPath('mumo-only-interaction.png'), fullPage: true });
+});

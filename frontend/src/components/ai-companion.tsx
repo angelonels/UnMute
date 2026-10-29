@@ -88,13 +88,13 @@ export function AICompanion({
     ) : (
       <CompanionMark {...common} />
     );
-  return pokeable ? (
+  const interaction = (
     <button
       type="button"
       aria-label={props.label ?? 'Say hello to Mumo'}
       title="Say hello"
       data-interaction={greeting ? 'greeted' : engaged ? 'engaged' : 'idle'}
-      className={`relative shrink-0 scale-100 cursor-pointer bg-transparent p-0 transition-[background-color] duration-150 ease-out motion-safe:transition-[scale,background-color] motion-safe:enabled:active:not-focus-visible:scale-[0.96] ${props.stage ? 'rounded-3xl' : 'rounded-full hover:bg-primary/5'}`}
+      className={`shrink-0 scale-100 cursor-pointer bg-transparent p-0 transition-[background-color] duration-150 ease-out motion-safe:transition-[scale,background-color] motion-safe:enabled:active:not-focus-visible:scale-[0.96] ${props.stage ? 'absolute top-[54%] left-[40%] h-[23%] min-h-11 w-[23%] min-w-11 rounded-full motion-safe:enabled:active:not-focus-visible:scale-100' : 'relative rounded-full hover:bg-primary/5'}`}
       onPointerEnter={(event) => {
         if (event.pointerType !== 'touch') setHovered(true);
       }}
@@ -108,11 +108,11 @@ export function AICompanion({
         onPoke?.();
       }}
     >
-      {content}
+      {!props.stage && content}
       {greeting > 0 && (
         <span
           aria-hidden="true"
-          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm ${props.stage ? 'top-[55%]' : '-top-2'}`}
+          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm ${props.stage ? '-top-1' : '-top-2'}`}
         >
           Hi!
         </span>
@@ -121,8 +121,18 @@ export function AICompanion({
         {greeting ? 'Mumo says hello.' : ''}
       </span>
     </button>
+  );
+  if (!pokeable) return content;
+  return props.stage ? (
+    <span
+      className={`relative inline-block shrink-0 align-middle ${props.className ?? ''}`}
+      style={{ width: props.size ?? 88, height: props.size ?? 88 }}
+    >
+      {content}
+      {interaction}
+    </span>
   ) : (
-    content
+    interaction
   );
 }
 
@@ -208,6 +218,7 @@ function Companion3D({
   const ceramic = finish === 'ceramic' || (finish === 'auto' && resolvedTheme === 'dark');
   const options = useRef<CompanionOptions>({
     ceramic,
+    dark: resolvedTheme === 'dark',
     reduced,
     visible: false,
     active,
@@ -229,6 +240,7 @@ function Companion3D({
   useEffect(() => {
     options.current = {
       ceramic,
+      dark: resolvedTheme === 'dark',
       reduced,
       visible: visible.current,
       active,
@@ -240,7 +252,18 @@ function Companion3D({
       stage,
     };
     scene.current?.update(options.current);
-  }, [ceramic, reduced, active, emotion, state, shape, expression, attention, stage]);
+  }, [
+    ceramic,
+    resolvedTheme,
+    reduced,
+    active,
+    emotion,
+    state,
+    shape,
+    expression,
+    attention,
+    stage,
+  ]);
   useEffect(() => {
     const node = host.current,
       surface = canvas.current;
@@ -328,7 +351,7 @@ function Companion3D({
           <span
             className={
               stage
-                ? 'absolute top-[55%] left-[43%] aspect-square w-[29%]'
+                ? 'absolute top-[55%] left-[42%] aspect-square w-[20%]'
                 : 'absolute inset-0 size-full'
             }
           >
