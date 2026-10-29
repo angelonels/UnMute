@@ -139,6 +139,7 @@ export function AIConversation({
     revealSubmission.current = true;
     following.current = true;
     setAway(false);
+    ai.setReadingHistory(false);
     ai.send(prompt);
     input.current?.focus();
   };
@@ -187,6 +188,7 @@ export function AIConversation({
                       revealSubmission.current = true;
                       following.current = true;
                       setAway(false);
+                      ai.setReadingHistory(false);
                       ai.retry();
                       input.current?.focus();
                     }}
@@ -206,6 +208,7 @@ export function AIConversation({
           onClick={() => {
             following.current = true;
             setAway(false);
+            ai.setReadingHistory(false);
             const node = viewport.current;
             if (node) node.scrollTop = node.scrollHeight;
           }}
@@ -248,7 +251,7 @@ function ConversationWelcome({
             aria-label={prompt}
             disabled={disabled || unavailable}
             onClick={() => send(prompt)}
-            className="group flex min-h-18 w-full cursor-pointer items-center gap-3 rounded-2xl border border-border/70 px-3 py-3 text-left hover:bg-surface-muted disabled:cursor-default disabled:opacity-45 motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:active:not-focus-visible:scale-[0.98]"
+            className="group flex min-h-18 w-full cursor-pointer items-center gap-3 rounded-2xl border border-border/70 px-3 py-3 text-left hover:bg-surface-muted disabled:cursor-default disabled:opacity-45 motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.96]"
           >
             <Icon width={19} height={19} className="shrink-0 text-muted" aria-hidden="true" />
             <span className="min-w-0 flex-1">
@@ -312,7 +315,7 @@ function ConversationComposer({
                 input.current?.focus();
               } else if (!unavailable && !disabled && ai.draft.trim()) send();
             }}
-            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface aria-disabled:cursor-default aria-disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.96]"
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface aria-disabled:cursor-default aria-disabled:opacity-25 motion-safe:transition-transform motion-safe:duration-150 motion-safe:[&:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96]"
           >
             {ai.busy ? (
               <Square width={15} height={15} strokeWidth={2} aria-hidden="true" />

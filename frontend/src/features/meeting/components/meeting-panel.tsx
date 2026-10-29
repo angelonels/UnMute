@@ -30,6 +30,7 @@ export function MeetingPanel({
   onKeyboard: () => void;
 }) {
   const reduced = useReducedMotion();
+  const mode = keyboard ? 'instant' : reduced ? 'reduced' : 'pointer';
   const shift = side === 'left' ? '-24px' : '24px';
   const hidden =
     reduced || keyboard ? { opacity: 0 } : { opacity: 0, transform: `translateX(${shift})` };
@@ -41,7 +42,13 @@ export function MeetingPanel({
             className="fixed inset-0 z-40 bg-black/35"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            variants={{
+              out: (input: string) => ({
+                opacity: 0,
+                transition: { duration: input === 'instant' ? 0 : 0.15 },
+              }),
+            }}
+            exit="out"
             transition={{ duration: keyboard ? 0 : 0.15 }}
           />
         </Dialog.Overlay>
@@ -62,14 +69,19 @@ export function MeetingPanel({
         }}
       >
         <m.aside
-          initial={hidden}
+          data-motion={mode}
+          initial={keyboard ? false : hidden}
           animate={{ opacity: 1, transform: 'translateX(0px)' }}
-          exit={{
-            ...hidden,
-            transition: { duration: keyboard ? 0 : 0.15, ease: [0.23, 1, 0.32, 1] },
+          variants={{
+            out: (input: string) => ({
+              opacity: 0,
+              transform: input === 'pointer' ? `translateX(${shift})` : 'translateX(0px)',
+              transition: { duration: input === 'instant' ? 0 : 0.15, ease: [0.23, 1, 0.32, 1] },
+            }),
           }}
+          exit="out"
           transition={{ duration: keyboard ? 0 : reduced ? 0.15 : 0.24, ease: [0.23, 1, 0.32, 1] }}
-          className={`flex min-h-0 shrink-0 flex-col overflow-x-hidden overflow-y-auto rounded-[1.5rem] border border-transparent bg-surface-raised shadow-shell ${panelClasses(modal, side)}`}
+          className={`flex min-h-0 shrink-0 flex-col overflow-x-hidden overflow-y-auto overscroll-contain rounded-[1.5rem] border border-transparent bg-surface-raised shadow-shell ${panelClasses(modal, side)}`}
         >
           {header ?? <PanelHeader title={title} description={description} />}
           {children}
@@ -79,7 +91,7 @@ export function MeetingPanel({
   );
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange} modal={modal}>
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} custom={mode}>
         {open &&
           (modal ? (
             <Dialog.Portal forceMount key={side}>

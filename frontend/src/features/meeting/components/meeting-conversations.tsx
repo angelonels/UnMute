@@ -49,7 +49,7 @@ export function MessageComposer({
             aria-label="Send message"
             disabled={!value.trim() || disabled}
             onClick={onSend}
-            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30 motion-safe:transition-transform motion-safe:duration-160 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.97]"
+            className="grid size-11 cursor-pointer place-items-center rounded-full bg-text text-surface disabled:cursor-default disabled:opacity-30 motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.96]"
           >
             <ArrowUp width={17} height={17} aria-hidden="true" />
           </button>
