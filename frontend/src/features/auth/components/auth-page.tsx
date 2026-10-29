@@ -179,7 +179,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
           </div>
         </section>
       </main>
-      <footer className="mx-auto flex min-h-11 w-full max-w-[112rem] shrink-0 items-center justify-center px-6 py-3 lg:justify-start text-xs text-[oklch(0.46_0.025_285)] sm:px-10 lg:px-12 dark:text-muted">
+      <footer className="mx-auto flex min-h-11 w-full max-w-[112rem] shrink-0 items-center justify-center px-6 py-3 lg:justify-start text-xs text-[oklch(0.435_0.025_282)] sm:px-10 lg:px-12 dark:text-muted">
         UnMute © {new Date().getFullYear()}
       </footer>
     </div>

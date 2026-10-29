@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 // Failure cases: a tiny detached sculpture on tall phones, primary action below the
-// first screen, clipped content at compact widths, lost Mumo target, and neutral white surfaces.
+// first screen, clipped content at compact widths, lost Mumo target, and glaring near-white surfaces without a restrained iris tint.
 for (const theme of ['light', 'dark'] as const) {
   for (const viewport of [
     { width: 320, height: 568 },
@@ -45,8 +45,10 @@ for (const theme of ['light', 'dark'] as const) {
         });
         expect(blue! - red!).toBeGreaterThan(3);
         expect(blue! - green!).toBeGreaterThan(3);
-        expect(red).toBeGreaterThan(230);
-        expect(green).toBeGreaterThan(230);
+        expect(red).toBeGreaterThan(220);
+        expect(green).toBeGreaterThan(220);
+        expect(red).toBeLessThan(241);
+        expect(green).toBeLessThan(241);
       }
       await page.screenshot({
         path: info.outputPath(`mobile-${theme}-${viewport.width}.png`),
