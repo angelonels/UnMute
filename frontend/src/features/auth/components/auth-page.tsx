@@ -170,7 +170,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
           </div>
         </section>
       </main>
-      <footer className="mx-auto flex min-h-14 w-full max-w-[112rem] shrink-0 items-center px-6 py-4 text-xs text-muted sm:px-10 lg:px-12">
+      <footer className="mx-auto flex min-h-14 w-full max-w-[112rem] shrink-0 items-center px-6 py-4 text-xs text-[oklch(0.46_0.025_285)] sm:px-10 lg:px-12 dark:text-muted">
         UnMute © {new Date().getFullYear()}
       </footer>
     </div>
@@ -179,36 +179,15 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
 
 function SignInArtwork() {
   return (
-    <div className="relative mx-auto aspect-square w-[min(11rem,65vw)] max-w-full sm:w-60 lg:w-[min(100%,76svh)] lg:max-w-[52rem]">
-      <img
-        src="/images/auth-sculpture.webp"
-        srcSet="/images/auth-sculpture-small.webp 480w, /images/auth-sculpture.webp 1200w"
-        sizes="(min-width: 1024px) 52vw, 240px"
-        width={1200}
-        height={1200}
-        alt=""
-        fetchPriority="high"
-        decoding="async"
-        className="pointer-events-none size-full object-contain"
+    <div className="relative mx-auto aspect-square w-[min(11rem,65vw)] max-w-full sm:w-60 lg:w-[min(100%,76svh)] lg:max-w-[52rem] [&>button]:size-full">
+      <AICompanion
+        size={640}
+        stage="sculpture"
+        finish="ceramic"
+        pokeable
+        label="Say hello to Mumo"
+        className="size-full! [--companion-body:var(--companion-paper-body)] [--companion-face:var(--companion-paper-face)]"
       />
-      <div className="absolute top-[55%] left-[43%] hidden aspect-square w-[29%] lg:block [&>button]:size-full [&_[data-companion-state]]:size-full!">
-        <AICompanion
-          size={220}
-          finish="ceramic"
-          pokeable
-          label="Say hello to Mumo"
-          className="size-full! [--companion-body:var(--companion-paper-body)] [--companion-face:var(--companion-paper-face)]"
-        />
-      </div>
-      <div className="absolute top-[55%] left-[43%] aspect-square w-[29%] lg:hidden [&>button]:size-full [&_[data-companion-state]]:size-full!">
-        <AICompanion
-          size={40}
-          finish="ceramic"
-          pokeable
-          label="Say hello to Mumo"
-          className="size-full! [--companion-body:var(--companion-paper-body)] [--companion-face:var(--companion-paper-face)]"
-        />
-      </div>
     </div>
   );
 }

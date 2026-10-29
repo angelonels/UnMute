@@ -155,14 +155,16 @@ test('Mumo keeps idle shell buffers and falls back after context loss', async ({
   });
 });
 
-test('hidden login artwork defers the 3D module until it becomes visible', async ({
+test('login defers the sculpture renderer until the session resolves and uses one scene on phone', async ({
   page,
 }, info) => {
+  let pending: import('@playwright/test').Route | undefined;
+  await page.route('**/api/auth/get-session**', (route) => {
+    pending = route;
+  });
   await page.setViewportSize({ width: 375, height: 812 });
   await page.goto('/');
-  await expect(
-    page.getByRole('button', { name: 'Continue with Google', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('main', { name: 'Loading account' })).toBeVisible();
   const loadedScene = () =>
     page.evaluate(() =>
       performance
@@ -170,11 +172,21 @@ test('hidden login artwork defers the 3D module until it becomes visible', async
         .some((entry) => /\/components\/companion\/scene\.ts(?:\?|$)/.test(entry.name)),
     );
   expect(await loadedScene()).toBe(false);
-  await page.setViewportSize({ width: 1440, height: 900 });
-  await expect(page.locator('canvas[data-renderer="webgl"]')).toBeVisible();
+  if (!pending) throw new Error('Session request unavailable');
+  await pending.fulfill({ json: null });
+  const sculpture = page.locator('canvas[data-stage="sculpture"][data-renderer="webgl"]');
+  await expect(sculpture).toBeVisible();
+  await expect(page.locator('canvas[data-renderer="webgl"]')).toHaveCount(1);
   expect(await loadedScene()).toBe(true);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(sculpture).toBeVisible();
+  await expect(page.locator('canvas[data-renderer="webgl"]')).toHaveCount(1);
   await info.attach('mumo-visibility-loading.json', {
-    body: JSON.stringify({ hiddenLoginLoadsScene: false, visibleLoginLoadsScene: true }, null, 2),
+    body: JSON.stringify(
+      { pendingSessionLoadsScene: false, visibleLoginLoadsScene: true, contexts: 1 },
+      null,
+      2,
+    ),
     contentType: 'application/json',
   });
   await page.screenshot({ path: info.outputPath('visible-login-companion.png'), fullPage: true });
