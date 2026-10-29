@@ -6,6 +6,7 @@ import { Link } from '@tanstack/react-router';
 import { authClient } from '../../../api/auth-client';
 import { Brand } from '../../../components/brand';
 import { ThemeToggle } from '../../../components/theme-toggle';
+import { LoadingIndicator } from '../../../components/loading-indicator';
 
 function GoogleMark() {
   return (
@@ -82,6 +83,16 @@ export function useAuthActions(authError: boolean) {
 export function AuthPage({ authError = false }: { authError?: boolean }) {
   const { isPending, error: sessionError, refetch } = authClient.useSession();
   const { busy, failed, signIn } = useAuthActions(authError);
+  const [retrying, setRetrying] = useState(false);
+  async function retrySession() {
+    if (retrying) return;
+    setRetrying(true);
+    try {
+      await refetch();
+    } finally {
+      setRetrying(false);
+    }
+  }
   return (
     <div className="relative isolate flex min-h-svh flex-col overflow-x-clip bg-canvas">
       <div
@@ -105,36 +116,12 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
             <p className="mt-5 text-lg leading-7 tracking-[-0.02em] text-muted lg:mt-7 lg:text-2xl lg:leading-8">
               Meet, talk, be here.
             </p>
-            <button
-              type="button"
-              aria-busy={busy}
-              aria-disabled={busy || undefined}
+            <GoogleSignInButton
+              busy={busy}
+              checking={isPending}
               disabled={isPending || Boolean(sessionError)}
-              onClick={() => {
-                if (!busy) void signIn();
-              }}
-              className="mt-7 flex min-h-15 w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-base leading-6 font-medium text-on-primary shadow-sm hover:bg-primary-hover disabled:cursor-wait disabled:opacity-50 aria-busy:cursor-progress motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] lg:mt-12"
-            >
-              <span
-                className="grid size-7 shrink-0 place-items-center rounded-full bg-white p-1 [&_svg]:size-5"
-                aria-hidden="true"
-              >
-                <GoogleMark />
-              </span>
-              <span className="min-w-0 [overflow-wrap:anywhere]">
-                {busy
-                  ? 'Connecting to Google…'
-                  : isPending
-                    ? 'Checking your session…'
-                    : 'Continue with Google'}
-              </span>
-              <ArrowRight
-                width={18}
-                height={18}
-                className="hidden shrink-0 sm:block"
-                aria-hidden="true"
-              />
-            </button>
+              onSignIn={signIn}
+            />
             {failed && (
               <p
                 className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm leading-6 text-error"
@@ -143,7 +130,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
                 We couldn’t complete sign-in. Please try again.
               </p>
             )}
-            {sessionError && (
+            {(sessionError || retrying) && (
               <div
                 role="alert"
                 className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm leading-6 text-error"
@@ -151,10 +138,29 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
                 We couldn’t check your session.{' '}
                 <button
                   type="button"
-                  className="min-h-11 cursor-pointer px-2 underline underline-offset-4"
-                  onClick={() => void refetch()}
+                  aria-busy={retrying}
+                  aria-disabled={retrying || undefined}
+                  className="inline-grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-2 underline underline-offset-4 aria-busy:cursor-progress"
+                  onClick={() => void retrySession()}
                 >
-                  Try again
+                  <span
+                    aria-hidden="true"
+                    className={`col-start-1 row-start-1 ${retrying ? '' : 'invisible'}`}
+                  >
+                    <LoadingIndicator />
+                  </span>
+                  <span
+                    aria-hidden={retrying || undefined}
+                    className={`col-start-2 row-start-1 ${retrying ? 'invisible' : ''}`}
+                  >
+                    Try again
+                  </span>
+                  <span
+                    aria-hidden={!retrying || undefined}
+                    className={`col-start-2 row-start-1 ${retrying ? '' : 'invisible'}`}
+                  >
+                    Checking…
+                  </span>
                 </button>
               </div>
             )}
@@ -174,6 +180,63 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
         UnMute © {new Date().getFullYear()}
       </footer>
     </div>
+  );
+}
+
+function GoogleSignInButton({
+  busy,
+  checking,
+  disabled,
+  onSignIn,
+}: {
+  busy: boolean;
+  checking: boolean;
+  disabled: boolean;
+  onSignIn: () => Promise<void>;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        aria-busy={busy}
+        aria-disabled={busy || undefined}
+        disabled={disabled}
+        onClick={() => {
+          if (!busy) void onSignIn();
+        }}
+        className="mt-7 flex min-h-15 w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-base leading-6 font-medium text-on-primary shadow-sm hover:bg-primary-hover disabled:cursor-wait disabled:opacity-50 aria-busy:cursor-progress motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] lg:mt-12"
+      >
+        <span
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-white p-1 [&_svg]:size-5"
+          aria-hidden="true"
+        >
+          {busy ? <LoadingIndicator className="text-primary" /> : <GoogleMark />}
+        </span>
+        <span className="grid min-w-0 grid-cols-[minmax(0,1fr)] [overflow-wrap:anywhere]">
+          <span
+            aria-hidden={busy || undefined}
+            className={`col-start-1 row-start-1 ${busy ? 'invisible' : ''}`}
+          >
+            {checking ? 'Checking your session…' : 'Continue with Google'}
+          </span>
+          <span
+            aria-hidden={!busy || undefined}
+            className={`col-start-1 row-start-1 ${busy ? '' : 'invisible'}`}
+          >
+            Connecting to Google…
+          </span>
+        </span>
+        <ArrowRight
+          width={18}
+          height={18}
+          className="hidden shrink-0 sm:block"
+          aria-hidden="true"
+        />
+      </button>
+      <span role="status" className="sr-only">
+        {busy ? 'Connecting to Google…' : ''}
+      </span>
+    </>
   );
 }
 

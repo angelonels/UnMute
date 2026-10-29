@@ -1,7 +1,6 @@
 import type { AIStreamSource } from '../ai-stream';
 import { useState } from 'react';
-import { authClient } from '../../../api/auth-client';
-import { AuthPage, SessionPending } from '../../auth';
+import { AuthPage, SessionPending, useAuthSession } from '../../auth';
 import { MeetingPage } from './meeting-page';
 
 type EntryProps = {
@@ -19,8 +18,8 @@ export function MeetingEntry(props: EntryProps) {
 }
 
 function AuthenticatedMeeting(props: EntryProps) {
-  const { data: session, isPending, error } = authClient.useSession();
-  if (isPending) return <SessionPending />;
+  const { data: session, initialPending, error } = useAuthSession();
+  if (initialPending) return <SessionPending />;
   if (!session || error) return <AuthPage />;
   return <MeetingPreview {...props} demo={false} userName={session.user.name ?? 'You'} />;
 }
