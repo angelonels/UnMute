@@ -50,3 +50,7 @@ Screenshots cover desktop and phone, both themes, the workspace, enlarged mobile
 ## Loading refinement follow-up
 
 The final expanded browser run passed all 61 tests in 2.5 minutes after the loading refinement. It covers session restoration, focused sign-in and retry progress, permission waits, first video playback, stable preview controls, AI thinking/streaming/stopping/retry, and promise-bound clipboard progress. Status regions now have distinct accessible names. The palette check waits for session-ready controls; the desktop visual check waits for the studio backdrop to decode before saving evidence. See `../loading-refinement/REVIEW.md` and its screenshots.
+
+## Mobile and light-palette follow-up
+
+Source commit `e725ca9` adds portrait/landscape phone composition and low-chroma iris light surfaces. Full project verification passed and all 71 browser cases passed. Current measured minimum normal-copy contrast is 4.6557:1. See `../mobile-refinement/REVIEW.md` and its screenshots/JSON for final evidence. Earlier measurements above describe their respective historical passes.

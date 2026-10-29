@@ -29,3 +29,7 @@ This records the cumulative direction for this refinement, including later corre
 - [x] Leave the application running at `http://localhost:5173/` with a retained preview tab.
 
 Browser review uses the built-in Codex browser. E2E uses the isolated Playwright Chromium explicitly authorized by the user. Personal Chrome profiles are untouched.
+
+- [x] Refine phone portrait, compact screens, tablet, and landscape composition in both themes.
+- [x] Tint near-white light surfaces toward iris using low-chroma OKLCH neutrals; remeasure actual backdrop contrast.
+- [x] Complete project verification and all 71 browser cases after mobile/color refinement.

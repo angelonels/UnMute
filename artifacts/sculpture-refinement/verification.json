@@ -1,7 +1,7 @@
 {
   "date": "2026-10-29",
   "branch": "polish/frontend-mumo-refinement",
-  "testedCommit": "df9c2c6",
+  "testedCommit": "e725ca9",
   "projectVerify": {
     "status": "passed",
     "existingBackendTests": 3,
@@ -14,10 +14,10 @@
   },
   "playwright": {
     "status": "passed",
-    "passed": 61,
+    "passed": 71,
     "failed": 0,
     "workers": 2,
-    "duration": "2.5m",
+    "duration": "1.6m",
     "browser": "isolated Chromium, user-authorized"
   },
   "reactDoctor": {
@@ -31,7 +31,7 @@
     "backdropCases": 8,
     "themes": ["light", "dark"],
     "widths": [320, 375, 1024, 1440],
-    "minimumNormalCopyRatio": 4.771
+    "minimumNormalCopyRatio": 4.6557
   },
   "measurementLimits": [
     "No Chrome DevTools/Core Web Vitals trace collected",
@@ -45,5 +45,10 @@
     "url": "http://localhost:5173/",
     "frontendHttpStatus": 200,
     "apiHealthHttpStatus": 200
+  },
+  "mobileComposition": {
+    "cases": 10,
+    "viewports": ["320x568", "375x812", "430x932", "768x1024", "812x375"],
+    "themes": ["light", "dark"]
   }
 }
