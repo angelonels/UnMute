@@ -90,11 +90,12 @@ export function WorkspacePage({ user }: { user: User }) {
                       <Help />
                       <button
                         disabled={busy}
+                        aria-busy={busy}
                         onClick={() => void signOut()}
                         className="flex min-h-12 w-full cursor-pointer items-center gap-3 px-3 text-muted"
                       >
                         <LogOut width={18} height={18} aria-hidden="true" />
-                        Sign out
+                        {busy ? 'Signing out…' : 'Sign out'}
                       </button>
                       {failed && (
                         <p role="alert" className="text-error">
@@ -108,7 +109,7 @@ export function WorkspacePage({ user }: { user: User }) {
               <span className="lg:hidden">
                 <Brand compact />
               </span>
-              <h1 className="hidden text-sm font-medium sm:block">Overview</h1>
+              <h1 className="sr-only text-sm font-medium sm:not-sr-only">Overview</h1>
             </div>
             <div className="flex items-center gap-1 sm:gap-2">
               <ThemeToggle />
@@ -259,7 +260,7 @@ function PreviewToggle({
       aria-busy={pending}
       disabled={pending}
       onClick={onClick}
-      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 text-sm disabled:cursor-progress disabled:opacity-50 motion-safe:transition-transform motion-safe:duration-[160ms] motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.97] ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
+      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-xs disabled:cursor-progress disabled:opacity-50 sm:px-4 sm:text-sm motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.96] ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
     >
       {children}
     </button>
@@ -387,7 +388,7 @@ function WorkspaceNavigation({
 }) {
   return (
     <aside
-      className={`hidden shrink-0 flex-col rounded-3xl bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
+      className={`hidden shrink-0 flex-col rounded-3xl border border-transparent bg-surface p-3 shadow-shell lg:flex ${navigationOpen ? 'w-60' : 'w-18'}`}
       aria-label="Workspace navigation"
     >
       <div
@@ -425,6 +426,7 @@ function WorkspaceNavigation({
         <button
           type="button"
           disabled={busy}
+          aria-busy={busy}
           onClick={() => void signOut()}
           aria-label="Sign out"
           className={`flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-xl text-sm text-muted hover:bg-surface-muted hover:text-text disabled:cursor-wait ${navigationOpen ? 'px-3' : 'justify-center'}`}

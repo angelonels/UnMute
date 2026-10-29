@@ -112,3 +112,38 @@ test('sign-out failure leaves a working retry', async ({ page }) => {
   await expect(page.getByRole('alert').filter({ visible: true })).toContainText('Sign-out failed');
   await expect(page.getByRole('button', { name: 'Sign out', exact: true })).toBeEnabled();
 });
+
+test('meeting preview keeps device controls and long names within a narrow viewport', async ({
+  page,
+}, testInfo) => {
+  await page.route('**/api/auth/get-session**', (route) =>
+    route.fulfill({
+      json: {
+        ...session,
+        user: { ...session.user, name: 'Alexanderthegreatwithanunbrokenfamilyname Morgan' },
+      },
+    }),
+  );
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeAttached();
+  await page.getByRole('button', { name: 'Start meeting', exact: true }).press('Enter');
+  const preview = page.getByRole('dialog', { name: 'Before you meet' });
+  await expect(preview).toBeVisible();
+  for (const name of ['Microphone', 'Camera']) {
+    const control = preview.getByRole('button', { name, exact: true });
+    await expect(control).toBeVisible();
+    expect(
+      await control.evaluate((node) => node.scrollWidth <= node.clientWidth),
+      `${name} content must fit inside its control`,
+    ).toBe(true);
+  }
+  expect(await preview.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
+  await preview.getByRole('button', { name: 'Back to workspace' }).scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: testInfo.outputPath('preview-narrow-long-name.png'),
+    fullPage: true,
+  });
+  await preview.getByRole('button', { name: 'Back to workspace' }).press('Enter');
+  await expect(page.getByRole('button', { name: 'Start meeting', exact: true })).toBeFocused();
+});

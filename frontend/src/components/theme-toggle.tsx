@@ -23,7 +23,7 @@ export function ThemeToggle() {
         if (!event.detail) setPointer(false);
         setTheme(dark ? 'light' : 'dark');
       }}
-      className="group grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-border/70 bg-surface text-text hover:border-muted/60 hover:bg-surface-muted motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:active:not-focus-visible:scale-[0.94]"
+      className="group grid size-11 shrink-0 cursor-pointer place-items-center rounded-full border border-border/70 bg-surface text-text hover:border-muted/60 hover:bg-surface-muted motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:active:not-focus-visible:scale-[0.96]"
     >
       <svg
         width="24"

@@ -48,6 +48,7 @@ export default function SegmentedControl({
   const id = useId();
   const reduced = useReducedMotion();
   const track = useRef<HTMLDivElement>(null);
+  const keyboard = useRef(false);
 
   // When the options are wider than the container, the track scrolls inside itself. Edges fade only on the side with more to see.
   useLayoutEffect(() => {
@@ -84,7 +85,7 @@ export default function SegmentedControl({
     if (left !== node.scrollLeft)
       node.scrollTo({
         left: Math.max(0, left),
-        behavior: first.current || reduced ? 'auto' : 'smooth',
+        behavior: first.current || reduced || keyboard.current ? 'auto' : 'smooth',
       });
     first.current = false;
   }, [value, reduced]);
@@ -95,6 +96,7 @@ export default function SegmentedControl({
     options.findIndex((option) => option.value === value),
   );
   const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
+    keyboard.current = true;
     const last = options.length - 1;
     const target =
       event.key === 'ArrowRight' || event.key === 'ArrowDown'
@@ -133,7 +135,13 @@ export default function SegmentedControl({
               title={option.label}
               aria-pressed={value === option.value}
               tabIndex={index === selectedIndex ? 0 : -1}
-              onClick={() => onValueChange(option.value)}
+              onPointerDown={() => {
+                keyboard.current = false;
+              }}
+              onClick={(event) => {
+                if (event.detail === 0) keyboard.current = true;
+                onValueChange(option.value);
+              }}
               onKeyDown={onKeyDown}
               onPointerEnter={onOptionIntent ? () => onOptionIntent(option.value) : undefined}
               onFocus={onOptionIntent ? () => onOptionIntent(option.value) : undefined}

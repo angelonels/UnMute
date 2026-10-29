@@ -142,26 +142,38 @@ function SwapText({ text }: { text: string }) {
         key={text}
         className={styles.swap}
         initial={
-          reduced || keyboard
+          keyboard
             ? false
-            : { opacity: 0, y: '0.3em', filter: `blur(${motionTokens.blur.soft}px)` }
+            : reduced
+              ? { opacity: 0 }
+              : {
+                  opacity: 0,
+                  transform: 'translateY(0.3em)',
+                  filter: `blur(${motionTokens.blur.soft}px)`,
+                }
         }
-        animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+        animate={{ opacity: 1, transform: 'translateY(0)', filter: 'blur(0px)' }}
         exit={
-          reduced || keyboard
+          keyboard
             ? { opacity: 0, transition: { duration: 0 } }
-            : {
-                opacity: 0,
-                y: '-0.3em',
-                filter: `blur(${motionTokens.blur.subtle}px)`,
-                transition: {
-                  duration: motionTokens.duration.fast,
-                  ease: [...motionTokens.ease.standard],
-                },
-              }
+            : reduced
+              ? { opacity: 0, transition: fade }
+              : {
+                  opacity: 0,
+                  transform: 'translateY(-0.3em)',
+                  filter: `blur(${motionTokens.blur.subtle}px)`,
+                  transition: {
+                    duration: motionTokens.duration.fast,
+                    ease: [...motionTokens.ease.standard],
+                  },
+                }
         }
         transition={{
-          duration: keyboard ? 0 : motionTokens.duration.standard,
+          duration: keyboard
+            ? 0
+            : reduced
+              ? motionTokens.duration.instant
+              : motionTokens.duration.standard,
           ease: [...motionTokens.ease.enter],
         }}
       >
