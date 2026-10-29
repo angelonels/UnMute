@@ -23,12 +23,14 @@ const session = {
 test.beforeEach(async ({ page }) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+      configurable: true,
       value: (constraints: MediaStreamConstraints) => {
         if (constraints.audio)
           return Promise.resolve(new AudioContext().createMediaStreamDestination().stream);
         const canvas = document.createElement('canvas');
         canvas.width = 640;
         canvas.height = 360;
+        canvas.getContext('2d')?.fillRect(0, 0, 640, 360);
         return Promise.resolve(canvas.captureStream(5));
       },
     });
@@ -75,7 +77,7 @@ test('workspace panels and meeting preview preserve keyboard access', async ({
     await toggle.click();
     await expect(toggle).toHaveAttribute('aria-pressed', 'true');
   }
-  await expect(preview.getByRole('status')).toContainText('Local preview');
+  await expect(preview.getByRole('status', { name: 'Device access', exact: true })).toBeEmpty();
   await expect(preview.getByLabel('Your camera video')).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath('meeting-preview.png'), fullPage: true });
   await preview.getByRole('button', { name: 'Back to workspace' }).click();
@@ -252,4 +254,50 @@ test('mobile account settings reflow at enlarged text with long profile details'
   });
   await settings.press('Escape');
   await expect(page.getByRole('button', { name: `Account: ${name}`, exact: true })).toBeFocused();
+});
+
+// Failure cases: permission requests leave controls looking idle, duplicate capture,
+// navigation before capture settles, and a spinner changing the button footprint.
+test('meeting preview shows stable device loading and waits before entering', async ({
+  page,
+}, info) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+      configurable: true,
+      value: () =>
+        new Promise<MediaStream>((resolve) => {
+          Reflect.set(window, '__finishPreviewCapture', () => {
+            const canvas = document.createElement('canvas');
+            canvas.width = 640;
+            canvas.height = 360;
+            canvas.getContext('2d')?.fillRect(0, 0, 640, 360);
+            resolve(canvas.captureStream(5));
+          });
+        }),
+    });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Start meeting', exact: true }).press('Enter');
+  const preview = page.getByRole('dialog', { name: 'Before you meet' });
+  const camera = preview.getByRole('button', { name: 'Camera', exact: true });
+  const width = (await camera.boundingBox())?.width;
+  await camera.click();
+  await expect(camera).toHaveAttribute('aria-busy', 'true');
+  await expect(camera).toBeDisabled();
+  await expect(preview.getByRole('button', { name: 'Microphone', exact: true })).toBeDisabled();
+  await expect(preview.getByRole('status', { name: 'Device access', exact: true })).toContainText(
+    'Waiting for camera access',
+  );
+  expect((await camera.boundingBox())?.width).toBe(width);
+  const enter = preview.getByRole('link', { name: 'Enter meeting preview', exact: true });
+  await expect(enter).toHaveAttribute('aria-disabled', 'true');
+  await enter.focus();
+  await enter.press('Enter');
+  await expect(page).toHaveURL(/\/$/);
+  await page.screenshot({ path: info.outputPath('preview-device-loading.png'), fullPage: true });
+  await page.evaluate(() => (Reflect.get(window, '__finishPreviewCapture') as () => void)());
+  await expect(camera).toHaveAttribute('aria-busy', 'false');
+  await expect(preview.getByLabel('Your camera video')).toBeVisible();
+  await expect(enter).toHaveAttribute('aria-disabled', 'false');
+  await expect(preview.getByRole('status', { name: 'Device access', exact: true })).toBeEmpty();
 });

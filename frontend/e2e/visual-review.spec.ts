@@ -44,6 +44,15 @@ for (const surface of ['login', 'workspace'] as const) {
           true,
         );
         await expect(page.locator('canvas[data-renderer="webgl"]')).toBeVisible();
+        if (surface === 'login' && width >= 1024) {
+          // The studio backdrop is first requested when the desktop breakpoint appears.
+          await page.evaluate(async (value) => {
+            const backdrop = new Image();
+            backdrop.src = `/images/auth-studio-${value}.webp`;
+            await backdrop.decode();
+            await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+          }, theme);
+        }
         await page.screenshot({
           path: info.outputPath(`${surface}-${theme}-${width}.png`),
           fullPage: true,

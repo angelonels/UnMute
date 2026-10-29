@@ -133,25 +133,30 @@ function PreviewToggle({
   children,
   label,
   pending = false,
+  disabled = false,
 }: {
   pending?: boolean;
+  disabled?: boolean;
   enabled: boolean;
   onClick: () => void;
   children: ReactNode;
   label: string;
 }) {
   return (
-    <button
+    <Button
       type="button"
+      variant={enabled ? 'secondary' : 'danger'}
+      size="lg"
       aria-label={label}
       aria-pressed={enabled}
       aria-busy={pending}
-      disabled={pending}
+      loading={pending}
+      disabled={disabled && !pending}
       onClick={onClick}
-      className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-3 text-xs disabled:cursor-progress disabled:opacity-50 sm:px-4 sm:text-sm motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.96] ${enabled ? 'border-border bg-surface text-text' : 'border-error/35 bg-error/10 text-error'}`}
+      className="w-full min-w-0 px-3 text-xs sm:px-4 sm:text-sm"
     >
       {children}
-    </button>
+    </Button>
   );
 }
 
@@ -171,6 +176,7 @@ function MeetingPreview({
   }, [open, stopAll]);
   const microphone = !!localMedia.streams.microphone;
   const camera = !!localMedia.streams.camera;
+  const devicesPending = localMedia.pending.camera || localMedia.pending.microphone;
   return (
     <ModalSurface
       open={open}
@@ -205,6 +211,7 @@ function MeetingPreview({
       <div className="mt-5 grid grid-cols-2 gap-3">
         <PreviewToggle
           label="Microphone"
+          disabled={devicesPending}
           pending={localMedia.pending.microphone}
           enabled={microphone}
           onClick={() => localMedia.toggle('microphone')}
@@ -218,6 +225,7 @@ function MeetingPreview({
         </PreviewToggle>
         <PreviewToggle
           pending={localMedia.pending.camera}
+          disabled={devicesPending}
           label="Camera"
           enabled={camera}
           onClick={() => localMedia.toggle('camera')}
@@ -232,11 +240,14 @@ function MeetingPreview({
       </div>
       <p
         role="status"
-        className="mt-5 rounded-xl bg-surface-muted p-4 text-sm leading-6 text-muted"
+        aria-label="Device access"
+        className="mt-4 min-h-6 text-sm leading-6 text-muted"
       >
-        {localMedia.pending.camera || localMedia.pending.microphone
-          ? 'Waiting for device access…'
-          : 'Local preview'}
+        {localMedia.pending.camera
+          ? 'Waiting for camera access…'
+          : localMedia.pending.microphone
+            ? 'Waiting for microphone access…'
+            : ''}
       </p>
       {localMedia.error && (
         <p role="alert" className="mt-3 text-sm text-error">
@@ -246,7 +257,11 @@ function MeetingPreview({
       <Link
         to="/meeting"
         search={{ demo: false, microphone, camera }}
-        className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary"
+        aria-disabled={devicesPending}
+        onClick={(event) => {
+          if (devicesPending) event.preventDefault();
+        }}
+        className="mt-6 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 text-sm font-medium text-on-primary aria-disabled:cursor-wait aria-disabled:opacity-50"
       >
         Enter meeting preview
         <ArrowRight width={17} height={17} aria-hidden="true" />
