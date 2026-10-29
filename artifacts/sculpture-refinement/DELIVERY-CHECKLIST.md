@@ -33,3 +33,5 @@ Browser review uses the built-in Codex browser. E2E uses the isolated Playwright
 - [x] Refine phone portrait, compact screens, tablet, and landscape composition in both themes.
 - [x] Tint near-white light surfaces toward iris using low-chroma OKLCH neutrals; remeasure actual backdrop contrast.
 - [x] Complete project verification and all 71 browser cases after mobile/color refinement.
+
+- [x] Reduce light-mode glare further across canvas/panels, deepen accents and footer ink, and verify all 71 browser cases again. See `../soft-light-refinement/REVIEW.md`.
