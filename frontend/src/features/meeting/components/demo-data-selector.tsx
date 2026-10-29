@@ -12,7 +12,7 @@ export function DemoDataSelector({
   return (
     <div
       aria-label="Demo data"
-      className="fixed bottom-1 left-1/2 z-50 flex max-w-[calc(100vw-8px)] -translate-x-1/2 gap-0.5 overflow-x-auto rounded-full bg-neutral-600 p-1 font-sans text-[10px] text-white shadow-lg"
+      className="mx-auto mb-2 flex max-w-full shrink-0 gap-0.5 overflow-x-auto overscroll-contain rounded-full border border-border bg-surface p-1 text-[10px] text-muted"
     >
       {open &&
         (
@@ -28,7 +28,7 @@ export function DemoDataSelector({
             key={mode}
             type="button"
             aria-pressed={value === mode}
-            className={`shrink-0 rounded-full px-2 py-1 ${value === mode ? 'bg-white text-neutral-900' : ''}`}
+            className={`shrink-0 rounded-full px-2 py-1 ${value === mode ? 'bg-primary/10 text-primary' : ''}`}
             onClick={() => {
               const url = new URL(window.location.href);
               url.searchParams.set('data', mode);

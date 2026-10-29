@@ -154,3 +154,28 @@ test('Mumo keeps idle shell buffers and falls back after context loss', async ({
     fullPage: true,
   });
 });
+
+test('hidden login artwork defers the 3D module until it becomes visible', async ({
+  page,
+}, info) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto('/');
+  await expect(
+    page.getByRole('button', { name: 'Continue with Google', exact: true }),
+  ).toBeVisible();
+  const loadedScene = () =>
+    page.evaluate(() =>
+      performance
+        .getEntriesByType('resource')
+        .some((entry) => /\/components\/companion\/scene\.ts(?:\?|$)/.test(entry.name)),
+    );
+  expect(await loadedScene()).toBe(false);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(page.locator('canvas[data-renderer="webgl"]')).toBeVisible();
+  expect(await loadedScene()).toBe(true);
+  await info.attach('mumo-visibility-loading.json', {
+    body: JSON.stringify({ hiddenLoginLoadsScene: false, visibleLoginLoadsScene: true }, null, 2),
+    contentType: 'application/json',
+  });
+  await page.screenshot({ path: info.outputPath('visible-login-companion.png'), fullPage: true });
+});
