@@ -106,6 +106,7 @@ for (const theme of ['light', 'dark'] as const) {
     });
     await page.setViewportSize({ width: 375, height: 812 });
     await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(page.getByRole('dialog').locator('canvas')).toBeVisible();
     await page.screenshot({
       path: info.outputPath(`meeting-brand-${theme}-375.png`),
       fullPage: true,

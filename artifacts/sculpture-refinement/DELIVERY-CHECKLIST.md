@@ -35,3 +35,5 @@ Browser review uses the built-in Codex browser. E2E uses the isolated Playwright
 - [x] Complete project verification and all 71 browser cases after mobile/color refinement.
 
 - [x] Reduce light-mode glare further across canvas/panels, deepen accents and footer ink, and verify all 71 browser cases again. See `../soft-light-refinement/REVIEW.md`.
+
+- [x] Audit brand, character materials, avatar palettes, primary/selected controls, preview colours, and status colours across both themes. Fix blue Mumo and unify shared tokens; verify 75 browser cases. See `../brand-audit/REVIEW.md` and `docs/brand-system.md`.
