@@ -57,6 +57,10 @@ for (const theme of ['light', 'dark'] as const) {
           const width = image.naturalWidth * scale;
           const height = image.naturalHeight * scale;
           context.globalAlpha = Number(style.opacity);
+          const blend = style.backgroundBlendMode;
+          if (blend !== 'normal' && blend !== 'multiply')
+            throw new Error(`Unsupported studio blend: ${blend}`);
+          context.globalCompositeOperation = blend === 'multiply' ? 'multiply' : 'source-over';
           context.drawImage(
             image,
             rect.left - bounds.left + (rect.width - width) / 2,
@@ -65,6 +69,7 @@ for (const theme of ['light', 'dark'] as const) {
             height,
           );
           context.globalAlpha = 1;
+          context.globalCompositeOperation = 'source-over';
         }
         const colorCanvas = document.createElement('canvas');
         colorCanvas.width = colorCanvas.height = 1;

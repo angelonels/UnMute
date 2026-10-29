@@ -97,23 +97,26 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
     <div className="relative isolate flex min-h-svh flex-col overflow-x-clip bg-canvas">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 hidden bg-[url('/images/auth-studio-light.webp')] bg-cover bg-center lg:block dark:bg-[url('/images/auth-studio-dark.webp')]"
+        className="pointer-events-none absolute inset-0 -z-10 hidden bg-canvas bg-[url('/images/auth-studio-light.webp')] bg-cover bg-center bg-blend-multiply lg:block dark:bg-[url('/images/auth-studio-dark.webp')] dark:bg-blend-normal"
       />
-      <header className="mx-auto flex min-h-20 w-full max-w-[112rem] shrink-0 flex-wrap items-center justify-between gap-4 px-6 py-4 [&>a]:max-w-full [&>a]:flex-wrap sm:px-10 lg:min-h-24 lg:px-12">
+      <header className="mx-auto flex min-h-18 w-full max-w-[112rem] shrink-0 flex-wrap items-center justify-between gap-4 px-6 py-3 [&>a]:max-w-full [&>a]:flex-wrap sm:px-10 lg:min-h-24 lg:px-12">
         <Brand />
         <ThemeToggle />
       </header>
-      <main className="mx-auto grid w-full max-w-[112rem] flex-1 content-center items-center gap-5 px-6 py-4 sm:px-10 lg:grid-cols-[1.8fr_1fr] lg:gap-10 lg:px-12 lg:py-6">
+      <main className="mx-auto grid w-full max-w-[112rem] flex-1 content-center items-center gap-4 px-6 pt-0 pb-4 sm:px-10 min-[640px]:max-lg:[@media(max-height:600px)]:grid-cols-[1fr_1.2fr] lg:grid-cols-[1.8fr_1fr] lg:gap-10 lg:px-12 lg:py-6">
         <SignInArtwork />
-        <section aria-labelledby="signin-heading" className="min-w-0 py-2 lg:py-12">
+        <section
+          aria-labelledby="signin-heading"
+          className="min-w-0 text-center lg:py-12 lg:text-left"
+        >
           <div className="mx-auto w-full max-w-[30rem]">
             <h1
               id="signin-heading"
-              className="text-[clamp(2.5rem,6.3vw,6rem)] leading-[1.02] font-normal tracking-[-0.065em] [overflow-wrap:anywhere]"
+              className="text-[clamp(2.5rem,12vw,3.5rem)] leading-[1.04] lg:text-[clamp(2.5rem,6.3vw,6rem)] lg:leading-[1.02] font-normal tracking-[-0.065em] [overflow-wrap:anywhere]"
             >
               Sign in to <span className="block">UnMute</span>
             </h1>
-            <p className="mt-5 text-lg leading-7 tracking-[-0.02em] text-muted lg:mt-7 lg:text-2xl lg:leading-8">
+            <p className="mt-3 text-base leading-6 tracking-[-0.02em] text-muted lg:mt-7 lg:text-2xl lg:leading-8">
               Meet, talk, be here.
             </p>
             <GoogleSignInButton
@@ -168,7 +171,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
               <Link
                 to="/meeting"
                 search={{ demo: true, microphone: false, camera: false }}
-                className="mt-5 flex min-h-11 items-center justify-center text-sm text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-current lg:mt-8"
+                className="mt-2 flex min-h-11 items-center justify-center text-sm text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-current lg:mt-8"
               >
                 Open meeting playground
               </Link>
@@ -176,7 +179,7 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
           </div>
         </section>
       </main>
-      <footer className="mx-auto flex min-h-14 w-full max-w-[112rem] shrink-0 items-center px-6 py-4 text-xs text-[oklch(0.46_0.025_285)] sm:px-10 lg:px-12 dark:text-muted">
+      <footer className="mx-auto flex min-h-11 w-full max-w-[112rem] shrink-0 items-center justify-center px-6 py-3 lg:justify-start text-xs text-[oklch(0.46_0.025_285)] sm:px-10 lg:px-12 dark:text-muted">
         UnMute © {new Date().getFullYear()}
       </footer>
     </div>
@@ -204,7 +207,7 @@ function GoogleSignInButton({
         onClick={() => {
           if (!busy) void onSignIn();
         }}
-        className="mt-7 flex min-h-15 w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-base leading-6 font-medium text-on-primary shadow-sm hover:bg-primary-hover disabled:cursor-wait disabled:opacity-50 aria-busy:cursor-progress motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] lg:mt-12"
+        className="mt-6 flex min-h-15 w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-base leading-6 font-medium text-on-primary shadow-sm hover:bg-primary-hover disabled:cursor-wait disabled:opacity-50 aria-busy:cursor-progress motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] lg:mt-12"
       >
         <span
           className="grid size-7 shrink-0 place-items-center rounded-full bg-white p-1 [&_svg]:size-5"
@@ -242,7 +245,7 @@ function GoogleSignInButton({
 
 function SignInArtwork() {
   return (
-    <div className="relative mx-auto aspect-square w-[min(11rem,65vw)] max-w-full sm:w-60 lg:w-[min(100%,76svh)] lg:max-w-[52rem]">
+    <div className="relative mx-auto aspect-square w-[min(82vw,38svh)] max-w-full max-sm:[@media(max-height:700px)]:w-40 min-[640px]:max-lg:[@media(max-height:600px)]:w-[min(30vw,65svh)] lg:w-[min(100%,76svh)] lg:max-w-[52rem]">
       <AICompanion
         size={640}
         stage="sculpture"
