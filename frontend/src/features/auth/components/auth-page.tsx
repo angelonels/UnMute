@@ -1,11 +1,10 @@
 import { AICompanion } from '../../../components/ai-companion';
 import { useState } from 'react';
 import { Effect } from 'effect';
-import { ArrowUpRight } from 'iconoir-react';
+import { ArrowRight, Microphone, PhoneDisabled, VideoCamera } from 'iconoir-react';
 import { authClient } from '../../../api/auth-client';
 import { Brand } from '../../../components/brand';
 import { ThemeToggle } from '../../../components/theme-toggle';
-import { Button } from '../../../components/arc/button/button';
 
 function GoogleMark() {
   return (
@@ -83,115 +82,87 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
   const { isPending, error: sessionError, refetch } = authClient.useSession();
   const { busy, failed, signIn } = useAuthActions(authError);
   return (
-    <div className="mx-auto max-w-[96rem] px-(--page-gutter) pb-6">
-      <header className="flex min-h-20 items-center justify-between gap-4">
+    <div className="mx-auto flex min-h-svh max-w-[100rem] flex-col px-4 sm:px-6 lg:px-8">
+      <header className="flex min-h-20 shrink-0 flex-wrap items-center justify-between gap-4 px-1 py-4 [&>a]:max-w-full [&>a]:flex-wrap lg:min-h-24 lg:px-2">
         <Brand />
         <div className="flex items-center gap-5">
-          <span className="hidden text-xs text-muted sm:block">A clearer space to connect.</span>
+          <span className="hidden text-xs text-muted sm:block">
+            A little less noise. A little more you.
+          </span>
           <ThemeToggle />
         </div>
       </header>
-      <main className="grid min-h-[calc(100svh-8rem)] gap-8 lg:grid-cols-[1.08fr_1fr] lg:gap-16">
-        <section
-          aria-labelledby="conversation-heading"
-          className="relative isolate hidden flex-col overflow-hidden rounded-[2rem] bg-panel p-10 text-white lg:flex xl:p-12"
-        >
-          <h2
-            id="conversation-heading"
-            className="mt-3 text-[clamp(2.5rem,4vw,4rem)] leading-[1.06] font-medium tracking-[-0.055em]"
-          >
-            Good conversations.
-            <br />
-            <span className="text-[#c5d6ff]">Nothing lost.</span>
-          </h2>
-          <p className="mt-5 max-w-72 text-sm leading-7 text-[#e1e9ff]">
-            Less to manage. More to say.
-            <br />A little more room to be here.
-          </p>
-          <div
-            className="relative mx-auto my-8 flex min-h-72 w-full max-w-lg flex-1 items-center justify-center"
-            role="img"
-            aria-label="UnMute’s companion making room for a conversation"
-          >
-            <svg
-              viewBox="0 0 480 300"
-              className="absolute inset-0 size-full"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M-70 180C45 25 137 297 260 120S478 41 551 172"
-                stroke="currentColor"
-                strokeOpacity="0.14"
-                strokeWidth="1"
-              />
-              <path
-                d="M-70 202C45 47 137 319 260 142S478 63 551 194"
-                stroke="currentColor"
-                strokeOpacity="0.07"
-                strokeWidth="1"
-              />
-            </svg>
-            <span className="absolute top-6 left-2 -rotate-5 rounded-[1.5rem] rounded-bl-md bg-white/95 px-6 py-4 text-xl tracking-tight text-panel shadow-sm xl:left-6">
-              hello.
-            </span>
-            <AICompanion
-              finish="ceramic"
-              size={188}
-              className="[--companion-light:var(--companion-paper-light)] [--companion-body:var(--companion-paper-body)] [--companion-shade:var(--companion-paper-shade)] [--companion-face:var(--companion-paper-face)] [--companion-edge:white] [--companion-fold:var(--companion-paper-shade)]"
-            />
-            <span className="absolute right-0 bottom-5 rotate-4 rounded-[1.5rem] rounded-tr-md border border-white/20 bg-white/8 px-6 py-4 text-xl tracking-tight xl:right-6">
-              I’m here.
-            </span>
-          </div>
-          <div className="mt-8 flex items-center justify-between text-xs text-[#e1e9ff]">
-            <span>Made for being here.</span>
-            <span>UnMute.</span>
-          </div>
-        </section>
+      <main className="grid flex-1 overflow-hidden rounded-[2rem] border border-border/60 bg-surface lg:grid-cols-[1.08fr_1fr]">
+        <ConversationIllustration />
         <section
           aria-labelledby="signin-heading"
-          className="flex min-h-[calc(100svh-8rem)] flex-col items-center justify-center px-2 sm:px-8 lg:px-0"
+          className="relative flex min-w-0 flex-col justify-center px-5 py-10 sm:px-12 sm:py-16 lg:px-12 xl:px-20"
         >
-          <div className="flex w-full max-w-96 flex-1 flex-col justify-center py-12">
+          <div className="mx-auto flex w-full max-w-96 flex-1 flex-col justify-center">
+            <div className="mb-8 flex items-center gap-2.5 text-xs text-muted sm:mb-10">
+              <span className="grid size-9 place-items-center rounded-xl bg-primary/8 lg:hidden">
+                <AICompanion size={28} />
+              </span>
+              <span className="hidden h-px w-7 bg-primary/50 lg:block" aria-hidden="true" />
+              Your next good conversation
+            </div>
             <h1
               id="signin-heading"
-              className="text-[clamp(2.5rem,4vw,3.5rem)] leading-[1.08] font-medium tracking-[-0.055em]"
+              className="text-[clamp(2rem,3.6vw,3.25rem)] leading-[1.1] font-medium tracking-[-0.055em] [overflow-wrap:anywhere] min-[360px]:text-[clamp(2.25rem,3.6vw,3.25rem)]"
             >
               Make room for <br />
-              the conversation.
+              <span className="text-muted">the conversation.</span>
             </h1>
-            <p className="mt-6 text-base leading-7 text-muted">
+            <p className="mt-5 max-w-80 text-sm leading-7 text-muted sm:text-base">
               A clear space to meet, listen, and be heard.
             </p>
-            <Button
-              variant="secondary"
-              size="lg"
-              loading={busy}
+            <button
+              type="button"
+              aria-busy={busy}
+              aria-disabled={busy || undefined}
               disabled={isPending || Boolean(sessionError)}
-              onClick={() => void signIn()}
-              className="mt-10 !min-h-14 w-full !rounded-2xl !border-border !font-medium hover:!border-input [&_svg]:size-5"
+              onClick={() => {
+                if (!busy) void signIn();
+              }}
+              className="mt-9 flex min-h-14 w-full cursor-pointer items-center justify-center gap-3 rounded-2xl bg-primary px-4 py-3 text-sm leading-6 font-medium text-on-primary shadow-sm hover:bg-primary-hover disabled:cursor-wait disabled:opacity-50 aria-busy:cursor-progress motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] sm:mt-10"
             >
-              <GoogleMark />
-              <span>
+              <span
+                className="grid size-7 shrink-0 place-items-center rounded-full bg-white p-1 [&_svg]:size-5"
+                aria-hidden="true"
+              >
+                <GoogleMark />
+              </span>
+              <span className="min-w-0 [overflow-wrap:anywhere]">
                 {busy
                   ? 'Connecting to Google…'
                   : isPending
                     ? 'Checking your session…'
                     : 'Continue with Google'}
               </span>
-              <ArrowUpRight width={18} height={18} aria-hidden="true" />
-            </Button>
+              <ArrowRight
+                width={18}
+                height={18}
+                className="hidden shrink-0 sm:block"
+                aria-hidden="true"
+              />
+            </button>
             {failed && (
-              <p className="mt-4 text-sm leading-6 text-error" role="alert">
+              <p
+                className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm leading-6 text-error"
+                role="alert"
+              >
                 We couldn’t complete sign-in. Please try again.
               </p>
             )}
             {sessionError && (
-              <div role="alert" className="mt-4 text-sm text-error">
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm leading-6 text-error"
+              >
                 We couldn’t check your session.{' '}
                 <button
-                  className="min-h-11 cursor-pointer px-2 underline"
+                  type="button"
+                  className="min-h-11 cursor-pointer px-2 underline underline-offset-4"
                   onClick={() => void refetch()}
                 >
                   Try again
@@ -201,18 +172,121 @@ export function AuthPage({ authError = false }: { authError?: boolean }) {
             {import.meta.env.DEV && (
               <a
                 href="/meeting?demo=true"
-                className="mt-4 flex min-h-11 items-center justify-center text-xs text-muted underline underline-offset-4"
+                className="mt-8 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-dashed border-border text-xs text-muted hover:border-input hover:text-text"
               >
                 Open meeting playground
+                <ArrowRight width={14} height={14} aria-hidden="true" />
               </a>
             )}
           </div>
-          <footer className="flex w-full max-w-96 flex-wrap justify-between gap-3 pb-3 text-[11px] text-muted">
-            <span>A little less noise. A little more you.</span>
-            <span>UnMute © {new Date().getFullYear()}</span>
-          </footer>
+          <p className="mt-12 text-center text-[11px] leading-5 text-muted lg:mt-16">
+            Made for being here.
+          </p>
         </section>
       </main>
+      <footer className="flex min-h-16 shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-1 px-1 py-4 text-[11px] text-muted lg:px-2">
+        <span>Good conversations start with you.</span>
+        <span>UnMute © {new Date().getFullYear()}</span>
+      </footer>
     </div>
+  );
+}
+
+function ConversationIllustration() {
+  return (
+    <section
+      aria-labelledby="conversation-heading"
+      className="relative isolate hidden min-h-[42rem] flex-col overflow-hidden bg-panel px-10 pt-11 pb-8 text-white lg:flex xl:px-14 xl:pt-14"
+    >
+      <svg
+        className="pointer-events-none absolute inset-0 -z-10 size-full opacity-20"
+        viewBox="0 0 700 800"
+        fill="none"
+        preserveAspectRatio="xMidYMid slice"
+        aria-hidden="true"
+      >
+        <circle cx="350" cy="500" r="220" stroke="currentColor" strokeOpacity="0.5" />
+        <circle cx="350" cy="500" r="310" stroke="currentColor" strokeOpacity="0.35" />
+        <circle cx="350" cy="500" r="400" stroke="currentColor" strokeOpacity="0.2" />
+        <path d="M350 90v710M-100 500h900" stroke="currentColor" strokeOpacity="0.15" />
+      </svg>
+      <div className="flex items-center gap-2 text-[11px] font-medium tracking-[0.08em] text-white/70 uppercase">
+        <span className="size-1.5 rounded-full bg-[#d7e4ff]" aria-hidden="true" />
+        Less noise. More presence.
+      </div>
+      <h2
+        id="conversation-heading"
+        className="mt-6 max-w-lg text-[clamp(2.5rem,4vw,4rem)] leading-[1.04] font-medium tracking-[-0.055em]"
+      >
+        Be a little
+        <br />
+        <span className="text-[#c5d6ff]">more here.</span>
+      </h2>
+      <p className="mt-5 max-w-72 text-sm leading-6 text-white/75">
+        The familiar faces. The fresh ideas.
+        <br />
+        The moments in between.
+      </p>
+      <div
+        className="relative mx-auto mt-8 mb-5 min-h-80 w-full max-w-lg flex-1"
+        role="img"
+        aria-label="An illustrative conversation with two people and Mumo, your meeting companion"
+      >
+        <div className="absolute top-8 left-0 w-[88%] -rotate-6 rounded-[1.5rem] border border-white/20 bg-[#eaf0fc] p-3 text-[#21314d] shadow-[0_16px_48px_#001b5b33] xl:top-10">
+          <div className="mb-3 flex items-center justify-between px-1 text-[10px]">
+            <span className="font-medium">A little catch-up</span>
+            <span className="text-[#61708b]">Illustrative preview</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="relative grid h-32 place-items-center rounded-2xl bg-[#d5e0dc] xl:h-36">
+              <span className="grid size-16 place-items-center rounded-full bg-[#b4c9bd] text-xl font-medium tracking-tight text-[#385546]">
+                MC
+              </span>
+              <span className="absolute bottom-2 left-3 text-[10px] text-[#385546]">Maya</span>
+              <span
+                className="absolute right-2 bottom-2 flex h-3 items-center gap-0.5 text-[#385546]"
+                aria-hidden="true"
+              >
+                {[5, 10, 7, 12, 5].map((height, index) => (
+                  <span key={index} className="w-0.5 rounded-full bg-current" style={{ height }} />
+                ))}
+              </span>
+            </div>
+            <div className="relative grid h-32 place-items-center rounded-2xl bg-[#e7dcd4] xl:h-36">
+              <span className="grid size-16 place-items-center rounded-full bg-[#d7bca8] text-xl font-medium tracking-tight text-[#6d4e3a]">
+                TB
+              </span>
+              <span className="absolute bottom-2 left-3 text-[10px] text-[#6d4e3a]">Theo</span>
+            </div>
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2" aria-hidden="true">
+            <span className="grid size-7 place-items-center rounded-lg bg-white">
+              <Microphone width={13} height={13} />
+            </span>
+            <span className="grid size-7 place-items-center rounded-lg bg-white">
+              <VideoCamera width={13} height={13} />
+            </span>
+            <span className="grid h-7 w-10 place-items-center rounded-lg bg-[#bf5353] text-white">
+              <PhoneDisabled width={14} height={14} />
+            </span>
+          </div>
+        </div>
+        <div className="absolute right-0 bottom-0 flex w-[55%] rotate-6 flex-col items-center rounded-[1.5rem] border border-white/25 bg-[#f7f8fc] px-4 pb-5 text-[#21314d] shadow-[0_16px_48px_#001b5b33]">
+          <div className="-mt-6">
+            <AICompanion
+              finish="ceramic"
+              size={152}
+              className="[--companion-body:var(--companion-paper-body)] [--companion-face:var(--companion-paper-face)]"
+            />
+          </div>
+          <span className="text-sm font-medium tracking-tight">A little company.</span>
+          <span className="mt-1 text-[11px] text-[#61708b]">Meet Mumo, your companion.</span>
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-4 border-t border-white/15 pt-5 text-[11px] text-white/70">
+        <span>A clearer space to connect.</span>
+        <span className="font-medium tracking-tight text-white">UnMute.</span>
+      </div>
+    </section>
   );
 }
