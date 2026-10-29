@@ -1,7 +1,7 @@
 {
   "date": "2026-10-29",
   "branch": "polish/frontend-mumo-refinement",
-  "testedCommit": "d3c60bd",
+  "testedCommit": "df9c2c6",
   "projectVerify": {
     "status": "passed",
     "existingBackendTests": 3,
@@ -14,10 +14,10 @@
   },
   "playwright": {
     "status": "passed",
-    "passed": 53,
+    "passed": 61,
     "failed": 0,
     "workers": 2,
-    "duration": "2.1m",
+    "duration": "2.5m",
     "browser": "isolated Chromium, user-authorized"
   },
   "reactDoctor": {

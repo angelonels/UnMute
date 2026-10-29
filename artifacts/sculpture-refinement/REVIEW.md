@@ -46,3 +46,7 @@ The Arc skill and review checklist were read for existing Arc touchpoints. The r
 The first full browser run exposed a test synchronization issue: the reduced-motion baseline was captured before the explicit greeting ended. The test now waits for that interaction to settle, then still compares exact frames after 20 animation frames. The final full run passed without retries.
 
 Screenshots cover desktop and phone, both themes, the workspace, enlarged mobile drawer text, Mumo’s greeting, and the WebGL fallback. `verification.json` records the tested commit and results.
+
+## Loading refinement follow-up
+
+The final expanded browser run passed all 61 tests in 2.5 minutes after the loading refinement. It covers session restoration, focused sign-in and retry progress, permission waits, first video playback, stable preview controls, AI thinking/streaming/stopping/retry, and promise-bound clipboard progress. Status regions now have distinct accessible names. The palette check waits for session-ready controls; the desktop visual check waits for the studio backdrop to decode before saving evidence. See `../loading-refinement/REVIEW.md` and its screenshots.

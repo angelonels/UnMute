@@ -22,7 +22,9 @@ This records the cumulative direction for this refinement, including later corre
 - [x] Give seated Mumo more happy, curious, surprised, and excited body language.
 - [x] Optimize lazy loading, geometry reuse, lifecycle cleanup, and adaptive phone/desktop quality.
 - [x] Read the Arc skill; use it when touching Arc components. Avoid unnecessary component replacement.
-- [x] Complete the final full project and browser verification after the latest identity/personality changes.
+- [x] Complete the full project and browser verification after the identity/personality changes (53 browser tests).
+- [x] Refine loading feedback across session restoration, auth retry, navigation, media, meeting preview, and AI responses.
+- [x] Re-run project and browser verification after the loading-state refinement (61 browser tests).
 - [x] Save final screenshots and reports.
 - [x] Leave the application running at `http://localhost:5173/` with a retained preview tab.
 
