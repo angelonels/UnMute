@@ -1,3 +1,4 @@
+import { LoadingIndicator } from '../../../components/loading-indicator';
 import { useState } from 'react';
 import { ModalSurface } from '../../../components/modal-surface';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -73,8 +74,9 @@ export function DeviceSettings({
                 <span className="text-xs font-medium">{label}</span>
                 <span
                   role="status"
-                  className={`text-[11px] ${pending[source] ? 'text-muted' : track ? 'text-success' : 'text-error'}`}
+                  className={`inline-flex items-center gap-1.5 text-[11px] ${pending[source] ? 'text-muted' : track ? 'text-success' : 'text-error'}`}
                 >
+                  {pending[source] && <LoadingIndicator className="size-3" />}
                   {pending[source] ? 'Connecting…' : track ? 'On' : 'Off'}
                 </span>
               </div>

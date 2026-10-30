@@ -1,30 +1,43 @@
 import type { AIStreamSource } from '../ai-stream';
 import { useState } from 'react';
-import { authClient } from '../../../api/auth-client';
-import { AuthPage } from '../../auth';
+import { AuthPage, SessionPending, useAuthSession } from '../../auth';
 import { MeetingPage } from './meeting-page';
 
-export function MeetingEntry({
-  demo,
-  microphone,
-  camera,
-  aiSource,
-}: {
+type EntryProps = {
   aiSource?: AIStreamSource;
   demo: boolean;
   microphone: boolean;
   camera: boolean;
-}) {
-  const { data: session, isPending, error } = authClient.useSession();
+};
+
+export function MeetingEntry(props: EntryProps) {
+  // The public development preview owns no session and must not consume auth rate limits.
+  if (import.meta.env.DEV && props.demo)
+    return <MeetingPreview {...props} demo userName="Alex Morgan" />;
+  return <AuthenticatedMeeting {...props} />;
+}
+
+function AuthenticatedMeeting(props: EntryProps) {
+  const { data: session, initialPending, error } = useAuthSession();
+  if (initialPending) return <SessionPending />;
+  if (!session || error) return <AuthPage />;
+  return <MeetingPreview {...props} demo={false} userName={session.user.name ?? 'You'} />;
+}
+
+function MeetingPreview({
+  demo,
+  microphone,
+  camera,
+  aiSource,
+  userName,
+}: EntryProps & { userName: string }) {
   const [revision, setRevision] = useState(0);
-  const developmentDemo = import.meta.env.DEV && demo;
-  if (!developmentDemo && (!session || isPending || error)) return <AuthPage />;
   return (
     <MeetingPage
       key={revision}
       aiSource={aiSource}
-      userName={developmentDemo ? 'Alex Morgan' : (session?.user.name ?? 'You')}
-      demo={developmentDemo}
+      userName={userName}
+      demo={demo}
       initialMicrophone={microphone}
       initialCamera={camera}
       onRestart={() => setRevision((previous) => previous + 1)}

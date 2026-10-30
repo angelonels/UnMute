@@ -1,0 +1,35 @@
+{
+  "date": "2026-10-29",
+  "branch": "polish/frontend-mumo-refinement",
+  "applicationCommit": "7df40c0",
+  "fullBrowserRun": {
+    "passed": 75,
+    "failed": 0,
+    "duration": "1.6m"
+  },
+  "finalCaptureRun": {
+    "passed": 3,
+    "failed": 0,
+    "reason": "Await mobile character canvas before capture"
+  },
+  "projectVerify": "passed",
+  "reactDoctor": {
+    "score": 90,
+    "warnings": ["AICompanion control-flow complexity", "Existing object URL ownership helper"]
+  },
+  "semanticContrast": {
+    "minimumRatio": 5.3687,
+    "threshold": 4.5,
+    "themes": ["light", "dark"]
+  },
+  "preview": {
+    "url": "http://localhost:5173/",
+    "frontendHttpStatus": 200,
+    "apiHealthHttpStatus": 200
+  },
+  "limits": [
+    "No Core Web Vitals trace",
+    "No real Google OAuth flow",
+    "Existing lazy scene chunk advisory and development next-themes warning"
+  ]
+}

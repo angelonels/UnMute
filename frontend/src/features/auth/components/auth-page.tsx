@@ -1,11 +1,12 @@
 import { AICompanion } from '../../../components/ai-companion';
 import { useState } from 'react';
 import { Effect } from 'effect';
-import { ArrowUpRight } from 'iconoir-react';
+import { ArrowRight } from 'iconoir-react';
+import { Link } from '@tanstack/react-router';
 import { authClient } from '../../../api/auth-client';
 import { Brand } from '../../../components/brand';
 import { ThemeToggle } from '../../../components/theme-toggle';
-import { Button } from '../../../components/arc/button/button';
+import { LoadingIndicator } from '../../../components/loading-indicator';
 
 function GoogleMark() {
   return (
@@ -82,137 +83,176 @@ export function useAuthActions(authError: boolean) {
 export function AuthPage({ authError = false }: { authError?: boolean }) {
   const { isPending, error: sessionError, refetch } = authClient.useSession();
   const { busy, failed, signIn } = useAuthActions(authError);
+  const [retrying, setRetrying] = useState(false);
+  async function retrySession() {
+    if (retrying) return;
+    setRetrying(true);
+    try {
+      await refetch();
+    } finally {
+      setRetrying(false);
+    }
+  }
   return (
-    <div className="mx-auto max-w-[96rem] px-(--page-gutter) pb-6">
-      <header className="flex min-h-20 items-center justify-between gap-4">
+    <div className="relative isolate flex min-h-svh flex-col overflow-x-clip bg-canvas">
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 hidden bg-canvas bg-[url('/images/auth-studio-light.webp')] bg-cover bg-center bg-blend-multiply lg:block dark:bg-[url('/images/auth-studio-dark.webp')] dark:bg-blend-normal"
+      />
+      <header className="mx-auto flex min-h-18 w-full max-w-[112rem] shrink-0 flex-wrap items-center justify-between gap-4 px-6 py-3 [&>a]:max-w-full [&>a]:flex-wrap sm:px-10 lg:min-h-24 lg:px-12">
         <Brand />
-        <div className="flex items-center gap-5">
-          <span className="hidden text-xs text-muted sm:block">A clearer space to connect.</span>
-          <ThemeToggle />
-        </div>
+        <ThemeToggle />
       </header>
-      <main className="grid min-h-[calc(100svh-8rem)] gap-8 lg:grid-cols-[1.08fr_1fr] lg:gap-16">
-        <section
-          aria-labelledby="conversation-heading"
-          className="relative isolate hidden flex-col overflow-hidden rounded-[2rem] bg-panel p-10 text-white lg:flex xl:p-12"
-        >
-          <h2
-            id="conversation-heading"
-            className="mt-3 text-[clamp(2.5rem,4vw,4rem)] leading-[1.06] font-medium tracking-[-0.055em]"
-          >
-            Good conversations.
-            <br />
-            <span className="text-[#c5d6ff]">Nothing lost.</span>
-          </h2>
-          <p className="mt-5 max-w-72 text-sm leading-7 text-[#e1e9ff]">
-            Less to manage. More to say.
-            <br />A little more room to be here.
-          </p>
-          <div
-            className="relative mx-auto my-8 flex min-h-72 w-full max-w-lg flex-1 items-center justify-center"
-            role="img"
-            aria-label="UnMute’s companion making room for a conversation"
-          >
-            <svg
-              viewBox="0 0 480 300"
-              className="absolute inset-0 size-full"
-              fill="none"
-              aria-hidden="true"
-            >
-              <path
-                d="M-70 180C45 25 137 297 260 120S478 41 551 172"
-                stroke="currentColor"
-                strokeOpacity="0.14"
-                strokeWidth="1"
-              />
-              <path
-                d="M-70 202C45 47 137 319 260 142S478 63 551 194"
-                stroke="currentColor"
-                strokeOpacity="0.07"
-                strokeWidth="1"
-              />
-            </svg>
-            <span className="absolute top-6 left-2 -rotate-5 rounded-[1.5rem] rounded-bl-md bg-white/95 px-6 py-4 text-xl tracking-tight text-panel shadow-sm xl:left-6">
-              hello.
-            </span>
-            <AICompanion
-              finish="ceramic"
-              size={188}
-              className="[--companion-light:var(--companion-paper-light)] [--companion-body:var(--companion-paper-body)] [--companion-shade:var(--companion-paper-shade)] [--companion-face:var(--companion-paper-face)] [--companion-edge:white] [--companion-fold:var(--companion-paper-shade)]"
-            />
-            <span className="absolute right-0 bottom-5 rotate-4 rounded-[1.5rem] rounded-tr-md border border-white/20 bg-white/8 px-6 py-4 text-xl tracking-tight xl:right-6">
-              I’m here.
-            </span>
-          </div>
-          <div className="mt-8 flex items-center justify-between text-xs text-[#e1e9ff]">
-            <span>Made for being here.</span>
-            <span>UnMute.</span>
-          </div>
-        </section>
+      <main className="mx-auto grid w-full max-w-[112rem] flex-1 content-center items-center gap-4 px-6 pt-0 pb-4 sm:px-10 min-[640px]:max-lg:[@media(max-height:600px)]:grid-cols-[1fr_1.2fr] lg:grid-cols-[1.8fr_1fr] lg:gap-10 lg:px-12 lg:py-6">
+        <SignInArtwork />
         <section
           aria-labelledby="signin-heading"
-          className="flex min-h-[calc(100svh-8rem)] flex-col items-center justify-center px-2 sm:px-8 lg:px-0"
+          className="min-w-0 text-center lg:py-12 lg:text-left"
         >
-          <div className="flex w-full max-w-96 flex-1 flex-col justify-center py-12">
+          <div className="mx-auto w-full max-w-[30rem]">
             <h1
               id="signin-heading"
-              className="text-[clamp(2.5rem,4vw,3.5rem)] leading-[1.08] font-medium tracking-[-0.055em]"
+              className="text-[clamp(2.5rem,12vw,3.5rem)] leading-[1.04] lg:text-[clamp(2.5rem,6.3vw,6rem)] lg:leading-[1.02] font-normal tracking-[-0.065em] [overflow-wrap:anywhere]"
             >
-              Make room for <br />
-              the conversation.
+              Sign in to <span className="block">UnMute</span>
             </h1>
-            <p className="mt-6 text-base leading-7 text-muted">
-              A clear space to meet, listen, and be heard.
+            <p className="mt-3 text-base leading-6 tracking-[-0.02em] text-muted lg:mt-7 lg:text-2xl lg:leading-8">
+              Meet, talk, be here.
             </p>
-            <Button
-              variant="secondary"
-              size="lg"
-              loading={busy}
+            <GoogleSignInButton
+              busy={busy}
+              checking={isPending}
               disabled={isPending || Boolean(sessionError)}
-              onClick={() => void signIn()}
-              className="mt-10 !min-h-14 w-full !rounded-2xl !border-border !font-medium hover:!border-input [&_svg]:size-5"
-            >
-              <GoogleMark />
-              <span>
-                {busy
-                  ? 'Connecting to Google…'
-                  : isPending
-                    ? 'Checking your session…'
-                    : 'Continue with Google'}
-              </span>
-              <ArrowUpRight width={18} height={18} aria-hidden="true" />
-            </Button>
+              onSignIn={signIn}
+            />
             {failed && (
-              <p className="mt-4 text-sm leading-6 text-error" role="alert">
+              <p
+                className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm leading-6 text-error"
+                role="alert"
+              >
                 We couldn’t complete sign-in. Please try again.
               </p>
             )}
-            {sessionError && (
-              <div role="alert" className="mt-4 text-sm text-error">
+            {(sessionError || retrying) && (
+              <div
+                role="alert"
+                className="mt-4 rounded-xl border border-error/20 bg-error/5 px-4 py-3 text-sm leading-6 text-error"
+              >
                 We couldn’t check your session.{' '}
                 <button
-                  className="min-h-11 cursor-pointer px-2 underline"
-                  onClick={() => void refetch()}
+                  type="button"
+                  aria-busy={retrying}
+                  aria-disabled={retrying || undefined}
+                  className="inline-grid min-h-11 cursor-pointer grid-cols-[auto_minmax(0,1fr)] items-center gap-2 px-2 underline underline-offset-4 aria-busy:cursor-progress"
+                  onClick={() => void retrySession()}
                 >
-                  Try again
+                  <span
+                    aria-hidden="true"
+                    className={`col-start-1 row-start-1 ${retrying ? '' : 'invisible'}`}
+                  >
+                    <LoadingIndicator />
+                  </span>
+                  <span
+                    aria-hidden={retrying || undefined}
+                    className={`col-start-2 row-start-1 ${retrying ? 'invisible' : ''}`}
+                  >
+                    Try again
+                  </span>
+                  <span
+                    aria-hidden={!retrying || undefined}
+                    className={`col-start-2 row-start-1 ${retrying ? '' : 'invisible'}`}
+                  >
+                    Checking…
+                  </span>
                 </button>
               </div>
             )}
             {import.meta.env.DEV && (
-              <a
-                href="/meeting?demo=true"
-                className="mt-4 flex min-h-11 items-center justify-center text-xs text-muted underline underline-offset-4"
+              <Link
+                to="/meeting"
+                search={{ demo: true, microphone: false, camera: false }}
+                className="mt-2 flex min-h-11 items-center justify-center text-sm text-primary underline decoration-primary/35 underline-offset-4 hover:decoration-current lg:mt-8"
               >
                 Open meeting playground
-              </a>
+              </Link>
             )}
           </div>
-          <footer className="flex w-full max-w-96 flex-wrap justify-between gap-3 pb-3 text-[11px] text-muted">
-            <span>A little less noise. A little more you.</span>
-            <span>UnMute © {new Date().getFullYear()}</span>
-          </footer>
         </section>
       </main>
+      <footer className="mx-auto flex min-h-11 w-full max-w-[112rem] shrink-0 items-center justify-center px-6 py-3 lg:justify-start text-xs text-[oklch(0.435_0.025_282)] sm:px-10 lg:px-12 dark:text-muted">
+        UnMute © {new Date().getFullYear()}
+      </footer>
+    </div>
+  );
+}
+
+function GoogleSignInButton({
+  busy,
+  checking,
+  disabled,
+  onSignIn,
+}: {
+  busy: boolean;
+  checking: boolean;
+  disabled: boolean;
+  onSignIn: () => Promise<void>;
+}) {
+  return (
+    <>
+      <button
+        type="button"
+        aria-busy={busy}
+        aria-disabled={busy || undefined}
+        disabled={disabled}
+        onClick={() => {
+          if (!busy) void onSignIn();
+        }}
+        className="mt-6 flex min-h-15 w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-primary px-4 py-3 text-base leading-6 font-medium text-on-primary shadow-sm hover:bg-primary-hover disabled:cursor-wait disabled:opacity-50 aria-busy:cursor-progress motion-safe:transition-[background-color,transform] motion-safe:duration-150 motion-safe:ease-out motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] lg:mt-12"
+      >
+        <span
+          className="grid size-7 shrink-0 place-items-center rounded-full bg-white p-1 [&_svg]:size-5"
+          aria-hidden="true"
+        >
+          {busy ? <LoadingIndicator className="text-primary" /> : <GoogleMark />}
+        </span>
+        <span className="grid min-w-0 grid-cols-[minmax(0,1fr)] [overflow-wrap:anywhere]">
+          <span
+            aria-hidden={busy || undefined}
+            className={`col-start-1 row-start-1 ${busy ? 'invisible' : ''}`}
+          >
+            {checking ? 'Checking your session…' : 'Continue with Google'}
+          </span>
+          <span
+            aria-hidden={!busy || undefined}
+            className={`col-start-1 row-start-1 ${busy ? '' : 'invisible'}`}
+          >
+            Connecting to Google…
+          </span>
+        </span>
+        <ArrowRight
+          width={18}
+          height={18}
+          className="hidden shrink-0 sm:block"
+          aria-hidden="true"
+        />
+      </button>
+      <span role="status" aria-label="Sign-in progress" className="sr-only">
+        {busy ? 'Connecting to Google…' : ''}
+      </span>
+    </>
+  );
+}
+
+function SignInArtwork() {
+  return (
+    <div className="relative mx-auto aspect-square w-[min(82vw,38svh)] max-w-full max-sm:[@media(max-height:700px)]:w-40 min-[640px]:max-lg:[@media(max-height:600px)]:w-[min(30vw,65svh)] lg:w-[min(100%,76svh)] lg:max-w-[52rem]">
+      <AICompanion
+        size={640}
+        stage="sculpture"
+        pokeable
+        label="Say hello to Mumo"
+        className="size-full!"
+      />
     </div>
   );
 }

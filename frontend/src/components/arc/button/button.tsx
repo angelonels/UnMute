@@ -18,8 +18,8 @@ import { motionTokens } from '../lib/motion-tokens';
 
 const styles = {
   button:
-    'relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-sm font-medium leading-normal whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress transition-[transform,background-color,border-color,box-shadow] duration-160 ease-out-expo motion-reduce:transition-none',
-  primary: 'border-text bg-text text-surface',
+    'relative inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-xl border border-transparent px-4 text-sm font-medium leading-normal whitespace-nowrap disabled:cursor-not-allowed disabled:opacity-50 aria-busy:cursor-progress transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none',
+  primary: 'border-transparent bg-primary text-on-primary hover:enabled:bg-primary-hover',
   secondary: 'border-border bg-surface text-text hover:enabled:bg-surface-muted',
   ghost: 'bg-transparent text-muted hover:enabled:bg-surface-muted hover:enabled:text-text',
   danger:
@@ -207,6 +207,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
 
   return (
     <motion.button
+      type="button"
       ref={setRefs}
       tabIndex={props.tabIndex ?? 0}
       className={classes}
@@ -223,7 +224,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       // Loading keeps the button focusable (a disabled button would drop keyboard focus mid-action) and swallows presses instead.
       aria-disabled={loading || props['aria-disabled'] || undefined}
       onClick={(event) => {
-        if (loading) {
+        if (loading || props['aria-disabled'] === true || props['aria-disabled'] === 'true') {
           event.preventDefault();
           return;
         }
@@ -291,7 +292,7 @@ function buttonClasses(
     styles[variant],
     styles[size],
     !anchorsLayer && !inert && !keyboard
-      ? 'motion-safe:[&:active:not(:focus-visible)]:scale-[0.97]'
+      ? 'motion-safe:[&:active:not(:focus-visible)]:scale-[0.96]'
       : '',
     keyboard ? 'transition-none!' : '',
     className,

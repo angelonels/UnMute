@@ -1,8 +1,8 @@
-import { authClient } from '../../../api/auth-client';
-import { AuthPage } from '../../auth';
+import { AuthPage, SessionPending, useAuthSession } from '../../auth';
 import { WorkspacePage } from '../../workspace';
 
 export function HomePage({ authError = false }: { authError?: boolean }) {
-  const { data: session } = authClient.useSession();
+  const { data: session, initialPending } = useAuthSession();
+  if (initialPending) return <SessionPending />;
   return session ? <WorkspacePage user={session.user} /> : <AuthPage authError={authError} />;
 }

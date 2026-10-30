@@ -1,0 +1,38 @@
+{
+  "light": {
+    "--on-primary/--primary": 5.865472136626474,
+    "--on-secondary/--secondary": 9.915540633332792,
+    "--secondary-ink/--secondary-soft": 7.248439417228468,
+    "--muted/--surface": 5.900877241716406,
+    "--text/--canvas": 16.27201709045867,
+    "--primary-ink/--primary-soft": 6.047411834668682,
+    "--on-error/--error": 7.2009493747241695,
+    "--success/--surface": 6.192322953226714,
+    "--warning/--surface": 5.3687029702648985,
+    "--error/--surface": 6.352111905778618,
+    "--person-sage-ink/--person-sage": 6.047411834668682,
+    "--person-clay-ink/--person-clay": 7.248439417228468,
+    "--person-lavender-ink/--person-lavender": 6.047411834668682,
+    "--person-slate-ink/--person-slate": 5.378589086935795,
+    "--person-sand-ink/--person-sand": 5.378589086935795,
+    "--person-rose-ink/--person-rose": 7.248439417228468
+  },
+  "dark": {
+    "--on-primary/--primary": 8.741760611054278,
+    "--on-secondary/--secondary": 9.633547248697788,
+    "--secondary-ink/--secondary-soft": 9.06139596587611,
+    "--muted/--surface": 7.367410067931137,
+    "--text/--canvas": 16.89230015745545,
+    "--primary-ink/--primary-soft": 7.515449187728285,
+    "--on-error/--error": 8.663113332456334,
+    "--success/--surface": 8.12186943853615,
+    "--warning/--surface": 10.441044869740473,
+    "--error/--surface": 7.675464576266526,
+    "--person-sage-ink/--person-sage": 7.515449187728285,
+    "--person-clay-ink/--person-clay": 9.06139596587611,
+    "--person-lavender-ink/--person-lavender": 7.515449187728285,
+    "--person-slate-ink/--person-slate": 6.821373922601435,
+    "--person-sand-ink/--person-sand": 6.821373922601435,
+    "--person-rose-ink/--person-rose": 9.06139596587611
+  }
+}

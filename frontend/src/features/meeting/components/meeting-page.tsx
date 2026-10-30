@@ -695,17 +695,38 @@ function RoomConversation({ room }: { room: MeetingRoom }) {
   );
 }
 
+function MediaPendingStatus({ pending }: { pending: MeetingRoom['localMedia']['pending'] }) {
+  const pendingDevices = [
+    pending.camera ? 'camera' : '',
+    pending.microphone ? 'microphone' : '',
+  ].filter(Boolean);
+  const pendingMessage = pending.screen
+    ? 'Choose a screen to share…'
+    : pendingDevices.length
+      ? `Starting ${pendingDevices.join(' and ')}…`
+      : '';
+  return (
+    <span
+      role="status"
+      className="pointer-events-none absolute bottom-full left-1/2 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg bg-surface/95 px-2 py-1 text-xs text-muted empty:hidden"
+    >
+      {pendingMessage}
+    </span>
+  );
+}
+
 function MediaDock({ room }: { room: MeetingRoom }) {
   const { media, localMedia, toggle, ai, setEnded } = room;
   return (
-    <div className="col-span-3 row-start-2 mx-auto flex max-w-full flex-wrap items-center justify-center min-[1100px]:col-span-1 min-[1100px]:col-start-2 min-[1100px]:row-start-1 gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
+    <div className="relative col-span-3 row-start-2 mx-auto flex max-w-full flex-wrap items-center justify-center min-[1100px]:col-span-1 min-[1100px]:col-start-2 min-[1100px]:row-start-1 gap-0.5 rounded-2xl border border-border/60 bg-surface p-1 shadow-sm sm:gap-3 sm:p-2 sm:px-3">
+      <MediaPendingStatus pending={localMedia.pending} />
       <MicrophoneControl room={room} />
       <MeetingControl
         aria-label={`Camera ${media.camera ? 'on' : 'off'}`}
         aria-pressed={media.camera}
         title={`Camera ${media.camera ? 'on' : 'off'}`}
         tone={media.camera ? 'neutral' : 'off'}
-        disabled={localMedia.pending.camera}
+        pending={localMedia.pending.camera}
         aria-busy={localMedia.pending.camera}
         onClick={() => toggle('camera')}
         icon={
@@ -724,7 +745,7 @@ function MediaDock({ room }: { room: MeetingRoom }) {
         aria-pressed={media.sharing}
         title="Share your screen locally"
         tone={media.sharing ? 'success' : 'neutral'}
-        disabled={localMedia.pending.screen}
+        pending={localMedia.pending.screen}
         aria-busy={localMedia.pending.screen}
         onClick={() => toggle('sharing')}
         icon={<MonitorUp width={20} height={20} strokeWidth={1.5} aria-hidden="true" />}
@@ -756,7 +777,7 @@ function MediaDock({ room }: { room: MeetingRoom }) {
           localMedia.stopAll();
           setEnded(true);
         }}
-        className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-2.5 text-xs font-medium text-white dark:text-canvas"
+        className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-error px-2.5 text-xs font-medium text-on-error"
       >
         <PhoneOff width={20} height={20} strokeWidth={1.5} aria-hidden="true" />
         <span className="hidden sm:inline">Leave</span>
@@ -773,7 +794,7 @@ function MicrophoneControl({ room }: { room: MeetingRoom }) {
       aria-pressed={media.microphone}
       title={`Microphone ${media.microphone ? 'on' : 'off'}`}
       tone={media.microphone ? 'neutral' : 'off'}
-      disabled={localMedia.pending.microphone}
+      pending={localMedia.pending.microphone}
       aria-busy={localMedia.pending.microphone}
       onClick={() => toggle('microphone')}
       icon={

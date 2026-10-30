@@ -1,19 +1,22 @@
+import { LoadingIndicator } from '../../../components/loading-indicator';
 import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
 
 type Props = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> & {
   icon: ReactNode;
+  pending?: boolean;
   children?: ReactNode;
-  tone?: 'neutral' | 'off' | 'success' | 'warning' | 'primary';
+  tone?: 'neutral' | 'off' | 'success' | 'warning' | 'primary' | 'secondary';
 };
 const tones = {
   neutral: 'border-transparent bg-transparent text-muted hover:bg-surface-muted hover:text-text',
   off: 'border-error/25 bg-error/10 text-error hover:bg-error/15',
   success: 'border-success/25 bg-success/10 text-success hover:bg-success/15',
   warning: 'border-warning/25 bg-warning/10 text-warning hover:bg-warning/15',
-  primary: 'border-transparent bg-primary/10 text-primary hover:bg-primary/15',
+  primary: 'border-transparent bg-primary-soft text-primary-ink hover:bg-primary/15',
+  secondary: 'border-transparent bg-secondary-soft text-secondary-ink hover:bg-secondary/20',
 };
 export const MeetingControl = forwardRef<HTMLButtonElement, Props>(function MeetingControl(
-  { icon, children, tone = 'neutral', className = '', ...props },
+  { icon, children, pending = false, tone = 'neutral', className = '', ...props },
   ref,
 ) {
   return (
@@ -21,9 +24,19 @@ export const MeetingControl = forwardRef<HTMLButtonElement, Props>(function Meet
       type="button"
       ref={ref}
       {...props}
-      className={`inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border px-2.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:[&:enabled:active:not(:focus-visible)]:scale-[0.96] ${tones[tone]} ${className}`}
+      disabled={props.disabled}
+      aria-disabled={pending || props['aria-disabled'] || undefined}
+      onClick={(event) => {
+        if (pending || props['aria-disabled'] === true || props['aria-disabled'] === 'true') {
+          event.preventDefault();
+          return;
+        }
+        props.onClick?.(event);
+      }}
+      aria-busy={pending || props['aria-busy']}
+      className={`inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl border px-2.5 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-50 aria-disabled:cursor-progress aria-disabled:opacity-50 motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out-expo motion-safe:[&:enabled:not([aria-disabled=true]):active:not(:focus-visible)]:scale-[0.96] ${tones[tone]} ${className}`}
     >
-      {icon}
+      {pending ? <LoadingIndicator className="size-5" /> : icon}
       {children}
     </button>
   );

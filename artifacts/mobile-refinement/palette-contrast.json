@@ -1,0 +1,16 @@
+{
+  "light": {
+    "--on-primary/--primary": 5.178527666774805,
+    "--on-secondary/--secondary": 9.915540633332792,
+    "--secondary-ink/--secondary-soft": 8.006783265315791,
+    "--muted/--surface": 6.468878835729484,
+    "--text/--canvas": 18.085738504955867
+  },
+  "dark": {
+    "--on-primary/--primary": 8.741760611054278,
+    "--on-secondary/--secondary": 9.633547248697788,
+    "--secondary-ink/--secondary-soft": 9.06139596587611,
+    "--muted/--surface": 7.367410067931137,
+    "--text/--canvas": 16.89230015745545
+  }
+}

@@ -20,13 +20,13 @@ interface CompanionProps {
   active?: boolean;
   label?: string;
   className?: string;
-  finish?: 'auto' | 'ceramic' | 'graphite';
   emotion?: CompanionEmotion;
   state?: StateName;
   shape?: ShapeName;
   expression?: ExpressionName | null;
   attention?: 'composer' | 'answer' | null;
   dimensional?: boolean;
+  stage?: 'sculpture';
   pokeable?: boolean;
   onPoke?: () => void;
   ref?: Ref<CompanionHandle>;
@@ -49,12 +49,28 @@ export function AICompanion({
   ...props
 }: CompanionProps) {
   const character = useRef<CompanionHandle>(null);
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  const [greeting, setGreeting] = useState(0);
+  const engaged = hovered || focused;
+  useEffect(() => {
+    if (!greeting) return;
+    const timer = window.setTimeout(() => setGreeting(0), 1400);
+    return () => window.clearTimeout(timer);
+  }, [greeting]);
   useImperativeHandle(
     ref,
     () => ({ poke: () => character.current?.poke(), blink: () => character.current?.blink() }),
     [],
   );
-  const face = companionExpression(expression, emotion, state);
+  const face =
+    pokeable && state === 'idle' && !props.attention && expression === undefined
+      ? greeting
+        ? 'surprised'
+        : engaged
+          ? 'inspecting'
+          : companionExpression(expression, emotion, state)
+      : companionExpression(expression, emotion, state);
   const common = {
     ...props,
     state,
@@ -63,33 +79,65 @@ export function AICompanion({
     emotion,
     ref: character,
     label: pokeable ? undefined : props.label,
+    active: props.active || (pokeable && engaged),
   };
   const content =
-    props.dimensional || (props.size ?? 24) >= 48 ? (
+    props.stage === 'sculpture' || props.dimensional || (props.size ?? 24) >= 48 ? (
       <Companion3D {...common} />
     ) : (
       <CompanionMark {...common} />
     );
-  return pokeable ? (
+  const interaction = (
     <button
       type="button"
       aria-label={props.label ?? 'Say hello to Mumo'}
       title="Say hello"
-      className="shrink-0 cursor-pointer rounded-full bg-transparent p-0"
+      data-interaction={greeting ? 'greeted' : engaged ? 'engaged' : 'idle'}
+      className={`shrink-0 scale-100 cursor-pointer bg-transparent p-0 transition-[background-color] duration-150 ease-out motion-safe:transition-[scale,background-color] motion-safe:enabled:active:not-focus-visible:scale-[0.96] ${props.stage ? 'absolute top-[54%] left-[40%] h-[23%] min-h-11 w-[23%] min-w-11 rounded-full motion-safe:enabled:active:not-focus-visible:scale-100' : 'relative rounded-full hover:bg-primary/5'}`}
+      onPointerEnter={(event) => {
+        if (event.pointerType !== 'touch') setHovered(true);
+      }}
+      onPointerLeave={() => setHovered(false)}
+      onPointerCancel={() => setHovered(false)}
+      onFocus={() => setFocused(true)}
+      onBlur={() => setFocused(false)}
       onClick={() => {
         character.current?.poke();
+        setGreeting((value) => value + 1);
         onPoke?.();
       }}
     >
-      {content}
+      {!props.stage && content}
+      {greeting > 0 && (
+        <span
+          aria-hidden="true"
+          className={`pointer-events-none absolute left-1/2 -translate-x-1/2 rounded-full border border-border bg-surface px-2.5 py-1 text-xs font-medium text-text shadow-sm ${props.stage ? '-top-1' : '-top-2'}`}
+        >
+          Hi!
+        </span>
+      )}
+      <span role="status" aria-label="Mumo greeting" className="sr-only">
+        {greeting ? 'Mumo says hello.' : ''}
+      </span>
     </button>
+  );
+  if (!pokeable) return content;
+  return props.stage ? (
+    <span
+      className={`relative inline-block shrink-0 align-middle ${props.className ?? ''}`}
+      style={{ width: props.size ?? 88, height: props.size ?? 88 }}
+    >
+      {content}
+      {interaction}
+    </span>
   ) : (
-    content
+    interaction
   );
 }
 
 function CompanionMark({
   size = 24,
+  active = false,
   label,
   className = '',
   state,
@@ -128,6 +176,9 @@ function CompanionMark({
   useEffect(() => {
     engine.current?.update({ state, shape, expression, attention, reducedMotion: reduced });
   }, [state, shape, expression, attention, reduced]);
+  useEffect(() => {
+    if (active) engine.current?.blink();
+  }, [active]);
   return (
     <span
       ref={host}
@@ -146,7 +197,7 @@ function Companion3D({
   active = false,
   label,
   className = '',
-  finish = 'auto',
+  stage,
   emotion = 'auto',
   state,
   shape,
@@ -160,10 +211,10 @@ function Companion3D({
   const host = useRef<HTMLSpanElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
   const scene = useRef<CompanionScene | null>(null);
+  const fallback = useRef<CompanionHandle>(null);
   const visible = useRef(false);
-  const ceramic = finish === 'ceramic' || (finish === 'auto' && resolvedTheme === 'dark');
   const options = useRef<CompanionOptions>({
-    ceramic,
+    dark: resolvedTheme === 'dark',
     reduced,
     visible: false,
     active,
@@ -172,15 +223,19 @@ function Companion3D({
     shape,
     expression,
     attention,
+    stage,
   });
   useImperativeHandle(
     ref,
-    () => ({ poke: () => scene.current?.poke(), blink: () => scene.current?.blink() }),
+    () => ({
+      poke: () => (scene.current ?? fallback.current)?.poke(),
+      blink: () => (scene.current ?? fallback.current)?.blink(),
+    }),
     [],
   );
   useEffect(() => {
     options.current = {
-      ceramic,
+      dark: resolvedTheme === 'dark',
       reduced,
       visible: visible.current,
       active,
@@ -189,9 +244,10 @@ function Companion3D({
       shape,
       expression,
       attention,
+      stage,
     };
     scene.current?.update(options.current);
-  }, [ceramic, reduced, active, emotion, state, shape, expression, attention]);
+  }, [resolvedTheme, reduced, active, emotion, state, shape, expression, attention, stage]);
   useEffect(() => {
     const node = host.current,
       surface = canvas.current;
@@ -199,16 +255,12 @@ function Companion3D({
     let alive = true,
       requested = false,
       prepareFrame = 0;
-    const module = import('./companion/scene');
-    void module.catch(() => {
-      if (alive) setStatus('unavailable');
-    });
     const observer = new IntersectionObserver(([entry]) => {
       visible.current = !!entry?.isIntersecting;
       scene.current?.update({ ...options.current, visible: visible.current });
       if (!visible.current || requested) return;
       requested = true;
-      void module
+      void import('./companion/scene')
         .then(({ createCompanionScene }) => {
           if (!alive) return;
           prepareFrame = requestAnimationFrame(() => {
@@ -239,7 +291,7 @@ function Companion3D({
       scene.current?.dispose();
       scene.current = null;
     };
-  }, []);
+  }, [stage]);
   useEffect(() => {
     if (status === 'unavailable') {
       scene.current?.dispose();
@@ -255,6 +307,8 @@ function Companion3D({
       style={{ width: size, height: size }}
       data-companion-state={state}
       data-companion-shape={shape}
+      data-companion-stage={stage}
+      data-scene-status={status}
     >
       <canvas
         ref={canvas}
@@ -264,7 +318,39 @@ function Companion3D({
         className={`absolute inset-0 size-full ${status === 'ready' ? 'visible' : 'invisible'}`}
       />
       {status !== 'ready' && (
-        <CompanionMark size={size} state={state} shape={shape} expression={expression} />
+        <span className="absolute inset-0 size-full">
+          {stage && (
+            <img
+              src="/images/auth-sculpture.webp"
+              srcSet="/images/auth-sculpture-small.webp 480w, /images/auth-sculpture.webp 1200w"
+              sizes="(min-width: 1024px) 52vw, 240px"
+              fetchPriority="high"
+              decoding="async"
+              alt=""
+              width={1200}
+              height={1200}
+              className="absolute inset-0 size-full object-contain"
+            />
+          )}
+          <span
+            className={
+              stage
+                ? 'absolute top-[55%] left-[42%] aspect-square w-[20%]'
+                : 'absolute inset-0 size-full'
+            }
+          >
+            <CompanionMark
+              ref={fallback}
+              size={stage ? 64 : size}
+              className="size-full!"
+              active={active}
+              state={state}
+              shape={shape}
+              expression={expression}
+              attention={attention}
+            />
+          </span>
+        </span>
       )}
       {status === 'unavailable' && label && (
         <span className="sr-only">3D rendering unavailable.</span>

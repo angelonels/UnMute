@@ -1,3 +1,4 @@
+import { LoadingIndicator } from '../../components/loading-indicator';
 import { syntheticCapture } from './demo-capture';
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Effect } from 'effect';
@@ -47,6 +48,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
   const [selectedDevices, setSelectedDevices] = useState<Partial<Record<MediaSource, string>>>({});
   const generations = useRef({ camera: 0, microphone: 0, screen: 0 });
   const [streams, setStreams] = useState<Streams>(emptyStreams);
+  const requesting = useRef({ camera: false, microphone: false, screen: false });
   const [pending, setPending] = useState({ camera: false, microphone: false, screen: false });
   const [error, setError] = useState('');
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
@@ -77,6 +79,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
   }, []);
   const end = useCallback((source: MediaSource) => {
     generations.current[source]++;
+    requesting.current[source] = false;
     stop(resources.current[source]);
     resources.current[source] = null;
     setStreams((previous) => ({ ...previous, [source]: null }));
@@ -84,6 +87,8 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
   }, []);
   const start = useCallback(
     (source: MediaSource, deviceId?: string) => {
+      if (requesting.current[source]) return;
+      requesting.current[source] = true;
       const generation = ++generations.current[source];
       setPending((previous) => ({ ...previous, [source]: true }));
       setError('');
@@ -91,6 +96,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
         Effect.match(capture(source, deviceId, mode), {
           onFailure: (message) => {
             if (generation !== generations.current[source]) return;
+            requesting.current[source] = false;
             setError(message);
             setPending((previous) => ({ ...previous, [source]: false }));
           },
@@ -99,6 +105,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
               stop(stream);
               return;
             }
+            requesting.current[source] = false;
             selected.current[source] = deviceId;
             setSelectedDevices((previous) => ({ ...previous, [source]: deviceId }));
             stop(resources.current[source]);
@@ -134,6 +141,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
     mediaDevices?.addEventListener('devicechange', refreshDevices);
     const ownedResources = resources.current;
     const ownedGenerations = generations.current;
+    const ownedRequests = requesting.current;
     let active = true;
     // Capture is asynchronous; do not start a request for a discarded Strict Mode mount.
     queueMicrotask(() => {
@@ -145,6 +153,7 @@ export function useLocalMedia(initialMicrophone = false, initialCamera = false, 
       mediaDevices?.removeEventListener('devicechange', refreshDevices);
       for (const source of ['camera', 'microphone', 'screen'] as const) {
         ownedGenerations[source]++;
+        ownedRequests[source] = false;
         stop(ownedResources[source]);
         ownedResources[source] = null;
       }
@@ -179,6 +188,8 @@ export function LocalVideo({
   const video = useRef<HTMLVideoElement>(null);
   const playbackRequest = useRef({ value: 0 });
   const [blocked, setBlocked] = useState(false);
+  const [playing, setPlaying] = useState<MediaStream | null>(null);
+  const loading = playing !== stream && !blocked;
   const play = useCallback(() => {
     const element = video.current;
     if (element) {
@@ -213,8 +224,20 @@ export function LocalVideo({
         playsInline
         muted
         aria-label={label}
+        aria-busy={loading}
+        onPlaying={() => setPlaying(stream)}
+        onWaiting={() => setPlaying(null)}
         className={`absolute inset-0 size-full bg-black ${contain ? 'object-contain' : 'object-cover'} ${mirror ? '-scale-x-100' : ''}`}
       />
+      {loading && (
+        <span
+          role="status"
+          className="pointer-events-none absolute inset-0 grid place-items-center bg-black/20 text-white"
+        >
+          <LoadingIndicator className="size-6" />
+          <span className="sr-only">Loading video</span>
+        </span>
+      )}
       {blocked && (
         <button
           type="button"

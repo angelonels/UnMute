@@ -613,8 +613,12 @@ const active = new Set<Engine>();
 let rafId = 0;
 
 function schedule() {
-  if (!rafId && !document.hidden && [...active].some((character) => character.animating))
+  if (rafId || document.hidden) return;
+  for (const character of active) {
+    if (!character.animating) continue;
     rafId = requestAnimationFrame(loop);
+    break;
+  }
 }
 function loop(now: number) {
   rafId = 0;
@@ -712,6 +716,7 @@ class Engine implements EngineHandle {
   private pokeStarted = -10;
   private pokeIndex = 0;
   private visible = true;
+  private destroyed = false;
   private last = performance.now();
   private lastHtml = '';
   private io: IntersectionObserver | null;
@@ -751,6 +756,9 @@ class Engine implements EngineHandle {
   private onMotionChange = () => this.refresh();
 
   update(options: EngineOptions) {
+    if (this.destroyed) return;
+    if (Object.entries(options).every(([key, value]) => this.opts[key as keyof Resolved] === value))
+      return;
     const next = { ...this.opts, ...options };
     if (next.state !== this.opts.state) {
       this.prev = { state: this.opts.state, time: this.stateTime, mem: this.mem };
@@ -774,7 +782,7 @@ class Engine implements EngineHandle {
   }
 
   poke() {
-    if (this.reduced) return;
+    if (this.destroyed || this.reduced) return;
     this.pokeIndex = this.repertoire.next('hello');
     this.pokeStarted = this.t;
     const performance = REACTION_PERFORMANCES[this.pokeIndex]!;
@@ -785,22 +793,24 @@ class Engine implements EngineHandle {
   }
 
   blink() {
-    if (!this.reduced) this.startBlink();
+    if (!this.destroyed && !this.reduced) this.startBlink();
   }
 
   destroy() {
+    if (this.destroyed) return;
+    this.destroyed = true;
     unregister(this);
     this.io?.disconnect();
     this.motionQuery?.removeEventListener('change', this.onMotionChange);
   }
 
   get animating() {
-    return this.visible && !this.reduced;
+    return !this.destroyed && this.visible && !this.reduced;
   }
 
   /** Called by the shared loop. */
   tick(now: number) {
-    if (!this.visible || this.reduced) {
+    if (this.destroyed || !this.visible || this.reduced) {
       this.last = now;
       return;
     }
@@ -825,6 +835,7 @@ class Engine implements EngineHandle {
   }
 
   private refresh() {
+    if (this.destroyed) return;
     if (this.reduced) this.still();
     schedule();
   }

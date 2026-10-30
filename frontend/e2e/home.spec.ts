@@ -4,9 +4,7 @@ test('Google sign-in surface supports themes, keyboard access, and narrow screen
   page,
 }, testInfo) => {
   await page.goto('/');
-  await expect(
-    page.getByRole('heading', { name: 'Make room for the conversation.' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sign in to UnMute' })).toBeVisible();
   const google = page.getByRole('button', { name: 'Continue with Google' });
   await expect(google).toBeVisible();
   await page.getByRole('button', { name: 'Use dark mode' }).click();
@@ -86,4 +84,22 @@ test('sign-in failure has a usable retry action', async ({ page }) => {
   await page.getByRole('button', { name: 'Continue with Google' }).click();
   await expect(page.getByRole('alert')).toContainText('Please try again');
   await expect(page.getByRole('button', { name: 'Continue with Google' })).toBeEnabled();
+});
+
+test('login reflows with enlarged text and retains session-error recovery', async ({
+  page,
+}, info) => {
+  await page.route('**/api/auth/get-session**', (route) =>
+    route.fulfill({ status: 503, json: { message: 'Unavailable' } }),
+  );
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await expect(page.getByRole('alert')).toContainText('We couldn’t check your session');
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = '200%';
+  });
+  await expect(page.getByRole('button', { name: 'Try again', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await page.getByRole('button', { name: 'Try again', exact: true }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: info.outputPath('login-enlarged-error.png'), fullPage: true });
 });

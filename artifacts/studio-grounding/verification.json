@@ -1,0 +1,21 @@
+{
+  "date": "2026-10-29",
+  "branch": "polish/frontend-mumo-refinement",
+  "applicationCommit": "2ada24f",
+  "projectVerify": "passed",
+  "finalLint": "passed",
+  "browser": {
+    "existingCasesPassed": 75,
+    "fullRunDuration": "2.9m",
+    "newLogoCasesFinalPassed": 2,
+    "newLogoFinalDuration": "10.3s",
+    "initialLogoFailure": "SVG float32 boundary 30.00000095; retain two-unit clearance, compare at 0.001-unit precision"
+  },
+  "reactDoctor": 90,
+  "preview": "http://localhost:5173/",
+  "limits": [
+    "Hybrid 3D sculpture over photographic studio background",
+    "Contact layer approximates local ambient occlusion",
+    "No Core Web Vitals trace or real OAuth flow"
+  ]
+}

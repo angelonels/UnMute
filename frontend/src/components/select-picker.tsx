@@ -30,7 +30,7 @@ export function SelectPicker({
         aria-label={label}
         onKeyDown={() => setKeyboard(true)}
         onPointerDown={() => setKeyboard(false)}
-        className="group flex min-h-12 w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-border bg-surface px-3 text-left text-sm text-text transition-colors duration-150 hover:bg-surface-muted data-[state=open]:bg-surface-muted disabled:cursor-progress disabled:opacity-50 motion-reduce:transition-none"
+        className="group flex min-h-12 w-full min-w-0 cursor-pointer items-center gap-3 rounded-xl border border-input bg-surface px-3 text-left text-sm text-text transition-colors duration-150 hover:bg-surface-muted data-[state=open]:bg-surface-muted disabled:cursor-progress disabled:opacity-50 motion-reduce:transition-none"
       >
         <span className="shrink-0 text-muted" aria-hidden="true">
           {icon}
@@ -68,7 +68,7 @@ export function SelectPicker({
             <Select.ScrollUpButton className="grid h-7 place-items-center text-muted">
               <ChevronUp width={16} height={16} aria-hidden="true" />
             </Select.ScrollUpButton>
-            <Select.Viewport className="space-y-0.5">
+            <Select.Viewport className="space-y-0.5 overscroll-contain">
               {options.map((option) => (
                 <Select.Item
                   key={option.value}

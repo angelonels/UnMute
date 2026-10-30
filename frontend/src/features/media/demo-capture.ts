@@ -6,11 +6,12 @@ export function syntheticCapture(source: MediaSource): Promise<MediaStream> {
     const context = new AudioContext();
     const destination = context.createMediaStreamDestination();
     // A repeating speech-like envelope, including silence, exercises the real analyser path.
-    const buffer = context.createBuffer(1, context.sampleRate * 3, context.sampleRate);
+    const buffer = context.createBuffer(1, context.sampleRate * 4, context.sampleRate);
     const samples = buffer.getChannelData(0);
     for (let index = 0; index < samples.length; index++) {
       const t = index / context.sampleRate;
-      const envelope = Math.max(0, Math.sin(t * Math.PI * 3)) ** 2;
+      // Leave a full silent interval so analyser release is observable even under rendering load.
+      const envelope = t < 2 ? Math.max(0, Math.sin(t * Math.PI * 3)) ** 2 : 0;
       samples[index] =
         envelope *
         0.12 *
@@ -51,9 +52,12 @@ export function syntheticCapture(source: MediaSource): Promise<MediaStream> {
   canvas.height = 720;
   const context = canvas.getContext('2d');
   if (!context) return Promise.reject(new DOMException('Unavailable', 'NotSupportedError'));
-  context.fillStyle = source === 'screen' ? '#e4e9e1' : '#355346';
+  const palette = getComputedStyle(document.documentElement);
+  const background = palette.getPropertyValue('--primary-soft').trim();
+  const foreground = palette.getPropertyValue('--primary-ink').trim();
+  context.fillStyle = background;
   context.fillRect(0, 0, canvas.width, canvas.height);
-  context.fillStyle = source === 'screen' ? '#355346' : '#e4e9e1';
+  context.fillStyle = foreground;
   context.font = '44px system-ui';
   context.fillText(
     source === 'screen' ? 'A clearer space to connect.' : 'Your camera preview',
